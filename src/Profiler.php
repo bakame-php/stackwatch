@@ -8,6 +8,9 @@ use Closure;
 use Countable;
 use IteratorAggregate;
 use JsonSerializable;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
+use Throwable;
 use Traversable;
 
 use function array_key_last;
@@ -28,7 +31,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     private array $labels;
     private Closure $callback;
 
-    public function __construct(callable $callback)
+    public function __construct(callable $callback, private LoggerInterface $logger = new NullLogger())
     {
         $this->callback = $callback instanceof Closure ? $callback : Closure::fromCallable($callback);
         $this->reset();
@@ -41,11 +44,21 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     public function runWithLabel(string $label, mixed ...$args): mixed
     {
-        $result = ProfilingResult::profile($label, $this->callback, ...$args);
-        $this->profiles[] = $result->profile;
-        $this->labels[$result->profile->label()] = 1;
+        $this->logger->info("Starting profiling for label: {$label}");
+        try {
+            $result = ProfilingResult::profile($label, $this->callback, ...$args);
 
-        return $result->value;
+            $this->profiles[] = $result->profile;
+            $this->labels[$result->profile->label()] = 1;
+
+            $this->logger->info("Finished profiling for label: {$label}", $result->profile->metrics()['metrics']);
+
+            return $result->value;
+        } catch (Throwable $exception) {
+            $this->logger->error($exception->getMessage(), $exception->getTrace());
+
+            throw $exception;
+        }
     }
 
     public function count(): int

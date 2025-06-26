@@ -7,7 +7,11 @@ namespace Bakame\Aide\Profiler;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
+use RuntimeException;
+use Stringable;
 
+use function array_column;
 use function json_encode;
 
 #[CoversClass(Profiler::class)]
@@ -100,5 +104,70 @@ final class ProfilerTest extends TestCase
         self::assertTrue($profiler->has('custom_label'));
         self::assertFalse($profiler->has('foo_bar'));
         self::assertCount(3, $profiler->labels());
+    }
+
+    #[Test]
+    public function testItLogsStartAndEnd(): void
+    {
+        $logger = new InMemoryLogger();
+        $profiler = new Profiler(fn () => usleep(10_000), $logger);
+        $profiler->runWithLabel('simple_test');
+
+        self::assertCount(2, $logger->logs, 'Expected 2 log entries');
+        self::assertSame('info', $logger->logs[0]['level']);
+        self::assertStringContainsString('Starting profiling for label: simple_test', (string) $logger->logs[0]['message']);
+
+        self::assertSame('info', $logger->logs[1]['level']);
+        self::assertStringContainsString('Finished profiling for label: simple_test', (string) $logger->logs[1]['message']);
+        dump($logger->logs[1]['context']);
+        self::assertArrayHasKey('cpu_time', $logger->logs[1]['context']);
+    }
+
+    public function it_can_log_failure(): void
+    {
+        $logger = new InMemoryLogger();
+        $profiler = new Profiler(function () {
+            throw new RuntimeException('Test crash');
+        }, $logger);
+
+        $this->expectException(RuntimeException::class);
+
+        try {
+            $profiler->runWithLabel('fail_case');
+        } finally {
+            self::assertCount(2, $logger->logs);
+            self::assertSame('info', $logger->logs[0]['level']);
+            self::assertSame('error', $logger->logs[1]['level']);
+            self::assertStringContainsString('Profiling failed for label: fail_case', (string) $logger->logs[1]['message']);
+            self::assertArrayHasKey('exception', $logger->logs[1]['context']);
+        }
+    }
+}
+
+
+class InMemoryLogger extends AbstractLogger
+{
+    /**
+     * @var non-empty-array<array{level:mixed, message:string|Stringable, context:array<array-key, mixed>}>|array{}
+     */
+    public array $logs = [];
+
+    public function log($level, string|Stringable $message, array $context = []): void
+    {
+        $this->logs[] = [
+            'level' => $level,
+            'message' => $message,
+            'context' => $context,
+        ];
+    }
+
+    /**
+     * Get messages only.
+     *
+     * @return array<string|Stringable>
+     */
+    public function messages(): array
+    {
+        return array_column($this->logs, 'message');
     }
 }

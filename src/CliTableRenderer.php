@@ -11,7 +11,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use function number_format;
 
-final class SimpleCliRenderer implements Renderer
+final class CliTableRenderer implements Renderer
 {
     public function __construct(private readonly OutputInterface $output = new ConsoleOutput())
     {

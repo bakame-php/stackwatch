@@ -10,14 +10,14 @@ use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 use Symfony\Component\Console\Output\BufferedOutput;
 
-#[CoversClass(SimpleCliRenderer::class)]
-final class SimpleCliRendererTest extends TestCase
+#[CoversClass(CliTableRenderer::class)]
+final class CliTableiRendererTest extends TestCase
 {
     #[Test]
     public function it_can_output_a_cli_table(): void
     {
         $output = new BufferedOutput();
-        $renderer = new SimpleCliRenderer($output);
+        $renderer = new CliTableRenderer($output);
 
         $profiler = new Profiler(fn () => usleep(1000));
         $profiler->runWithLabel('cli_test');
@@ -36,7 +36,7 @@ final class SimpleCliRendererTest extends TestCase
     public function it_renders_incomplete_or_not_yet_runned_profile(): void
     {
         $output = new BufferedOutput();
-        $renderer = new SimpleCliRenderer($output);
+        $renderer = new CliTableRenderer($output);
         $profiler = new Profiler(fn () => null);
 
         $incompleteProfile = new Profile('incomplete');
