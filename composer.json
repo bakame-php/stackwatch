@@ -1,7 +1,7 @@
 {
     "name": "bakame/aide-profiler",
-    "description": "A straightforward profiler to inspect the statistics attached to your code",
-    "keywords": ["profiler", "microtime", "cpu", "memory_usage"],
+    "description": "A minimalist, embeddable, multi-metric, and framework-agnostic profiler for PHP",
+    "keywords": ["profiler", "microtime", "cpu", "memory_usage", "embeddable", "multi-metric"],
     "license": "MIT",
     "authors": [
         {
