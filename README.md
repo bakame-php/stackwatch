@@ -79,7 +79,7 @@ $namedProfile = $profiler->get('my_test'); // will return the associated Profile
 
 $profiler->get('foobar'); //returns null because the `foobar` label does not exist
 $profiler->has('foobar'); //return false because the label does not exist
-$profiler->label(); //will return all the labels attached to the Profiler
+$profiler->labels(); //will return all the labels attached to the Profiler
 ````
 
 > [!NOTE]  
@@ -102,9 +102,14 @@ $profiler = new Profiler($callable);
 $profiler(1, 2, 3);
 $profiler->runWithLabel('my_test', 4, 5, 6);
 $profiler(7, 8, 9);
+
 count($profiler); // returns 3
+$profiler->isEmpty(); // return false
+
 $profiler->reset();
+
 count($profiler); // returns 0
+$profiler->isEmpty(); // return true
 ```
 
 ### Logging and Profiling
@@ -136,6 +141,16 @@ You will see in your terminal the following output since we used Monolog `Stream
 [2025-06-26T16:26:54.937517+00:00] profiler.INFO: Finished profiling for label: toto {"cpu_time":2.1e-5,"memory_usage":2536.0,"real_memory_usage":0.0,"peak_memory_usage":0.0,"real_peak_memory_usage":0.0} []
 [2025-06-26T16:26:54.937570+00:00] profiler.INFO: Starting profiling for label: tata [] []
 [2025-06-26T16:26:54.938688+00:00] profiler.INFO: Finished profiling for label: tata {"cpu_time":1.3000000000000001e-5,"memory_usage":2536.0,"real_memory_usage":0.0,"peak_memory_usage":0.0,"real_peak_memory
+```
+
+### JSON Rendering
+
+You can convert the `Profiler` into its JSON representation using the `json_encode` method.
+The JSON representation will return the timestamp, the snapshots as well as the metrics
+associated to all the `Profile` instances attached to the object.
+
+```php
+echo json_encode($profiler), PHP_EOL;
 ```
 
 ### CLI Rendering
