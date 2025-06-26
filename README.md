@@ -113,6 +113,5 @@ Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed re
 
 ## Credits
 
-- [Bishop Bettini and Haldayne PHP Componentry](https://github.com/haldayne/fox)
 - [ignace nyamagana butera](https://github.com/nyamsprod)
 - [All Contributors](https://github.com/bakame-php/aide/graphs/contributors)
