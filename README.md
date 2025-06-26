@@ -7,7 +7,7 @@ A straighforward profiler to quickly profile your code in PHP.
 ### Composer
 
 ~~~
-composer require bakame-php/aide-profiler
+composer require bakame/aide-profiler
 ~~~
 
 ### System Requirements
