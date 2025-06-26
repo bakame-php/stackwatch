@@ -1,3 +1,5 @@
+![Aide-profiler](.github/logo.png?raw=true)
+
 # Aide for Profiling
 
 A minimalist profiler for PHP. The profiler is embeddable, multi-metric, and framework-agnostic 
