@@ -1,0 +1,50 @@
+{
+    "require": {
+        "php" : "^8.1"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.75.0",
+        "phpstan/phpstan": "^1.12.27",
+        "phpstan/phpstan-strict-rules": "^1.6.2",
+        "phpstan/phpstan-phpunit": "^1.4.2",
+        "phpstan/phpstan-deprecation-rules": "^1.2.1",
+        "phpunit/phpunit": "^10.5.15 || ^11.5.22",
+        "symfony/var-dumper": "^6.4.21 || ^v7.3.0",
+        "symfony/console": "^6.4 || ^7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Bakame\\Aide\\Profiler\\": "src"
+        }
+    },
+    "scripts": {
+        "phpcs": "PHP_CS_FIXER_IGNORE_ENV=1 php-cs-fixer fix -vvv --diff --dry-run --allow-risky=yes --ansi",
+        "phpcs:fix": "php-cs-fixer fix -vvv --allow-risky=yes --ansi",
+        "phpstan": "phpstan analyse -c phpstan.neon --ansi --memory-limit=192M",
+        "phpunit": "XDEBUG_MODE=coverage phpunit --coverage-text",
+        "phpunit:min": "phpunit --no-coverage",
+        "test": [
+            "@phpunit",
+            "@phpstan",
+            "@phpcs"
+        ]
+    },
+    "scripts-descriptions": {
+        "phpcs": "Runs coding style testing",
+        "phpcs:fix": "Fix coding style issues",
+        "phpstan": "Runs complete codebase static analysis",
+        "phpunit": "Runs unit and functional testing",
+        "test": "Runs all tests"
+    },
+    "suggest": {
+        "symfony/console": "to render the profiler in your CLI command"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-develop": "1.x-dev"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
