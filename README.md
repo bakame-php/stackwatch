@@ -1,6 +1,7 @@
 # Aide for Profiling
 
-A straighforward profiler to quickly profile your code in PHP.
+A minimalist profiler for PHP. The profiler is embeddable, multi-metric, and framework-agnostic 
+It fills the gap between a basic timer and full-blown profilers like [Xdebug](https://xdebug.org/) or [Blackfire](https://www.blackfire.io/).
 
 ## Installation
 
