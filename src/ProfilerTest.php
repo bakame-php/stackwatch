@@ -38,9 +38,12 @@ final class ProfilerTest extends TestCase
 
         self::assertCount(2, $profiler);
 
-        self::assertContainsOnlyFloat(
-            array_map(fn (Profile $p) => $p->executionTime(), $profiler->profiles())
-        );
+        $values =  array_map(fn (Profile $p) => $p->executionTime(), $profiler->profiles());
+        if (method_exists(self::class, 'assertContainsOnlyFloat')) { /* @phpstan-ignore-line */
+            self::assertContainsOnlyFloat($values);
+        } else {
+            self::assertContainsOnly('float', $values);  /* @phpstan-ignore-line */
+        }
     }
 
     #[Test]
