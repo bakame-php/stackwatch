@@ -69,6 +69,30 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         return [] === $this->profiles ? null : $this->profiles[array_key_last($this->profiles)];
     }
 
+    /**
+     * Returns the first Profile with the provided label.
+     */
+    public function get(string $label): ?Profile
+    {
+        foreach ($this->profiles as $profile) {
+            if ($profile->label() === $label) {
+                return $profile;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     *  Returns all the Profiles with the provided label.
+     *
+     * @return array<Profile>
+     */
+    public function getAll(string $label): array
+    {
+        return array_filter($this->profiles, fn (Profile $profile): bool => $profile->label() === $label);
+    }
+
     public function reset(): void
     {
         $this->profiles = [];

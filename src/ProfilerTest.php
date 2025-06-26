@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 use function array_map;
 use function json_encode;
+use function method_exists;
 
 #[CoversClass(Profiler::class)]
 #[CoversClass(ProfilingResult::class)]
@@ -87,5 +88,21 @@ final class ProfilerTest extends TestCase
         self::assertIsArray($profile);
         self::assertArrayHasKey('label', $profile);
         self::assertArrayHasKey('metrics', $profile);
+    }
+
+    #[Test]
+    public function it_can_store_and_retrieve_multiple_profiles(): void
+    {
+        $profiler = new Profiler(fn (int $x) => $x * 2);
+        $profiler->runWithLabel('custom_label', 4);
+        $profiler(2);
+        $profiler(3);
+        $profiler->runWithLabel('custom_label', 5);
+
+        self::assertCount(4, $profiler);
+        self::assertCount(2, $profiler->getAll('custom_label'));
+        self::assertInstanceOf(Profile::class, $profiler->get('custom_label'));
+        self::assertNull($profiler->get('foo_bar'));
+        self::assertCount(0, $profiler->getAll('foo_bar'));
     }
 }
