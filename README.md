@@ -26,8 +26,6 @@ the burden of calculating and setting up your code for profiling.
 ### Basic usage
 
 ```php
-<?php
-
 use Bakame\Aide\Profiler\Profiler;
 
 $callable = function (int ...$args): int|float => {
@@ -56,8 +54,6 @@ You can label each run if you use `Profiler::runWithLabel` this method does the 
 its first argument is the label you want to associate with the profile.
 
 ```php
-<?php
-
 use Bakame\Aide\Profiler\Profiler;
 
 $callable = function (int ...$args): int|float => {
@@ -84,9 +80,9 @@ The `Profiler` can optionally take a `Psr\LoggerInterface` implementing object t
 of the profiling process.
 
 ```php
+use Bakame\Aide\Profiler\Profiler;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
-use Bakame\Aide\Profiler\Profiler;
 
 $logger = new Logger('profiler');
 $logger->pushHandler(new StreamHandler('php://stdout', Logger::DEBUG));
