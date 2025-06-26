@@ -1,4 +1,16 @@
 {
+    "name": "bakame/aide-profiler",
+    "description": "A straightforward profiler to inspect the statistics attached to your code",
+    "keywords": ["profiler", "microtime", "cpu", "memory_usage"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name" : "Ignace Nyamagana Butera",
+            "email" : "nyamsprod@gmail.com",
+            "homepage" : "https://github.com/nyamsprod/",
+            "role" : "Developer"
+        }
+    ],
     "require": {
         "php" : "^8.1"
     },
