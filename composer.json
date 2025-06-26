@@ -11,6 +11,18 @@
             "role" : "Developer"
         }
     ],
+    "support": {
+        "docs": "https://github.com/bakame-php/aide-profiler",
+        "issues": "https://github.com/bakame-php/aide-profiler/issues",
+        "rss": "https://github.com/bakame-php/aide-profiler/releases.atom",
+        "source": "https://github.com/bakame-php/aide-profiler"
+    },
+    "funding": [
+        {
+            "type": "github",
+            "url": "https://github.com/sponsors/nyamsprod"
+        }
+    ],
     "require": {
         "php" : "^8.1"
     },
