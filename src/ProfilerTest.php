@@ -13,6 +13,9 @@ use function json_encode;
 
 #[CoversClass(Profiler::class)]
 #[CoversClass(ProfilingResult::class)]
+/**
+ * @phpstan-import-type ProfileMetrics from Profile
+ */
 final class ProfilerTest extends TestCase
 {
     #[Test]
@@ -32,7 +35,7 @@ final class ProfilerTest extends TestCase
     #[Test]
     public function it_can_store_multiple_profiles(): void
     {
-        $profiler = new Profiler(fn ($x) => $x * 2);
+        $profiler = new Profiler(fn (int $x) => $x * 2);
         $profiler(2);
         $profiler(3);
 
@@ -74,12 +77,15 @@ final class ProfilerTest extends TestCase
     {
         $profiler = new Profiler(fn () => null);
         $profiler();
-        /** @var string $json */
+        /** @var non-empty-string $json */
         $json = json_encode($profiler);
-        $data = json_decode($json, true);
+        /** @var array<ProfileMetrics> $data */
+        $data = json_decode($json, true); /** @phpstan-ignore-line */
+        /** @var ProfileMetrics $profile */
+        $profile = $data[0];  /* @phpstan-ignore-line */
 
-        self::assertIsArray($data);
-        self::assertArrayHasKey('label', $data[0]);
-        self::assertArrayHasKey('metrics', $data[0]);
+        self::assertIsArray($profile);
+        self::assertArrayHasKey('label', $profile);
+        self::assertArrayHasKey('metrics', $profile);
     }
 }

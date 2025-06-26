@@ -50,7 +50,7 @@ final class Snapshot implements JsonSerializable
         return new self(
             new DateTimeImmutable(),
             microtime(true),
-            $cpu,
+            $cpu, /* @phpstan-ignore-line */
             memory_get_usage(),
             memory_get_usage(true),
             memory_get_peak_usage(),
@@ -93,6 +93,6 @@ final class Snapshot implements JsonSerializable
             && $this->peakMemoryUsage === $other->peakMemoryUsage
             && $this->realMemoryUsage === $other->realMemoryUsage
             && $this->realPeakMemoryUsage === $other->realPeakMemoryUsage
-            && $this->timestamp == $other->timestamp;
+            && $this->timestamp == $other->timestamp; /* @phpstan-ignore-line */
     }
 }

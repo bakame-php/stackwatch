@@ -77,7 +77,7 @@ final class ProfileTest extends TestCase
         usleep(1000);
         $profile->endProfiling();
 
-        /** @var string $json */
+        /** @var non-empty-string $json */
         $json = json_encode($profile);
         self::assertJson($json);
 
