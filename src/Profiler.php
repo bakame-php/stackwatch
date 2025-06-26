@@ -11,7 +11,9 @@ use JsonSerializable;
 use Traversable;
 
 use function array_key_last;
+use function array_map;
 use function bin2hex;
+use function count;
 use function random_bytes;
 
 /**
@@ -21,7 +23,9 @@ use function random_bytes;
 final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 {
     /** @var array<Profile> */
-    private array $profiles = [];
+    private array $profiles;
+    /** @var array<string, 1> */
+    private array $labels;
     private Closure $callback;
 
     public function __construct(callable $callback)
@@ -37,10 +41,11 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     public function runWithLabel(string $label, mixed ...$args): mixed
     {
-        $profilingResult = ProfilingResult::profile($label, $this->callback, ...$args);
-        $this->profiles[] = $profilingResult->profile;
+        $result = ProfilingResult::profile($label, $this->callback, ...$args);
+        $this->profiles[] = $result->profile;
+        $this->labels[$result->profile->label()] = 1;
 
-        return $profilingResult->value;
+        return $result->value;
     }
 
     public function count(): int
@@ -57,16 +62,29 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     }
 
     /**
-     * @return array<Profile>
+     * @return array<ProfileMetrics>
      */
-    public function profiles(): array
+    public function jsonSerialize(): array
     {
-        return $this->profiles;
+        return array_map(static fn (Profile $profile): array => $profile->metrics(), $this->profiles);
+    }
+
+    public function isEmpty(): bool
+    {
+        return [] === $this->profiles;
     }
 
     public function lastProfile(): ?Profile
     {
         return [] === $this->profiles ? null : $this->profiles[array_key_last($this->profiles)];
+    }
+
+    /**
+     * Tells whether the label is present in the current profiler cache.
+     */
+    public function has(string $label): bool
+    {
+        return array_key_exists($label, $this->labels);
     }
 
     /**
@@ -84,25 +102,35 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     }
 
     /**
-     *  Returns all the Profiles with the provided label.
+     * Returns all the Profiles with the provided label.
      *
-     * @return array<Profile>
+     * @return list<Profile>
      */
     public function getAll(string $label): array
     {
-        return array_filter($this->profiles, fn (Profile $profile): bool => $profile->label() === $label);
+        $result = [];
+        foreach ($this->profiles as $profile) {
+            if ($profile->label() === $label) {
+                $result[] = $profile;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Returns the list of all distinct label present in the Profiler.
+     *
+     * @return list<string>
+     */
+    public function labels(): array
+    {
+        return array_keys($this->labels);
     }
 
     public function reset(): void
     {
         $this->profiles = [];
-    }
-
-    /**
-     * @return array<ProfileMetrics>
-     */
-    public function jsonSerialize(): array
-    {
-        return array_map(static fn (Profile $profile): array => $profile->metrics(), $this->profiles);
+        $this->labels = [];
     }
 }

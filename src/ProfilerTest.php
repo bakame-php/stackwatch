@@ -8,9 +8,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-use function array_map;
 use function json_encode;
-use function method_exists;
 
 #[CoversClass(Profiler::class)]
 #[CoversClass(ProfilingResult::class)]
@@ -41,12 +39,8 @@ final class ProfilerTest extends TestCase
         $profiler(3);
 
         self::assertCount(2, $profiler);
-
-        $values =  array_map(fn (Profile $p) => $p->executionTime(), $profiler->profiles());
-        if (method_exists(self::class, 'assertContainsOnlyFloat')) { /* @phpstan-ignore-line */
-            self::assertContainsOnlyFloat($values);
-        } else {
-            self::assertContainsOnly('float', $values);  /* @phpstan-ignore-line */
+        foreach ($profiler as $profile) {
+            self::assertIsFloat($profile->executionTime());
         }
     }
 
@@ -62,15 +56,14 @@ final class ProfilerTest extends TestCase
     }
 
     #[Test]
-    public function it_can_rest_its_profiles(): void
+    public function it_can_reset_its_profiles(): void
     {
         $profiler = new Profiler(fn () => null);
-
         $profiler();
-        self::assertNotEmpty($profiler->profiles());
+        self::assertFalse($profiler->isEmpty());
 
         $profiler->reset();
-        self::assertEmpty($profiler->profiles());
+        self::assertTrue($profiler->isEmpty());
     }
 
     #[Test]
@@ -104,5 +97,8 @@ final class ProfilerTest extends TestCase
         self::assertInstanceOf(Profile::class, $profiler->get('custom_label'));
         self::assertNull($profiler->get('foo_bar'));
         self::assertCount(0, $profiler->getAll('foo_bar'));
+        self::assertTrue($profiler->has('custom_label'));
+        self::assertFalse($profiler->has('foo_bar'));
+        self::assertCount(3, $profiler->labels());
     }
 }
