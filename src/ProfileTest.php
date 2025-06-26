@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Bakame\Aide\Profiler;
 
-use LogicException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use ValueError;
 
 /**
  * @phpstan-import-type ProfileMetrics from Profile
@@ -89,7 +87,7 @@ final class ProfileTest extends TestCase
     #[Test]
     public function it_will_reject_invalid_label(): void
     {
-        $this->expectException(ValueError::class);
+        $this->expectException(InvalidProfileState::class);
 
         new Profile('_123invalid');
     }
@@ -97,7 +95,7 @@ final class ProfileTest extends TestCase
     #[Test]
     public function it_will_fail_if_you_try_to_start_twice_profiling(): void
     {
-        $this->expectException(LogicException::class);
+        $this->expectException(InvalidProfileState::class);
 
         $profile = new Profile('double_start');
         $profile->beginProfiling();
@@ -107,7 +105,7 @@ final class ProfileTest extends TestCase
     #[Test]
     public function it_will_fail_if_you_try_to_end_a_profiling_without_starting_it(): void
     {
-        $this->expectException(LogicException::class);
+        $this->expectException(InvalidProfileState::class);
 
         $profile = new Profile('no_start');
         $profile->endProfiling(); // should throw
@@ -116,7 +114,7 @@ final class ProfileTest extends TestCase
     #[Test]
     public function it_will_throw_if_you_try_to_access_a_property_before_profiling_has_ended(): void
     {
-        $this->expectException(LogicException::class);
+        $this->expectException(InvalidProfileState::class);
 
         $profile = new Profile('too_soon');
         $profile->beginProfiling();

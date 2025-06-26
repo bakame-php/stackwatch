@@ -1,6 +1,6 @@
 ![Aide-profiler](.github/logo.png?raw=true)
 
-# Aidre Profiler
+# Aide Profiler
 
 [![Author](http://img.shields.io/badge/author-@nyamsprod-blue.svg?style=flat-square)](https://twitter.com/nyamsprod)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
@@ -187,6 +187,44 @@ the following table will be outputted in your terminal.
 | 2dc8fd3a8c5e | 0.000009     | 0.001260      | 2.5         | 0.0           | 0.0           | 0.0            |
 +--------------+--------------+---------------+-------------+---------------+---------------+----------------+
 ```
+
+### Open telemetry exporter
+
+The `Profiler` results can be exported to a Open telemetry compatible server using the `open-telemetry/exporter-otlp` package.
+
+To do so, first install the package if it is not yet the case, then do the following:
+
+```php
+use Bakame\Aide\Profiler\OpenTelemetryExporter;
+use Bakame\Aide\Profiler\Profiler;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use OpenTelemetry\SDK\Trace\SpanExporter\InMemoryExporter;
+use OpenTelemetry\SDK\Trace\SpanProcessor\SimpleSpanProcessor;
+use OpenTelemetry\SDK\Trace\TracerProvider;
+
+// add a logger is optional.
+$logger = new Logger('profiler');
+$logger->pushHandler(new StreamHandler('php://stdout', Logger::DEBUG));
+$tracerProvider = new TracerProvider(new SimpleSpanProcessor(new InMemoryExporter()));
+$exporter = new OpenTelemetryExporter($tracerProvider, $logger);
+
+$callable = function (int ...$args): int|float => {
+    usleep(100)
+    
+    return array_sum($args);
+}; 
+
+$profiler = new Profiler($callable);
+$profiler->runWithLabel('first_run', 1, 2);
+$profiler->runWithLabel('last_run', 1, 2);
+$profiler(1, 2);
+
+$exporter->exportProfilter($profier); 
+// the Profiler content is exported to the Open Telemetry Server.
+```
+
+Do not forget to change the `$tracerProvider` to connect to your own environment and server.
 
 ## Testing
 

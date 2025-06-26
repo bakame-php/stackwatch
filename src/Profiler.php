@@ -54,8 +54,12 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
             $this->logger->info("Finished profiling for label: {$label}", $result->profile->metrics()['metrics']);
 
             return $result->value;
+        } catch (ProfilingException $exception) {
+            $this->logger->error('Profiling aborted for label: {label} due to an error in the profiling processus.', ['label' => $label, 'exception' => $exception]);
+
+            throw $exception;
         } catch (Throwable $exception) {
-            $this->logger->error($exception->getMessage(), $exception->getTrace());
+            $this->logger->error('Profiling aborted for label: {label} due to an error in the executed code.', ['label' => $label, 'exception' => $exception]);
 
             throw $exception;
         }

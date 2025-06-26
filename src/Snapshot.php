@@ -6,7 +6,6 @@ namespace Bakame\Aide\Profiler;
 
 use DateTimeImmutable;
 use JsonSerializable;
-use ValueError;
 
 use function getrusage;
 use function memory_get_peak_usage;
@@ -42,10 +41,12 @@ final class Snapshot implements JsonSerializable
     ) {
     }
 
+    /**
+     * @throws UnableToProfile
+     */
     public static function now(): self
     {
-        $cpu = getrusage();
-        false !== $cpu || throw new ValueError('Unable to take a snapshot because of the CPU.');
+        false !== ($cpu = getrusage()) || throw new UnableToProfile('Unable to get the current resource usage.');
 
         return new self(
             new DateTimeImmutable(),
@@ -93,6 +94,6 @@ final class Snapshot implements JsonSerializable
             && $this->peakMemoryUsage === $other->peakMemoryUsage
             && $this->realMemoryUsage === $other->realMemoryUsage
             && $this->realPeakMemoryUsage === $other->realPeakMemoryUsage
-            && $this->timestamp == $other->timestamp; /* @phpstan-ignore-line */
+            && $this->timestamp->format('U.u') === $other->timestamp->format('U.u');
     }
 }

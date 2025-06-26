@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Bakame\Aide\Profiler;
 
 use JsonSerializable;
-use LogicException;
-use ValueError;
 
 use function bin2hex;
 use function preg_match;
@@ -38,17 +36,25 @@ final class Profile implements JsonSerializable
     private float $peakMemoryUsage = 0;
     private float $realMemoryUsage = 0;
     private float $realPeakMemoryUsage = 0;
+    /** @var non-empty-string */
     private readonly string $label;
 
     public function __construct(?string $label = null)
     {
         $label ??= bin2hex(random_bytes(6));
         $label = strtolower(trim($label));
-        1 === preg_match('/^[a-z0-9][a-z0-9_]*$/', $label) || throw new ValueError('The label must start with a lowercased letter or a digit and only contain lowercased letters, digits, or underscores.');
+        if ('' === $label) {
+            $label = bin2hex(random_bytes(6));
+        }
+
+        1 === preg_match('/^[a-z0-9][a-z0-9_]*$/', $label) || throw new InvalidProfileState('The label must start with a lowercased letter or a digit and only contain lowercased letters, digits, or underscores.');
 
         $this->label = $label;
     }
 
+    /**
+     * @return non-empty-string
+     */
     public function label(): string
     {
         return $this->label;
@@ -105,22 +111,17 @@ final class Profile implements JsonSerializable
 
     public function beginProfiling(): void
     {
-        (null === $this->start && null === $this->end) || throw new LogicException('Profiling cannot be started if it has already started.');
+        (null === $this->start && null === $this->end) || throw new InvalidProfileState('Profiling cannot be started if it has already started.');
 
         $this->start = Snapshot::now();
     }
 
     public function endProfiling(): void
     {
-        (null !== $this->start && null === $this->end) || throw new LogicException('Profiling cannot be ended if it is not running.');
+        (null !== $this->start && null === $this->end) || throw new InvalidProfileState('Profiling cannot be ended if it is not running.');
 
         $this->end = Snapshot::now();
-        $this->cpuTime = self::calculateCpuTime($this->start, $this->end);
-        $this->executionTime = $this->end->executionTime - $this->start->executionTime;
-        $this->memoryUsage = $this->end->memoryUsage - $this->start->memoryUsage;
-        $this->peakMemoryUsage = $this->end->peakMemoryUsage - $this->start->peakMemoryUsage;
-        $this->realMemoryUsage = $this->end->realMemoryUsage - $this->start->realMemoryUsage;
-        $this->realPeakMemoryUsage = $this->end->realPeakMemoryUsage - $this->start->realPeakMemoryUsage;
+        $this->setMetrics();
     }
 
     private static function calculateCpuTime(Snapshot $start, Snapshot $end): float
@@ -136,7 +137,7 @@ final class Profile implements JsonSerializable
 
     private function assertHasEnded(): void
     {
-        $this->hasEnded() || throw new LogicException('Profiling must be completed before accessing statistics.');
+        $this->hasEnded() || throw new InvalidProfileState('Profiling must be completed before accessing statistics.');
     }
 
     public function executionTime(): float
@@ -179,5 +180,28 @@ final class Profile implements JsonSerializable
         $this->assertHasEnded();
 
         return $this->realPeakMemoryUsage;
+    }
+
+    public function start(): Snapshot
+    {
+        return $this->start ?? throw new InvalidProfileState('Profiling has yet to be started.');
+    }
+
+    public function end(): Snapshot
+    {
+        return $this->end ?? throw new InvalidProfileState('Profiling has yet to be ended.');
+    }
+
+    private function setMetrics(): void
+    {
+        $start = $this->start();
+        $end = $this->end();
+
+        $this->cpuTime = self::calculateCpuTime($start, $end);
+        $this->executionTime = $end->executionTime - $start->executionTime;
+        $this->memoryUsage = $end->memoryUsage - $start->memoryUsage;
+        $this->peakMemoryUsage = $end->peakMemoryUsage - $start->peakMemoryUsage;
+        $this->realMemoryUsage = $end->realMemoryUsage - $start->realMemoryUsage;
+        $this->realPeakMemoryUsage = $end->realPeakMemoryUsage - $start->realPeakMemoryUsage;
     }
 }
