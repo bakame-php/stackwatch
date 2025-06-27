@@ -30,10 +30,24 @@ You need:
 
 Traditionally, you will use `microtime` to quickly profile your snippet.
 
-The `Bakame\Aide\Profiler` package is an utility class that helps you remove
-the burden of calculating and setting up your code for profiling.
+```php
+
+$callable = function (int ...$args): int|float => {
+    usleep(100)
+    
+    return array_sum($args);
+};
+
+$start = microtime(true);
+$result = $callable(1, 2, 3);
+echo microtime(true) - $start; // the execution time of your code
+```
+
+The `Bakame\Aide\Profiler` package is a utility that simplifies profiling by eliminating the need to manually calculate and configure your code.
 
 ### Basic usage
+
+Let's re-sue the same callable now in the context of the `Profiler` class.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
@@ -44,11 +58,14 @@ $callable = function (int ...$args): int|float => {
     return array_sum($args);
 }; 
 
+// you create a new Profiler by passing the callable
 $profiler = new Profiler($callable);
+
+//we invoke the __invoke method of the profile which will execute the callable
+//$result is the result of executing your callable here it will be 6.
 $result = $profiler(1, 2, 3);
-//$result equals 6;
+
 $profile = $profiler->last(); // returns the Profile from the last call
-$profiler->nth(-1); // returns the same Profile as Profile::last
 // the $profile object returns the following metrucs
 $profile->executionTime();
 $profile->cpuTime(); 
@@ -58,9 +75,23 @@ $profile->realMemoryUsage();
 $profile->realPeakMemoryUsage();
 ````
 
-You can access all profiles using their indexes, via the `nth` method or the `first` and `last` method
-to quickly access the first and last `Profile` recorded. The `nth` method accepts negative integer to 
-ease getting `Profile` starting from the list end.
+You can execute as much time as you want the `Profiler` instance it will record all the 
+execution metrics.
+
+```php
+$result = $profiler(1, 2, 3);
+$result = $profiler(4, 5, 6);
+$result = $profiler(7, 8, 9);
+
+$profiler->last(); // returns the Profile from the last call
+$profiler->nth(-1); // returns the same Profile as Profile::last
+$profiler->firt(); // returns the first Profile ever generated
+count($profiler); // the number of Profile already recordded
+$profiler->isEmpty(); //returns false because the profiler already contains recorded Profiles
+```
+
+You can access any profile by index using the `nth` method, or use the `first` and `last` methods to quickly retrieve the first and last recorded `Profile`.
+The `nth` method also accepts negative integers to simplify access from the end of the list.
 
 ### Using labels
 
