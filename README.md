@@ -47,7 +47,8 @@ $callable = function (int ...$args): int|float => {
 $profiler = new Profiler($callable);
 $result = $profiler(1, 2, 3);
 //$result equals 6;
-$profile = $profiler->lastProfile(); // returns the Profile from the last call
+$profile = $profiler->last(); // returns the Profile from the last call
+$profiler->nth(-1); // returns the same Profile as Profile::last
 // the $profile object returns the following metrucs
 $profile->executionTime();
 $profile->cpuTime(); 
@@ -56,6 +57,10 @@ $profile->peakMemoryUsage();
 $profile->realMemoryUsage();
 $profile->realPeakMemoryUsage();
 ````
+
+You can access all profiles using their indexes, via the `nth` method or the `first` and `last` method
+to quickly access the first and last `Profile` recorded. The `nth` method accepts negative integer to 
+ease getting `Profile` starting from the list end.
 
 ### Using labels
 
@@ -73,7 +78,7 @@ $callable = function (int ...$args): int|float => {
 
 $profiler = new Profiler($callable);
 $profiler(1, 2, 3); // returns 6
-$profile = $profiler->lastProfile(); // returns the last Profile object from the last call
+$profile = $profiler->last(); // returns the last Profile object from the last call
 $profiler->runWithLabel('my_test', 7, 8, 9); // returns 24
 $namedProfile = $profiler->get('my_test'); // will return the associated Profile
 
@@ -111,6 +116,9 @@ $profiler->reset();
 count($profiler); // returns 0
 $profiler->isEmpty(); // return true
 ```
+
+> [!NOTE]  
+> PHP provides a `reset_peak_memory_usage` that will globally reset all peak memory usage data.
 
 ### Logging
 

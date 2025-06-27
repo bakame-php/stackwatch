@@ -30,7 +30,7 @@ final class ProfilerTest extends TestCase
         self::assertSame('result', $result);
         self::assertCount(1, $profiler);
 
-        $profile = $profiler->lastProfile();
+        $profile = $profiler->last();
         self::assertInstanceOf(Profile::class, $profile);
         self::assertTrue($profile->hasEnded());
     }
@@ -54,7 +54,7 @@ final class ProfilerTest extends TestCase
         $profiler = new Profiler(fn () => 42);
         $profiler->runWithLabel('custom_label');
 
-        $profile = $profiler->lastProfile();
+        $profile = $profiler->last();
         self::assertInstanceOf(Profile::class, $profile);
         self::assertSame('custom_label', $profile->label());
     }

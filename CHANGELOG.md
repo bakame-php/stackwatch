@@ -2,6 +2,24 @@
 
 All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
+## [Next](https://github.com/bakame-php/aide-profiler/compare/0.2.0...main) - TBD
+
+### Added
+
+- `Profiler::first`, `Profiler::last`, `Profiler::nth`
+
+### Fixed
+
+- None
+
+### Deprecated
+
+- None
+
+### Removed
+
+- **BC BREAK:** `Profiler::lastProfile` replaced by `Profiler::last`
+
 ## [0.2.0](https://github.com/bakame-php/aide-profiler/compare/0.1.0...0.2.0) - 2025-06-27
 
 ### Added

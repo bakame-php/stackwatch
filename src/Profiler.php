@@ -14,7 +14,6 @@ use Throwable;
 use Traversable;
 
 use function array_key_last;
-use function array_map;
 use function bin2hex;
 use function count;
 use function random_bytes;
@@ -79,11 +78,11 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     }
 
     /**
-     * @return array<ProfileMetrics>
+     * @return array<Profile>
      */
     public function jsonSerialize(): array
     {
-        return array_map(static fn (Profile $profile): array => $profile->metrics(), $this->profiles);
+        return $this->profiles;
     }
 
     public function isEmpty(): bool
@@ -91,9 +90,23 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         return [] === $this->profiles;
     }
 
-    public function lastProfile(): ?Profile
+    public function last(): ?Profile
     {
         return [] === $this->profiles ? null : $this->profiles[array_key_last($this->profiles)];
+    }
+
+    public function firt(): ?Profile
+    {
+        return [] === $this->profiles ? null : $this->profiles[0];
+    }
+
+    public function nth(int $offset): ?Profile
+    {
+        if ($offset < 0) {
+            $offset += count($this->profiles);
+        }
+
+        return $this->profiles[$offset] ?? null;
     }
 
     /**
