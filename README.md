@@ -112,7 +112,7 @@ count($profiler); // returns 0
 $profiler->isEmpty(); // return true
 ```
 
-### Logging and Profiling
+### Logging
 
 The `Profiler` can optionally take a `Psr\LoggerInterface` implementing object to log the profiling process.
 
