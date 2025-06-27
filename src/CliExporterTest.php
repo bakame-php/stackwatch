@@ -10,18 +10,18 @@ use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
 use Symfony\Component\Console\Output\BufferedOutput;
 
-#[CoversClass(CliTableRenderer::class)]
-final class CliTableiRendererTest extends TestCase
+#[CoversClass(CliExporter::class)]
+final class CliExporterTest extends TestCase
 {
     #[Test]
     public function it_can_output_a_cli_table(): void
     {
         $output = new BufferedOutput();
-        $renderer = new CliTableRenderer($output);
+        $renderer = new CliExporter($output);
 
         $profiler = new Profiler(fn () => usleep(1000));
         $profiler->runWithLabel('cli_test');
-        $renderer->render($profiler);
+        $renderer->exportProfiler($profiler);
         $content = $output->fetch();
 
         self::assertStringContainsString('Label', $content);
@@ -36,7 +36,7 @@ final class CliTableiRendererTest extends TestCase
     public function it_renders_incomplete_or_not_yet_runned_profile(): void
     {
         $output = new BufferedOutput();
-        $renderer = new CliTableRenderer($output);
+        $renderer = new CliExporter($output);
         $profiler = new Profiler(fn () => null);
 
         $incompleteProfile = new Profile('incomplete');
@@ -47,7 +47,7 @@ final class CliTableiRendererTest extends TestCase
         $reflection = new ReflectionProperty($profiler, 'profiles');
         $reflection->setValue($profiler, [$incompleteProfile, $notRunningProfile]);
 
-        $renderer->render($profiler);
+        $renderer->exportProfiler($profiler);
         $outputText = $output->fetch();
 
         self::assertStringContainsString('Label', $outputText);

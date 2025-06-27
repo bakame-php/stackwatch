@@ -88,7 +88,7 @@ final class ProfileTest extends TestCase
     #[Test]
     public function it_will_reject_invalid_label(): void
     {
-        $this->expectException(InvalidProfileState::class);
+        $this->expectException(InvalidArgument::class);
 
         new Profile('_123invalid');
     }

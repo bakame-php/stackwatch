@@ -7,6 +7,8 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 ### Added
 
 - `Profiler::first`, `Profiler::last`, `Profiler::nth`
+- `Metrics`
+- `Profiler` metrics related methods.
 
 ### Fixed
 
@@ -18,6 +20,9 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 ### Removed
 
+- **BC BREAK:**  The `Renderer` interface is removed
+- **BC BREAK:** `CliTableRenderer` renamed `CliExporter`
+- **BC BREAK:** `CliTableRenderer` implements the `Exporter` interface
 - **BC BREAK:** `Profiler::lastProfile` replaced by `Profiler::last`
 - **BC BREAK:** `Profiler::get` returns the last `Profile` for a specific label before it was returning the first one.
 - **BC BREAK:** `Profile::metrics` returns a `Metrics` object before the metrics where attached directly to the profile.

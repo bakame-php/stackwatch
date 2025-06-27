@@ -42,16 +42,27 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     public function runWithLabel(string $label, mixed ...$args): mixed
     {
+        $result = $this->run($label, ...$args);
+        $this->profiles[] = $result->profile;
+        $this->labels[$result->profile->label()] = 1;
+
+        return $result->value;
+    }
+
+    public function metrics(mixed ...$args): Metrics
+    {
+        return $this->run(Profile::randomLabel(), ...$args)->profile->metrics();
+    }
+
+    private function run(string $label, mixed ...$args): ProfilingResult
+    {
         $this->logger->info("Starting profiling for label: {$label}");
         try {
             $result = ProfilingResult::profile($label, $this->callback, ...$args);
 
-            $this->profiles[] = $result->profile;
-            $this->labels[$result->profile->label()] = 1;
-
             $this->logger->info("Finished profiling for label: {$label}", $result->profile->stats()['metrics']);
 
-            return $result->value;
+            return $result;
         } catch (ProfilingException $exception) {
             $this->logger->error('Profiling aborted for label: {label} due to an error in the profiling processus.', ['label' => $label, 'exception' => $exception]);
 
@@ -61,6 +72,36 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
             throw $exception;
         }
+    }
+
+    public function cpuTime(mixed ...$args): float
+    {
+        return $this->metrics(...$args)->cpuTime;
+    }
+
+    public function executionTime(mixed ...$args): float
+    {
+        return $this->metrics(...$args)->executionTime;
+    }
+
+    public function memoryUsage(mixed ...$args): float
+    {
+        return $this->metrics(...$args)->memoryUsage;
+    }
+
+    public function realMemoryUsage(mixed ...$args): float
+    {
+        return $this->metrics(...$args)->realMemoryUsage;
+    }
+
+    public function peakMemoryUsage(mixed ...$args): float
+    {
+        return $this->metrics(...$args)->peakMemoryUsage;
+    }
+
+    public function realPeakMemoryUsage(mixed ...$args): float
+    {
+        return $this->metrics(...$args)->realPeakMemoryUsage;
     }
 
     public function count(): int

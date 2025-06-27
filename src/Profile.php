@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bakame\Aide\Profiler;
 
 use JsonSerializable;
+use Random\RandomException;
 
 use function bin2hex;
 use function preg_match;
@@ -29,6 +30,10 @@ final class Profile implements JsonSerializable
     private ?Snapshot $end = null;
     private Metrics $metrics;
 
+    /**
+     * @throws InvalidArgument
+     * @throws RandomException
+     */
     public function __construct(?string $label = null)
     {
         $label ??= self::randomLabel();
@@ -37,14 +42,14 @@ final class Profile implements JsonSerializable
             $label = self::randomLabel();
         }
 
-        1 === preg_match('/^[a-z0-9][a-z0-9_]*$/', $label) || throw new InvalidProfileState('The label must start with a lowercased letter or a digit and only contain lowercased letters, digits, or underscores.');
+        1 === preg_match('/^[a-z0-9][a-z0-9_]*$/', $label) || throw new InvalidArgument('The label must start with a lowercased letter or a digit and only contain lowercased letters, digits, or underscores.');
 
         $this->label = $label;
         $this->metrics = Metrics::none();
     }
 
     /**
-     * @throws \Random\RandomException
+     * @throws RandomException
      *
      * @return non-empty-string
      */

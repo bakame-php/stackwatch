@@ -11,13 +11,30 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use function number_format;
 
-final class CliTableRenderer implements Renderer
+final class CliExporter implements Exporter
 {
     public function __construct(private readonly OutputInterface $output = new ConsoleOutput())
     {
     }
 
-    public function render(Profiler $profiler): void
+    public function exportProfile(Profile $profile): void
+    {
+        $table = new Table($this->output);
+        $table->setHeaders([
+            'Label',
+            'CPU Time (s)',
+            'Exec Time (s)',
+            'Memory (kB)',
+            'Real Mem (kB)',
+            'Peak Mem (kB)',
+            'Real Peak (kB)',
+        ]);
+
+        $table->addRow($this->profileToRow($profile));
+        $table->render();
+    }
+
+    public function exportProfiler(Profiler $profiler): void
     {
         $table = new Table($this->output);
         $table->setHeaders([
@@ -31,7 +48,7 @@ final class CliTableRenderer implements Renderer
         ]);
 
         foreach ($profiler as $profile) {
-            $table->addRow($this->profileToRow($profile))  ;
+            $table->addRow($this->profileToRow($profile));
         }
 
         $table->render();
