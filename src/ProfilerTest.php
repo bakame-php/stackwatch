@@ -44,7 +44,7 @@ final class ProfilerTest extends TestCase
 
         self::assertCount(2, $profiler);
         foreach ($profiler as $profile) {
-            self::assertIsFloat($profile->executionTime());
+            self::assertIsFloat($profile->metrics()->executionTime);
         }
     }
 

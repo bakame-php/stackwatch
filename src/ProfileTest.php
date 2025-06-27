@@ -12,6 +12,7 @@ use PHPUnit\Framework\TestCase;
  * @phpstan-import-type ProfileMetrics from Profile
  */
 #[CoversClass(Profile::class)]
+#[CoversClass(Metrics::class)]
 final class ProfileTest extends TestCase
 {
     #[Test]
@@ -39,12 +40,12 @@ final class ProfileTest extends TestCase
         self::assertFalse($profile->isRunning());
 
         self::assertSame('test', $profile->label());
-        self::assertGreaterThan(0, $profile->executionTime());
-        self::assertGreaterThanOrEqual(0, $profile->cpuTime());
-        self::assertGreaterThanOrEqual(0, $profile->memoryUsage());
-        self::assertGreaterThanOrEqual(0, $profile->realMemoryUsage());
-        self::assertGreaterThanOrEqual(0, $profile->peakMemoryUsage());
-        self::assertGreaterThanOrEqual(0, $profile->realPeakMemoryUsage());
+        self::assertGreaterThan(0, $profile->metrics()->executionTime);
+        self::assertGreaterThanOrEqual(0, $profile->metrics()->cpuTime);
+        self::assertGreaterThanOrEqual(0, $profile->metrics()->memoryUsage);
+        self::assertGreaterThanOrEqual(0, $profile->metrics()->realMemoryUsage);
+        self::assertGreaterThanOrEqual(0, $profile->metrics()->peakMemoryUsage);
+        self::assertGreaterThanOrEqual(0, $profile->metrics()->realPeakMemoryUsage);
     }
 
     #[Test]
@@ -55,7 +56,7 @@ final class ProfileTest extends TestCase
         usleep(1000);
         $profile->endProfiling();
 
-        $metrics = $profile->metrics();
+        $metrics = $profile->stats();
 
         self::assertArrayHasKey('label', $metrics);
         self::assertArrayHasKey('start', $metrics);
@@ -118,6 +119,6 @@ final class ProfileTest extends TestCase
 
         $profile = new Profile('too_soon');
         $profile->beginProfiling();
-        $profile->executionTime();
+        $profile->metrics()->executionTime;
     }
 }

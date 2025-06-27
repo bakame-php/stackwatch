@@ -13,43 +13,44 @@ use function strtolower;
 use function trim;
 
 /**
+ * @phpstan-import-type MetricsStat from Metrics
  * @phpstan-type ProfileMetrics array{
  *     label: string,
  *     start: ?Snapshot,
  *     end: ?Snapshot,
- *     metrics: array{
- *         cpu_time: float,
- *         memory_usage: float,
- *         real_memory_usage: float,
- *         peak_memory_usage: float,
- *         real_peak_memory_usage: float
- *     }
+ *     metrics: MetricsStat
  * }
  */
 final class Profile implements JsonSerializable
 {
-    private ?Snapshot $start = null;
-    private ?Snapshot $end = null;
-    private float $cpuTime = 0;
-    private float $executionTime = 0;
-    private float $memoryUsage = 0;
-    private float $peakMemoryUsage = 0;
-    private float $realMemoryUsage = 0;
-    private float $realPeakMemoryUsage = 0;
     /** @var non-empty-string */
     private readonly string $label;
+    private ?Snapshot $start = null;
+    private ?Snapshot $end = null;
+    private Metrics $metrics;
 
     public function __construct(?string $label = null)
     {
-        $label ??= bin2hex(random_bytes(6));
+        $label ??= self::randomLabel();
         $label = strtolower(trim($label));
         if ('' === $label) {
-            $label = bin2hex(random_bytes(6));
+            $label = self::randomLabel();
         }
 
         1 === preg_match('/^[a-z0-9][a-z0-9_]*$/', $label) || throw new InvalidProfileState('The label must start with a lowercased letter or a digit and only contain lowercased letters, digits, or underscores.');
 
         $this->label = $label;
+        $this->metrics = Metrics::none();
+    }
+
+    /**
+     * @throws \Random\RandomException
+     *
+     * @return non-empty-string
+     */
+    public static function randomLabel(): string
+    {
+        return bin2hex(random_bytes(6));
     }
 
     /**
@@ -63,19 +64,13 @@ final class Profile implements JsonSerializable
     /**
      * @return ProfileMetrics
      */
-    public function metrics(): array
+    public function stats(): array
     {
         return [
             'label' => $this->label,
             'start' => $this->start,
             'end' => $this->end,
-            'metrics' => [
-                'cpu_time' => $this->cpuTime,
-                'memory_usage' => $this->memoryUsage,
-                'real_memory_usage' => $this->realMemoryUsage,
-                'peak_memory_usage' => $this->peakMemoryUsage,
-                'real_peak_memory_usage' => $this->realPeakMemoryUsage,
-            ],
+            'metrics' => $this->metrics->stats(),
         ];
     }
 
@@ -84,7 +79,7 @@ final class Profile implements JsonSerializable
      */
     public function jsonSerialize(): array
     {
-        return $this->metrics();
+        return $this->stats();
     }
 
     public function hasNotBegun(): bool
@@ -121,87 +116,32 @@ final class Profile implements JsonSerializable
         (null !== $this->start && null === $this->end) || throw new InvalidProfileState('Profiling cannot be ended if it is not running.');
 
         $this->end = Snapshot::now();
-        $this->setMetrics();
+        $this->metrics = Metrics::fromSnapshots($this->start, $this->end);
     }
 
-    private static function calculateCpuTime(Snapshot $start, Snapshot $end): float
-    {
-        $cpuStart = $start->cpu;
-        $cpuEnd = $end->cpu;
-
-        $utime = ($cpuEnd['ru_utime.tv_sec'] - $cpuStart['ru_utime.tv_sec']) + ($cpuEnd['ru_utime.tv_usec'] - $cpuStart['ru_utime.tv_usec']) / 1_000_000;
-        $stime = ($cpuEnd['ru_stime.tv_sec'] - $cpuStart['ru_stime.tv_sec']) + ($cpuEnd['ru_stime.tv_usec'] - $cpuStart['ru_stime.tv_usec']) / 1_000_000;
-
-        return $utime + $stime;
-    }
-
-    private function assertHasEnded(): void
-    {
-        $this->hasEnded() || throw new InvalidProfileState('Profiling must be completed before accessing statistics.');
-    }
-
-    public function executionTime(): float
-    {
-        $this->assertHasEnded();
-
-        return $this->executionTime;
-    }
-
-    public function cpuTime(): float
-    {
-        $this->assertHasEnded();
-
-        return $this->cpuTime;
-    }
-
-    public function memoryUsage(): float
-    {
-        $this->assertHasEnded();
-
-        return $this->memoryUsage;
-    }
-
-    public function realMemoryUsage(): float
-    {
-        $this->assertHasEnded();
-
-        return $this->realMemoryUsage;
-    }
-
-    public function peakMemoryUsage(): float
-    {
-        $this->assertHasEnded();
-
-        return $this->peakMemoryUsage;
-    }
-
-    public function realPeakMemoryUsage(): float
-    {
-        $this->assertHasEnded();
-
-        return $this->realPeakMemoryUsage;
-    }
-
+    /**
+     * @throws InvalidProfileState
+     */
     public function start(): Snapshot
     {
         return $this->start ?? throw new InvalidProfileState('Profiling has yet to be started.');
     }
 
+    /**
+     * @throws InvalidProfileState
+     */
     public function end(): Snapshot
     {
         return $this->end ?? throw new InvalidProfileState('Profiling has yet to be ended.');
     }
 
-    private function setMetrics(): void
+    /**
+     * @throws InvalidProfileState
+     */
+    public function metrics(): Metrics
     {
-        $start = $this->start();
-        $end = $this->end();
+        $this->hasEnded() || throw new InvalidProfileState('Profiling has yet to be ended.');
 
-        $this->cpuTime = self::calculateCpuTime($start, $end);
-        $this->executionTime = $end->executionTime - $start->executionTime;
-        $this->memoryUsage = $end->memoryUsage - $start->memoryUsage;
-        $this->peakMemoryUsage = $end->peakMemoryUsage - $start->peakMemoryUsage;
-        $this->realMemoryUsage = $end->realMemoryUsage - $start->realMemoryUsage;
-        $this->realPeakMemoryUsage = $end->realPeakMemoryUsage - $start->realPeakMemoryUsage;
+        return $this->metrics;
     }
 }

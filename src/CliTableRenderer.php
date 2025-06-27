@@ -50,14 +50,16 @@ final class CliTableRenderer implements Renderer
             return [$profile->label(), new TableCell('The profiling is not finished', ['colspan' => 6])];
         }
 
+        $metrics = $profile->metrics();
+
         return [
             $profile->label(),
-            number_format($profile->cpuTime(), 9),
-            number_format($profile->executionTime(), 6),
-            number_format($profile->memoryUsage() / 1024, 1),
-            number_format($profile->realMemoryUsage() / 1024, 1),
-            number_format($profile->peakMemoryUsage() / 1024, 1),
-            number_format($profile->realPeakMemoryUsage() / 1024, 1),
+            number_format($metrics->cpuTime, 9),
+            number_format($metrics->executionTime, 9),
+            number_format($metrics->memoryUsage / 1024, 1),
+            number_format($metrics->realMemoryUsage / 1024, 1),
+            number_format($metrics->peakMemoryUsage / 1024, 1),
+            number_format($metrics->realPeakMemoryUsage / 1024, 1),
         ];
     }
 }

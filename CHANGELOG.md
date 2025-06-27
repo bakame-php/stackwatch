@@ -19,6 +19,9 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 ### Removed
 
 - **BC BREAK:** `Profiler::lastProfile` replaced by `Profiler::last`
+- **BC BREAK:** `Profiler::get` returns the last `Profile` for a specific label before it was returning the first one.
+- **BC BREAK:** `Profile::metrics` returns a `Metrics` object before the metrics where attached directly to the profile.
+- **BC BREAK:** The `Metrics::executionTime` is now calculated using `hrtime` instead of `microtime`
 
 ## [0.2.0](https://github.com/bakame-php/aide-profiler/compare/0.1.0...0.2.0) - 2025-06-27
 

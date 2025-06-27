@@ -25,6 +25,7 @@ composer require bakame/aide-profiler
 You need:
 
 - **PHP >= 8.1** but the latest stable version of PHP is recommended
+- [PSR-3](https://packagist.org/packages/psr/log?query=psr%2Flog) implementing package
 
 ## Usage
 
@@ -66,13 +67,15 @@ $profiler = new Profiler($callable);
 $result = $profiler(1, 2, 3);
 
 $profile = $profiler->last(); // returns the Profile from the last call
-// the $profile object returns the following metrucs
-$profile->executionTime();
-$profile->cpuTime(); 
-$profile->memoryUsage();
-$profile->peakMemoryUsage();
-$profile->realMemoryUsage();
-$profile->realPeakMemoryUsage();
+// the $profile object returns a Metrics instance with following properties
+$metrics = $profile->metrics();
+
+$metrics->executionTime;
+$metrics->cpuTime; 
+$metrics->memoryUsage;
+$metrics->peakMemoryUsage;
+$metrics->realMemoryUsage;
+$metrics->realPeakMemoryUsage;
 ````
 
 You can execute the `Profiler` instance as many times as needed — it will record all execution metrics each time.
@@ -113,8 +116,8 @@ $profile = $profiler->last(); // returns the last Profile object from the last c
 $profiler->runWithLabel('my_test', 7, 8, 9); // returns 24
 $namedProfile = $profiler->get('my_test'); // will return the associated Profile
 
-$profiler->get('foobar'); //returns null because the `foobar` label does not exist
-$profiler->has('foobar'); //return false because the label does not exist
+$profiler->get('foobar'); // returns null because the `foobar` label does not exist
+$profiler->has('foobar'); // return false because the label does not exist
 $profiler->labels(); //will return all the labels attached to the Profiler
 ````
 

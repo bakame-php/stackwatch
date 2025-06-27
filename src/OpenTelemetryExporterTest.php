@@ -33,7 +33,7 @@ class OpenTelemetryExporterTest extends TestCase
         $reflection = new ReflectionClass($profile);
         $reflection->getProperty('start')->setValue($profile, $start);
         $reflection->getProperty('end')->setValue($profile, $end);
-        $reflection->getMethod('setMetrics')->invoke($profile);
+        $reflection->getMethod('metrics')->invoke($profile, Metrics::fromSnapshots($start, $end));
 
         return $profile;
     }

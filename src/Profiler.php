@@ -13,10 +13,9 @@ use Psr\Log\NullLogger;
 use Throwable;
 use Traversable;
 
+use function array_filter;
 use function array_key_last;
-use function bin2hex;
 use function count;
-use function random_bytes;
 
 /**
  * @phpstan-import-type ProfileMetrics from Profile
@@ -38,7 +37,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     public function __invoke(mixed ...$args): mixed
     {
-        return $this->runWithLabel(bin2hex(random_bytes(6)), ...$args);
+        return $this->runWithLabel(Profile::randomLabel(), ...$args);
     }
 
     public function runWithLabel(string $label, mixed ...$args): mixed
@@ -50,7 +49,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
             $this->profiles[] = $result->profile;
             $this->labels[$result->profile->label()] = 1;
 
-            $this->logger->info("Finished profiling for label: {$label}", $result->profile->metrics()['metrics']);
+            $this->logger->info("Finished profiling for label: {$label}", $result->profile->stats()['metrics']);
 
             return $result->value;
         } catch (ProfilingException $exception) {
@@ -118,17 +117,13 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     }
 
     /**
-     * Returns the first Profile with the provided label.
+     * Returns the last Profile with the provided label.
      */
     public function get(string $label): ?Profile
     {
-        foreach ($this->profiles as $profile) {
-            if ($profile->label() === $label) {
-                return $profile;
-            }
-        }
+        $res = $this->getAll($label);
 
-        return null;
+        return [] === $res ? null : $res[array_key_last($res)];
     }
 
     /**
@@ -138,14 +133,12 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function getAll(string $label): array
     {
-        $result = [];
-        foreach ($this->profiles as $profile) {
-            if ($profile->label() === $label) {
-                $result[] = $profile;
-            }
-        }
-
-        return $result;
+        return array_values(
+            array_filter(
+                $this->profiles,
+                fn (Profile $profile) => $profile->label() === $label
+            )
+        );
     }
 
     /**

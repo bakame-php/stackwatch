@@ -41,15 +41,17 @@ final class OpenTelemetryExporter implements Exporter
             ->setStartTimestamp((int) $start->timestamp->format('Uu')  * 1000)
             ->startSpan();
 
+        $metrics = $profile->metrics();
+
         $span->setAttribute('export.status', 'success');
         $span->setAttribute('profiler.label', $profile->label());
         $span->setAttribute('profiler.status', 'ended');
-        $span->setAttribute('cpu_time', $profile->cpuTime());
-        $span->setAttribute('exec_time', $profile->executionTime());
-        $span->setAttribute('memory_usage', $profile->memoryUsage());
-        $span->setAttribute('real_memory_usage', $profile->realMemoryUsage());
-        $span->setAttribute('peak_memory_usage', $profile->peakMemoryUsage());
-        $span->setAttribute('real_peak_memory_usage', $profile->realPeakMemoryUsage());
+        $span->setAttribute('cpu_time', $metrics->cpuTime);
+        $span->setAttribute('exec_time', $metrics->executionTime);
+        $span->setAttribute('memory_usage', $metrics->memoryUsage);
+        $span->setAttribute('real_memory_usage', $metrics->realMemoryUsage);
+        $span->setAttribute('peak_memory_usage', $metrics->peakMemoryUsage);
+        $span->setAttribute('real_peak_memory_usage', $metrics->realPeakMemoryUsage);
 
         $span->end((int) $end->timestamp->format('Uu') * 1000);
     }
