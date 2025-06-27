@@ -8,9 +8,9 @@ use DateTimeImmutable;
 use JsonSerializable;
 
 use function getrusage;
+use function hrtime;
 use function memory_get_peak_usage;
 use function memory_get_usage;
-use function microtime;
 
 /**
  * @phpstan-type SnapshotMetrics array{
@@ -50,7 +50,7 @@ final class Snapshot implements JsonSerializable
 
         return new self(
             new DateTimeImmutable(),
-            microtime(true),
+            hrtime(true),
             $cpu, /* @phpstan-ignore-line */
             memory_get_usage(),
             memory_get_usage(true),

@@ -52,7 +52,7 @@ final class CliTableRenderer implements Renderer
 
         return [
             $profile->label(),
-            number_format($profile->cpuTime(), 6),
+            number_format($profile->cpuTime(), 9),
             number_format($profile->executionTime(), 6),
             number_format($profile->memoryUsage() / 1024, 1),
             number_format($profile->realMemoryUsage() / 1024, 1),
