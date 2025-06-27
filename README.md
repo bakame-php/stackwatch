@@ -75,28 +75,28 @@ $profile->realMemoryUsage();
 $profile->realPeakMemoryUsage();
 ````
 
-You can execute as much time as you want the `Profiler` instance it will record all the 
-execution metrics.
+You can execute the `Profiler` instance as many times as needed — it will record all execution metrics each time.
 
 ```php
-$result = $profiler(1, 2, 3);
-$result = $profiler(4, 5, 6);
-$result = $profiler(7, 8, 9);
+$result1 = $profiler(1, 2, 3);
+$result2 = $profiler(4, 5, 6);
+$result3 = $profiler(7, 8, 9);
 
-$profiler->last(); // returns the Profile from the last call
-$profiler->nth(-1); // returns the same Profile as Profile::last
-$profiler->firt(); // returns the first Profile ever generated
-count($profiler); // the number of Profile already recordded
+count($profiler);     // the number of Profile already recordded
+$profiler->last();    // returns the Profile from the last call
+$profiler->nth(-1);   // returns the same Profile as Profile::last
+$profiler->firt();    // returns the first Profile ever generated
 $profiler->isEmpty(); //returns false because the profiler already contains recorded Profiles
 ```
 
-You can access any profile by index using the `nth` method, or use the `first` and `last` methods to quickly retrieve the first and last recorded `Profile`.
-The `nth` method also accepts negative integers to simplify access from the end of the list.
+You can access any profile by index using the `nth` method, or use the `first` and `last` methods
+to quickly retrieve the first and last recorded `Profile`. The `nth` method also accepts negative
+integers to simplify access from the end of the list.
 
 ### Using labels
 
-You can add a custom label on each run if you use `Profiler::runWithLabel` this method does the same as the `__invoke` method but
-allows to add a custom label to the return `Profile` obejct submitted via the method first argument.
+To add a custom label to each run, use `Profiler::runWithLabel`. This method works like the `__invoke`
+method but allows you to assign a custom label to the returned `Profile` object via its first argument.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
@@ -123,7 +123,7 @@ $profiler->labels(); //will return all the labels attached to the Profiler
 
 ### Resetting the Profiler
 
-At any given time you can reset the `Profiler` by clearing all the profiles already run.
+At any given time you can reset the `Profiler` by clearing all the profiles already recorded.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
