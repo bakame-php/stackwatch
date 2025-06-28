@@ -15,6 +15,7 @@ use function array_column;
 use function json_encode;
 use function usleep;
 
+#[CoversClass(Metrics::class)]
 #[CoversClass(Profiler::class)]
 #[CoversClass(ProfilingResult::class)]
 /**
@@ -31,12 +32,20 @@ final class ProfilerTest extends TestCase
             return 'end';
         };
 
-        self::assertGreaterThanOrEqual(0, Profiler::executionTime($callback));
-        self::assertGreaterThanOrEqual(0, Profiler::cpuTime($callback));
+        self::assertGreaterThanOrEqual(0, Profiler::executionTime($callback, 2));
+        self::assertGreaterThanOrEqual(0, Profiler::cpuTime($callback, 3));
         self::assertGreaterThanOrEqual(0, Profiler::memoryUsage($callback));
-        self::assertGreaterThanOrEqual(0, Profiler::realMemoryUsage($callback));
-        self::assertGreaterThanOrEqual(0, Profiler::peakMemoryUsage($callback));
+        self::assertGreaterThanOrEqual(0, Profiler::realMemoryUsage($callback, 3));
+        self::assertGreaterThanOrEqual(0, Profiler::peakMemoryUsage($callback, 2));
         self::assertGreaterThanOrEqual(0, Profiler::realPeakMemoryUsage($callback));
+    }
+
+    #[Test]
+    public function it_fails_to_return_the_metrics_on_invalid_iteration_argument(): void
+    {
+        $this->expectException(InvalidArgument::class);
+
+        Profiler::executionTime(fn () => null, 0); /* @phpstan-ignore-line  */
     }
 
     #[Test]

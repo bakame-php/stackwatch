@@ -27,42 +27,92 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     private array $labels;
     private Closure $callback;
 
-    public static function metrics(callable $callback): Metrics
+    public static function execute(callable $callback): ProfilingResult
     {
-        $new = new self($callback, new NullLogger());
-        $new->__invoke();
-
-        return $new->last()->metrics ?? Metrics::none();
+        return ProfilingResult::profile(null, $callback);
     }
 
-    public static function cpuTime(callable $callback): float
+    /**
+     * @param int<1, max> $iterations
+     *
+     * @throws InvalidArgument if the iterations are lesser than 1
+     */
+    public static function metrics(callable $callback, int $iterations = 1): Metrics
     {
-        return self::metrics($callback)->cpuTime;
+        1 <= $iterations || throw new InvalidArgument('The iterations argument must be a positive integer greater than or equal to 1.');
+
+        $new = new self($callback);
+        if (1 === $iterations) {
+            $new();
+
+            return $new->last()->metrics ?? Metrics::none();
+        }
+
+        for ($i = 0; $i < $iterations; ++$i) {
+            $new();
+        }
+
+        return Metrics::avg($new);
     }
 
-    public static function executionTime(callable $callback): float
+    /**
+     * @param int<1, max> $iterations
+     *
+     * @throws InvalidArgument if the iterations are lesser than 1
+     */
+    public static function cpuTime(callable $callback, int $iterations = 1): float
     {
-        return self::metrics($callback)->executionTime;
+        return self::metrics($callback, $iterations)->cpuTime;
     }
 
-    public static function memoryUsage(callable $callback): float
+    /**
+     * @param int<1, max> $iterations
+     *
+     * @throws InvalidArgument if the iterations are lesser than 1
+     */
+    public static function executionTime(callable $callback, int $iterations = 1): float
     {
-        return self::metrics($callback)->memoryUsage;
+        return self::metrics($callback, $iterations)->executionTime;
     }
 
-    public static function realMemoryUsage(callable $callback): float
+    /**
+     * @param int<1, max> $iterations
+     *
+     * @throws InvalidArgument if the iterations are lesser than 1
+     */
+    public static function memoryUsage(callable $callback, int $iterations = 1): float
     {
-        return self::metrics($callback)->realMemoryUsage;
+        return self::metrics($callback, $iterations)->memoryUsage;
     }
 
-    public static function peakMemoryUsage(callable $callback): float
+    /**
+     * @param int<1, max> $iterations
+     *
+     * @throws InvalidArgument if the iterations are lesser than 1
+     */
+    public static function realMemoryUsage(callable $callback, int $iterations = 1): float
     {
-        return self::metrics($callback)->peakMemoryUsage;
+        return self::metrics($callback, $iterations)->realMemoryUsage;
     }
 
-    public static function realPeakMemoryUsage(callable $callback): float
+    /**
+     * @param int<1, max> $iterations
+     *
+     * @throws InvalidArgument if the iterations are lesser than 1
+     */
+    public static function peakMemoryUsage(callable $callback, int $iterations = 1): float
     {
-        return self::metrics($callback)->realPeakMemoryUsage;
+        return self::metrics($callback, $iterations)->peakMemoryUsage;
+    }
+
+    /**
+     * @param int<1, max> $iterations
+     *
+     * @throws InvalidArgument if the iterations are lesser than 1
+     */
+    public static function realPeakMemoryUsage(callable $callback, int $iterations = 1): float
+    {
+        return self::metrics($callback, $iterations)->realPeakMemoryUsage;
     }
 
     public function __construct(callable $callback, private LoggerInterface $logger = new NullLogger())

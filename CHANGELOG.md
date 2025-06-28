@@ -8,7 +8,8 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 - `Profiler::first`, `Profiler::last`, `Profiler::nth`
 - `Metrics`
-- `Profiler` metrics related methods.
+- `Profiler` metrics related static methods.
+-  `Profiler::execute` static method.
 
 ### Fixed
 

@@ -6,6 +6,8 @@ namespace Bakame\Aide\Profiler;
 
 use JsonSerializable;
 
+use function count;
+
 /**
  * @phpstan-type MetricsStat array{
  *     cpu_time: float,
@@ -84,5 +86,45 @@ final class Metrics implements JsonSerializable
             'peak_memory_usage' => $this->peakMemoryUsage,
             'real_peak_memory_usage' => $this->realPeakMemoryUsage,
         ];
+    }
+
+    public static function avg(Metrics|Profiler ...$metrics): self
+    {
+        $sum = Metrics::none();
+        $count = 0;
+        foreach ($metrics as $metric) {
+            if ($metric instanceof self) {
+                ++$count;
+                $sum = self::add($sum, $metric);
+
+                continue;
+            }
+
+            $count += count($metric);
+            foreach ($metric as $profile) {
+                $sum = self::add($sum, $profile->metrics);
+            }
+        }
+
+        return new Metrics(
+            cpuTime: $sum->cpuTime / $count,
+            executionTime: $sum->executionTime / $count,
+            memoryUsage: $sum->memoryUsage / $count,
+            peakMemoryUsage: $sum->peakMemoryUsage / $count,
+            realMemoryUsage: $sum->realMemoryUsage / $count,
+            realPeakMemoryUsage: $sum->realPeakMemoryUsage / $count,
+        );
+    }
+
+    private static function add(Metrics $carry, Metrics $metric): Metrics
+    {
+        return new self(
+            cpuTime: $carry->cpuTime + $metric->cpuTime,
+            executionTime: $carry->executionTime + $metric->executionTime,
+            memoryUsage: $carry->memoryUsage + $metric->memoryUsage,
+            peakMemoryUsage: $carry->peakMemoryUsage + $metric->peakMemoryUsage,
+            realMemoryUsage: $carry->realMemoryUsage + $metric->realMemoryUsage,
+            realPeakMemoryUsage: $carry->realPeakMemoryUsage + $metric->realPeakMemoryUsage,
+        );
     }
 }
