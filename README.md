@@ -77,6 +77,9 @@ $metrics->peakMemoryUsage;
 $metrics->realMemoryUsage;
 $metrics->realPeakMemoryUsage;
 ````
+
+### Metrics recording
+
 Apart from these static methods the `Profiler` can record each of the call you made, for that you
 will need to instantiate a new instance with the call you want to profile.
 

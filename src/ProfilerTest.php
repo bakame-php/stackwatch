@@ -13,6 +13,7 @@ use Stringable;
 
 use function array_column;
 use function json_encode;
+use function usleep;
 
 #[CoversClass(Profiler::class)]
 #[CoversClass(ProfilingResult::class)]
@@ -21,6 +22,23 @@ use function json_encode;
  */
 final class ProfilerTest extends TestCase
 {
+    #[Test]
+    public function it_can_return_each_metrics_separately(): void
+    {
+        $callback = function (): string {
+            usleep(1000);
+
+            return 'end';
+        };
+
+        self::assertGreaterThanOrEqual(0, Profiler::executionTime($callback));
+        self::assertGreaterThanOrEqual(0, Profiler::cpuTime($callback));
+        self::assertGreaterThanOrEqual(0, Profiler::memoryUsage($callback));
+        self::assertGreaterThanOrEqual(0, Profiler::realMemoryUsage($callback));
+        self::assertGreaterThanOrEqual(0, Profiler::peakMemoryUsage($callback));
+        self::assertGreaterThanOrEqual(0, Profiler::realPeakMemoryUsage($callback));
+    }
+
     #[Test]
     public function it_can_be_invoked_and_return_the_result(): void
     {

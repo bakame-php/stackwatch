@@ -42,27 +42,27 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         return self::metrics($callback)->cpuTime;
     }
 
-    public function executionTime(callable $callback): float
+    public static function executionTime(callable $callback): float
     {
         return self::metrics($callback)->executionTime;
     }
 
-    public function memoryUsage(callable $callback): float
+    public static function memoryUsage(callable $callback): float
     {
         return self::metrics($callback)->memoryUsage;
     }
 
-    public function realMemoryUsage(callable $callback): float
+    public static function realMemoryUsage(callable $callback): float
     {
         return self::metrics($callback)->realMemoryUsage;
     }
 
-    public function peakMemoryUsage(callable $callback): float
+    public static function peakMemoryUsage(callable $callback): float
     {
         return self::metrics($callback)->peakMemoryUsage;
     }
 
-    public function realPeakMemoryUsage(callable $callback): float
+    public static function realPeakMemoryUsage(callable $callback): float
     {
         return self::metrics($callback)->realPeakMemoryUsage;
     }
