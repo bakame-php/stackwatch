@@ -6,6 +6,8 @@ namespace Bakame\Aide\Profiler;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Random\RandomException;
+use Throwable;
 
 final class ProfilingResult
 {
@@ -16,21 +18,29 @@ final class ProfilingResult
     }
 
     /**
-     * @throws \Random\RandomException
+     * @throws RandomException
+     * @throws Throwable
      */
     public static function profile(
-        string $label,
+        ?string $label,
         callable $callback,
         LoggerInterface $logger = new NullLogger(),
         mixed ...$args
     ): self {
-        $logger->info('Starting profiling for label: '.$label.'.');
-        $start = Snapshot::now();
-        $value = ($callback)(...$args);
-        $end = Snapshot::now();
-        $profile = new Profile($label, $start, $end);
-        $logger->info('Finished profiling for label: '.$label.'.', $profile->stats());
+        $label = $label ?? Profile::randomLabel();
+        try {
+            $logger->info('Starting profiling for label: '.$label.'.');
+            $start = Snapshot::now();
+            $value = ($callback)(...$args);
+            $end = Snapshot::now();
+            $profile = new Profile($label, $start, $end);
+            $logger->info('Finished profiling for label: '.$label.'.', $profile->stats());
 
-        return new self($profile, $value);
+            return new self($profile, $value);
+        } catch (Throwable $exception) {
+            $logger->error('Profiling aborted for label: {label} due to an error in the executed code.', ['label' => $label, 'exception' => $exception]);
+
+            throw $exception;
+        }
     }
 }

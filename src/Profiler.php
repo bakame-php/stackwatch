@@ -10,7 +10,6 @@ use IteratorAggregate;
 use JsonSerializable;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Throwable;
 use Traversable;
 
 use function array_filter;
@@ -75,29 +74,16 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     public function __invoke(mixed ...$args): mixed
     {
-        return $this->runWithLabel(Profile::randomLabel(), ...$args);
+        return $this->runWithLabel(null, ...$args);
     }
 
-    public function runWithLabel(string $label, mixed ...$args): mixed
+    public function runWithLabel(?string $label, mixed ...$args): mixed
     {
-        $result = $this->run($label, ...$args);
+        $result = ProfilingResult::profile($label, $this->callback, $this->logger, ...$args);
         $this->profiles[] = $result->profile;
         $this->labels[$result->profile->label] = 1;
 
         return $result->value;
-    }
-
-    private function run(?string $label, mixed ...$args): ProfilingResult
-    {
-        try {
-            $label = $label ?? Profile::randomLabel();
-
-            return ProfilingResult::profile($label, $this->callback, $this->logger, ...$args);
-        } catch (Throwable $exception) {
-            $this->logger->error('Profiling aborted for label: {label} due to an error in the executed code.', ['label' => $label, 'exception' => $exception]);
-
-            throw $exception;
-        }
     }
 
     public function count(): int
@@ -131,7 +117,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         return [] === $this->profiles ? null : $this->profiles[array_key_last($this->profiles)];
     }
 
-    public function firt(): ?Profile
+    public function first(): ?Profile
     {
         return [] === $this->profiles ? null : $this->profiles[0];
     }

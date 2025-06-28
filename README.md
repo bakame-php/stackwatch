@@ -115,7 +115,7 @@ $result3 = $profiler(new DateTimeImmutable('2024-05-11'));
 count($profiler);     // the number of Profile already recordded
 $profiler->last();    // returns the Profile from the last call
 $profiler->nth(-1);   // returns the same Profile as Profile::last
-$profiler->firt();    // returns the first Profile ever generated
+$profiler->first();    // returns the first Profile ever generated
 $profiler->isEmpty(); //returns false because the profiler already contains recorded Profiles
 ```
 
