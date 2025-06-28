@@ -59,18 +59,10 @@ final class CliExporter implements Exporter
      */
     public function profileToRow(Profile $profile): array
     {
-        if ($profile->hasNotBegun()) {
-            return [$profile->label(), new TableCell('The profiling has not started', ['colspan' => 6])];
-        }
-
-        if ($profile->isRunning()) {
-            return [$profile->label(), new TableCell('The profiling is not finished', ['colspan' => 6])];
-        }
-
-        $metrics = $profile->metrics();
+        $metrics = $profile->metrics;
 
         return [
-            $profile->label(),
+            $profile->label,
             number_format($metrics->cpuTime, 9),
             number_format($metrics->executionTime, 9),
             number_format($metrics->memoryUsage / 1024, 1),

@@ -26,25 +26,19 @@ final class OpenTelemetryExporter implements Exporter
 
     public function exportProfile(Profile $profile): void
     {
-        if (!$profile->hasEnded()) {
-            $this->logger->warning('Profile "{label}" has not ended, skipping', ['label' => $profile->label()]);
-
-            return;
-        }
-
-        $start = $profile->start();
-        $end = $profile->end();
+        $start = $profile->start;
+        $end = $profile->end;
 
         $span = $this->tracer
-            ->spanBuilder($profile->label())
+            ->spanBuilder($profile->label)
             ->setSpanKind(SpanKind::KIND_INTERNAL)
             ->setStartTimestamp((int) $start->timestamp->format('Uu')  * 1000)
             ->startSpan();
 
-        $metrics = $profile->metrics();
+        $metrics = $profile->metrics;
 
         $span->setAttribute('export.status', 'success');
-        $span->setAttribute('profiler.label', $profile->label());
+        $span->setAttribute('profiler.label', $profile->label);
         $span->setAttribute('profiler.status', 'ended');
         $span->setAttribute('cpu_time', $metrics->cpuTime);
         $span->setAttribute('exec_time', $metrics->executionTime);

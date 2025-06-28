@@ -8,6 +8,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function usleep;
+
 /**
  * @phpstan-import-type ProfileMetrics from Profile
  */
@@ -18,63 +20,48 @@ final class ProfileTest extends TestCase
     #[Test]
     public function it_has_a_specific_lifecycle(): void
     {
-        $profile = new Profile('test');
-
-        self::assertTrue($profile->hasNotBegun());
-        self::assertFalse($profile->hasBegun());
-        self::assertFalse($profile->hasEnded());
-        self::assertFalse($profile->isRunning());
-
-        $profile->beginProfiling();
-
-        self::assertFalse($profile->hasNotBegun());
-        self::assertTrue($profile->hasBegun());
-        self::assertFalse($profile->hasEnded());
-        self::assertTrue($profile->isRunning());
-
+        $start = Snapshot::now();
         usleep(1000);
+        $end = Snapshot::now();
 
-        $profile->endProfiling();
+        $profile = new Profile('test', $start, $end);
 
-        self::assertTrue($profile->hasEnded());
-        self::assertFalse($profile->isRunning());
-
-        self::assertSame('test', $profile->label());
-        self::assertGreaterThan(0, $profile->metrics()->executionTime);
-        self::assertGreaterThanOrEqual(0, $profile->metrics()->cpuTime);
-        self::assertGreaterThanOrEqual(0, $profile->metrics()->memoryUsage);
-        self::assertGreaterThanOrEqual(0, $profile->metrics()->realMemoryUsage);
-        self::assertGreaterThanOrEqual(0, $profile->metrics()->peakMemoryUsage);
-        self::assertGreaterThanOrEqual(0, $profile->metrics()->realPeakMemoryUsage);
+        self::assertSame('test', $profile->label);
+        self::assertGreaterThan(0, $profile->metrics->executionTime);
+        self::assertGreaterThanOrEqual(0, $profile->metrics->cpuTime);
+        self::assertGreaterThanOrEqual(0, $profile->metrics->memoryUsage);
+        self::assertGreaterThanOrEqual(0, $profile->metrics->realMemoryUsage);
+        self::assertGreaterThanOrEqual(0, $profile->metrics->peakMemoryUsage);
+        self::assertGreaterThanOrEqual(0, $profile->metrics->realPeakMemoryUsage);
     }
 
     #[Test]
     public function it_will_returns_metrics_in_an_associative_array(): void
     {
-        $profile = new Profile('metrics');
-        $profile->beginProfiling();
+        $start = Snapshot::now();
         usleep(1000);
-        $profile->endProfiling();
+        $end = Snapshot::now();
+        $profile = new Profile('test', $start, $end);
 
-        $metrics = $profile->stats();
+        $stats = $profile->stats();
 
-        self::assertArrayHasKey('label', $metrics);
-        self::assertArrayHasKey('start', $metrics);
-        self::assertArrayHasKey('end', $metrics);
-        self::assertArrayHasKey('metrics', $metrics);
+        self::assertArrayHasKey('label', $stats);
+        self::assertArrayHasKey('start', $stats);
+        self::assertArrayHasKey('end', $stats);
+        self::assertArrayHasKey('metrics', $stats);
 
-        self::assertIsArray($metrics['metrics']);
-        self::assertArrayHasKey('cpu_time', $metrics['metrics']);
-        self::assertArrayHasKey('memory_usage', $metrics['metrics']);
+        self::assertIsArray($stats['metrics']);
+        self::assertArrayHasKey('cpu_time', $stats['metrics']);
+        self::assertArrayHasKey('memory_usage', $stats['metrics']);
     }
 
     #[Test]
     public function it_can_be_json_encoded(): void
     {
-        $profile = new Profile('serialize');
-        $profile->beginProfiling();
+        $start = Snapshot::now();
         usleep(1000);
-        $profile->endProfiling();
+        $end = Snapshot::now();
+        $profile = new Profile('test', $start, $end);
 
         /** @var non-empty-string $json */
         $json = json_encode($profile);
@@ -90,35 +77,9 @@ final class ProfileTest extends TestCase
     {
         $this->expectException(InvalidArgument::class);
 
-        new Profile('_123invalid');
-    }
-
-    #[Test]
-    public function it_will_fail_if_you_try_to_start_twice_profiling(): void
-    {
-        $this->expectException(InvalidProfileState::class);
-
-        $profile = new Profile('double_start');
-        $profile->beginProfiling();
-        $profile->beginProfiling();
-    }
-
-    #[Test]
-    public function it_will_fail_if_you_try_to_end_a_profiling_without_starting_it(): void
-    {
-        $this->expectException(InvalidProfileState::class);
-
-        $profile = new Profile('no_start');
-        $profile->endProfiling(); // should throw
-    }
-
-    #[Test]
-    public function it_will_throw_if_you_try_to_access_a_property_before_profiling_has_ended(): void
-    {
-        $this->expectException(InvalidProfileState::class);
-
-        $profile = new Profile('too_soon');
-        $profile->beginProfiling();
-        $profile->metrics()->executionTime;
+        $start = Snapshot::now();
+        usleep(1000);
+        $end = Snapshot::now();
+        $profile = new Profile('_123invalid', $start, $end);
     }
 }

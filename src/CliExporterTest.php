@@ -7,7 +7,6 @@ namespace Bakame\Aide\Profiler;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use ReflectionProperty;
 use Symfony\Component\Console\Output\BufferedOutput;
 
 #[CoversClass(CliExporter::class)]
@@ -31,30 +30,4 @@ final class CliExporterTest extends TestCase
         self::assertStringContainsString('cli_test', $content);
         self::assertMatchesRegularExpression('/\d+\.\d{6}/', $content); // cpu or exec time
     }
-
-    #[Test]
-    public function it_renders_incomplete_or_not_yet_runned_profile(): void
-    {
-        $output = new BufferedOutput();
-        $renderer = new CliExporter($output);
-        $profiler = new Profiler(fn () => null);
-
-        $incompleteProfile = new Profile('incomplete');
-        $incompleteProfile->beginProfiling();
-
-        $notRunningProfile = new Profile('not_running');
-
-        $reflection = new ReflectionProperty($profiler, 'profiles');
-        $reflection->setValue($profiler, [$incompleteProfile, $notRunningProfile]);
-
-        $renderer->exportProfiler($profiler);
-        $outputText = $output->fetch();
-
-        self::assertStringContainsString('Label', $outputText);
-        self::assertStringContainsString('incomplete', $outputText);
-        self::assertStringContainsString('The profiling is not finished', $outputText);
-        self::assertStringContainsString('not_running', $outputText);
-        self::assertStringContainsString('The profiling has not started', $outputText);
-    }
-
 }

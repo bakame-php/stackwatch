@@ -29,13 +29,7 @@ class OpenTelemetryExporterTest extends TestCase
         $start = new Snapshot(new DateTimeImmutable(), microtime(true), [], 1000, 2000, 3000, 4000);
         usleep(100);
         $end = new Snapshot(new DateTimeImmutable(), microtime(true) + 1, [], 1100, 2100, 3100, 4100);
-        $profile = new Profile($label);
-        $reflection = new ReflectionClass($profile);
-        $reflection->getProperty('start')->setValue($profile, $start);
-        $reflection->getProperty('end')->setValue($profile, $end);
-        $reflection->getMethod('metrics')->invoke($profile, Metrics::fromSnapshots($start, $end));
-
-        return $profile;
+        return new Profile($label, $start, $end);
     }
 
     protected function setUp(): void
@@ -66,7 +60,7 @@ class OpenTelemetryExporterTest extends TestCase
         /** @var ImmutableSpan $span */
         $span = $spans[0];
 
-        self::assertSame($profile->label(), $span->getName());
+        self::assertSame($profile->label, $span->getName());
 
         $otlAttributes = $span->getAttributes()->toArray();
 
@@ -89,7 +83,7 @@ class OpenTelemetryExporterTest extends TestCase
         $profiler = new Profiler(fn () => null);
         $reflection = new ReflectionClass($profiler);
         $reflection->getProperty('profiles')->setValue($profiler, [$profile1, $profile2]);
-        $reflection->getProperty('labels')->setValue($profiler, [$profile1->label() => 1, $profile2->label() => 1]);
+        $reflection->getProperty('labels')->setValue($profiler, [$profile1->label => 1, $profile2->label => 1]);
 
         $this->exporter->exportProfiler($profiler);
         $spans = $this->otlExporter->getSpans();
@@ -98,11 +92,11 @@ class OpenTelemetryExporterTest extends TestCase
         /** @var ImmutableSpan $span */
         $span = $spans[0];
         $otlAttributes = $span->getAttributes()->toArray();
-        self::assertSame($otlAttributes['profiler.label'], $profile1->label());
+        self::assertSame($otlAttributes['profiler.label'], $profile1->label);
 
         /** @var ImmutableSpan $span */
         $span = $spans[1];
         $otlAttributes = $span->getAttributes()->toArray();
-        self::assertSame($otlAttributes['profiler.label'], $profile2->label());
+        self::assertSame($otlAttributes['profiler.label'], $profile2->label);
     }
 }

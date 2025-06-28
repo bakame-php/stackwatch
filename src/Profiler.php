@@ -44,29 +44,22 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     {
         $result = $this->run($label, ...$args);
         $this->profiles[] = $result->profile;
-        $this->labels[$result->profile->label()] = 1;
+        $this->labels[$result->profile->label] = 1;
 
         return $result->value;
     }
 
     public function metrics(mixed ...$args): Metrics
     {
-        return $this->run(Profile::randomLabel(), ...$args)->profile->metrics();
+        return $this->run(null, ...$args)->profile->metrics;
     }
 
-    private function run(string $label, mixed ...$args): ProfilingResult
+    private function run(?string $label, mixed ...$args): ProfilingResult
     {
-        $this->logger->info("Starting profiling for label: {$label}");
         try {
-            $result = ProfilingResult::profile($label, $this->callback, ...$args);
+            $label = $label ?? Profile::randomLabel();
 
-            $this->logger->info("Finished profiling for label: {$label}", $result->profile->stats()['metrics']);
-
-            return $result;
-        } catch (ProfilingException $exception) {
-            $this->logger->error('Profiling aborted for label: {label} due to an error in the profiling processus.', ['label' => $label, 'exception' => $exception]);
-
-            throw $exception;
+            return ProfilingResult::profile($label, $this->callback, $this->logger, ...$args);
         } catch (Throwable $exception) {
             $this->logger->error('Profiling aborted for label: {label} due to an error in the executed code.', ['label' => $label, 'exception' => $exception]);
 
@@ -177,7 +170,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         return array_values(
             array_filter(
                 $this->profiles,
-                fn (Profile $profile) => $profile->label() === $label
+                fn (Profile $profile) => $profile->label === $label
             )
         );
     }

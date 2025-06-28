@@ -32,7 +32,6 @@ final class ProfilerTest extends TestCase
 
         $profile = $profiler->last();
         self::assertInstanceOf(Profile::class, $profile);
-        self::assertTrue($profile->hasEnded());
     }
 
     #[Test]
@@ -44,7 +43,7 @@ final class ProfilerTest extends TestCase
 
         self::assertCount(2, $profiler);
         foreach ($profiler as $profile) {
-            self::assertIsFloat($profile->metrics()->executionTime);
+            self::assertIsFloat($profile->metrics->executionTime);
         }
     }
 
@@ -56,7 +55,7 @@ final class ProfilerTest extends TestCase
 
         $profile = $profiler->last();
         self::assertInstanceOf(Profile::class, $profile);
-        self::assertSame('custom_label', $profile->label());
+        self::assertSame('custom_label', $profile->label);
     }
 
     #[Test]
@@ -115,12 +114,12 @@ final class ProfilerTest extends TestCase
 
         self::assertCount(2, $logger->logs, 'Expected 2 log entries');
         self::assertSame('info', $logger->logs[0]['level']);
-        self::assertStringContainsString('Starting profiling for label: simple_test', (string) $logger->logs[0]['message']);
+        self::assertStringContainsString('Starting profiling for label: simple_test.', (string) $logger->logs[0]['message']);
 
         self::assertSame('info', $logger->logs[1]['level']);
-        self::assertStringContainsString('Finished profiling for label: simple_test', (string) $logger->logs[1]['message']);
+        self::assertStringContainsString('Finished profiling for label: simple_test.', (string) $logger->logs[1]['message']);
         dump($logger->logs[1]['context']);
-        self::assertArrayHasKey('cpu_time', $logger->logs[1]['context']);
+        self::assertArrayHasKey('metrics', $logger->logs[1]['context']);
     }
 
     public function it_can_log_failure(): void
