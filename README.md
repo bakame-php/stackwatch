@@ -41,12 +41,14 @@ The `Bakame\Aide\Profiler` package is a utility that simplifies profiling by eli
 
 ### Basic usage
 
-Let's re-use the same callable now in the context of the `Profiler` class.
+Let's adapt the first example using the `Profiler` class.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
 
-$duration = Profiler::executionTime($service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24')));
+$duration = Profiler::executionTime(
+    $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'))
+);
 // $duration is the execution time in nanosecond using hrtime instead of microtime
 ````
 They are as many methods as they are metrics:
@@ -68,7 +70,9 @@ The method returns a `Metrics` class with readonly methods for each metric.
 use Bakame\Aide\Profiler\Profiler;
 
 // you create a new Profiler by passing the callable or closure you want to profile
-$metrics = Profiler::executionTime($service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24')));
+$metrics = Profiler::executionTime(
+    $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'))
+);
 
 $metrics->executionTime;
 $metrics->cpuTime; 
@@ -77,11 +81,42 @@ $metrics->peakMemoryUsage;
 $metrics->realMemoryUsage;
 $metrics->realPeakMemoryUsage;
 ````
+### Iterations
+
+If you need to access the average usage for a specific metrics you can use the second argument.
+When executing a callback more than once, the average value for that specific metric across all iterations
+will be returned:
+
+```php
+use Bakame\Aide\Profiler\Profiler;
+
+$cpuTime = Profiler::cpuTime(
+    $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24')),
+    5
+);
+// the average CPU Time used when executing 5 times the code.
+````
+The `$iterations` argument is available for all metrics.
+
+### Profiling while returning the call result
+
+Last but not least, it is possible to access the result from executing a call as well as its associated profile
+using the static method `Profiler::execute`. The method returns a `ProfilingResult`
+instance where the `result` property represents the returned value of the callback execution while its `profile`
+property contains all the data related to profiling the call.
+
+```php
+use Bakame\Aide\Profiler\Profiler;
+
+$profiling = Profiler::execute($service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24')));
+$profiling->result; // the result of executing the `calculateHeavyStuff` method
+$profiling->profilingData; // the profiling data associated with the call.
+````
 
 ### Metrics recording
 
-Apart from these static methods the `Profiler` can record each of the call you made, for that you
-will need to instantiate a new instance with the call you want to profile.
+Apart from these static methods the `Profiler` can record each of the calls you made. For that, you
+will need to instantiate a new `Profiler` instance with the call you want to profile.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
@@ -93,9 +128,9 @@ $profiler = new Profiler($service->calculateHeavyStuff(...));
 //$result is the result of executing the calculateHeavyStuff method
 $result = $profiler(new DateTimeImmutable('2024-12-24'));
 
-$profile = $profiler->last(); // returns the Profile from the last call
-// the $profile object returns a Metrics instance
-$metrics = $profile->metrics;
+$profilingData = $profiler->last(); // returns the ProfilingData from the last call
+// the $profilingData->metrics property returns a Metrics instance
+$metrics = $profilingData->metrics;
 
 $metrics->executionTime;
 $metrics->cpuTime; 
@@ -123,22 +158,6 @@ You can access any profile by index using the `nth` method, or use the `first` a
 to quickly retrieve the first and last recorded `Profile`. The `nth` method also accepts negative
 integers to simplify access from the end of the list.
 
-If you are only interested in specific metric, you can do the following
-
-```php
-use Bakame\Aide\Profiler\Profiler;
-
-$callable = function (int ...$args): int|float => {
-    usleep(100)
-    
-    return array_sum($args);
-}; 
-
-// you create a new Profiler by passing the callable
-$profiler = new Profiler($callable);
-$profiler->executionTime(1, 2, 3); // will return the execution tine of the call as a float.
-```
-
 ### Using labels
 
 To add a custom label to each run, use `Profiler::runWithLabel`. This method works like the `__invoke`
@@ -155,9 +174,9 @@ $callable = function (int ...$args): int|float => {
 
 $profiler = new Profiler($callable);
 $profiler(1, 2, 3); // returns 6
-$profile = $profiler->last(); // returns the last Profile object from the last call
+$profile = $profiler->last(); // returns the last ProfilingData object from the last call
 $profiler->runWithLabel('my_test', 7, 8, 9); // returns 24
-$namedProfile = $profiler->get('my_test'); // will return the associated Profile
+$namedProfile = $profiler->get('my_test'); // will return the associated ProfilingData
 
 $profiler->get('foobar'); // returns null because the `foobar` label does not exist
 $profiler->has('foobar'); // return false because the label does not exist
@@ -306,7 +325,7 @@ $profiler->runWithLabel('first_run', 1, 2);
 $profiler->runWithLabel('last_run', 1, 2);
 $profiler(1, 2);
 
-$exporter->exportProfilter($profier); 
+$exporter->exportProfilter($profiler); 
 // the Profiler content is exported to the Open Telemetry Server.
 ```
 

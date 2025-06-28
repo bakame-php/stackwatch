@@ -29,7 +29,10 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 - **BC BREAK:** `Profile::metrics` returns a `Metrics` object before the metrics where attached directly to the profile.
 - **BC BREAK:** The `Metrics::executionTime` is now calculated using `hrtime` instead of `microtime`
 - **BC BREAK:** The `Profile` class is now a readonly value object, the methods showing the progress of the profile generation are removed.
-- 
+- **BC BREAK:** `Profile` renamed `ProfilingData`
+- **BC BREAK:** `ProfileResult::value` renamed `ProfileResult::result`
+- **BC BREAK:** `ProfileResult::profile` renamed `ProfileResult::profilingData`
+
 ## [0.2.0](https://github.com/bakame-php/aide-profiler/compare/0.1.0...0.2.0) - 2025-06-27
 
 ### Added

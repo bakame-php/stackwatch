@@ -24,21 +24,21 @@ final class OpenTelemetryExporter implements Exporter
         $this->logger = $logger;
     }
 
-    public function exportProfile(Profile $profile): void
+    public function exportProfilingData(ProfilingData $profilingData): void
     {
-        $start = $profile->start;
-        $end = $profile->end;
+        $start = $profilingData->start;
+        $end = $profilingData->end;
 
         $span = $this->tracer
-            ->spanBuilder($profile->label)
+            ->spanBuilder($profilingData->label)
             ->setSpanKind(SpanKind::KIND_INTERNAL)
             ->setStartTimestamp((int) $start->timestamp->format('Uu')  * 1000)
             ->startSpan();
 
-        $metrics = $profile->metrics;
+        $metrics = $profilingData->metrics;
 
         $span->setAttribute('export.status', 'success');
-        $span->setAttribute('profiler.label', $profile->label);
+        $span->setAttribute('profiler.label', $profilingData->label);
         $span->setAttribute('profiler.status', 'ended');
         $span->setAttribute('cpu_time', $metrics->cpuTime);
         $span->setAttribute('exec_time', $metrics->executionTime);
@@ -56,7 +56,7 @@ final class OpenTelemetryExporter implements Exporter
         $scope = $parent->activate();
 
         foreach ($profiler as $profile) {
-            $this->exportProfile($profile);
+            $this->exportProfilingData($profile);
         }
 
         $parent->end();

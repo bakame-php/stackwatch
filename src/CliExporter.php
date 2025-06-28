@@ -17,7 +17,7 @@ final class CliExporter implements Exporter
     {
     }
 
-    public function exportProfile(Profile $profile): void
+    public function exportProfilingData(ProfilingData $profilingData): void
     {
         $table = new Table($this->output);
         $table->setHeaders([
@@ -30,7 +30,7 @@ final class CliExporter implements Exporter
             'Real Peak (kB)',
         ]);
 
-        $table->addRow($this->profileToRow($profile));
+        $table->addRow($this->profilingDataToRow($profilingData));
         $table->render();
     }
 
@@ -48,7 +48,7 @@ final class CliExporter implements Exporter
         ]);
 
         foreach ($profiler as $profile) {
-            $table->addRow($this->profileToRow($profile));
+            $table->addRow($this->profilingDataToRow($profile));
         }
 
         $table->render();
@@ -57,7 +57,7 @@ final class CliExporter implements Exporter
     /**
      * @return list<string|TableCell>
      */
-    public function profileToRow(Profile $profile): array
+    private function profilingDataToRow(ProfilingData $profile): array
     {
         $metrics = $profile->metrics;
 

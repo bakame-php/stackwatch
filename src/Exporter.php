@@ -6,7 +6,7 @@ namespace Bakame\Aide\Profiler;
 
 interface Exporter
 {
-    public function exportProfile(Profile $profile): void;
+    public function exportProfilingData(ProfilingData $profilingData): void;
 
     public function exportProfiler(Profiler $profiler): void;
 }

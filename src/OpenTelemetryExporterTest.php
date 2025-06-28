@@ -24,12 +24,12 @@ class OpenTelemetryExporterTest extends TestCase
     /**
      * @throws ReflectionException
      */
-    private function createProfile(string $label): Profile
+    private function createProfile(string $label): ProfilingData
     {
         $start = new Snapshot(new DateTimeImmutable(), microtime(true), [], 1000, 2000, 3000, 4000);
         usleep(100);
         $end = new Snapshot(new DateTimeImmutable(), microtime(true) + 1, [], 1100, 2100, 3100, 4100);
-        return new Profile($label, $start, $end);
+        return new ProfilingData($label, $start, $end);
     }
 
     protected function setUp(): void
@@ -53,7 +53,7 @@ class OpenTelemetryExporterTest extends TestCase
     {
         $profile = $this->createProfile('test_export');
 
-        $this->exporter->exportProfile($profile);
+        $this->exporter->exportProfilingData($profile);
 
         $spans = $this->otlExporter->getSpans();
         self::assertCount(1, $spans);
@@ -82,7 +82,7 @@ class OpenTelemetryExporterTest extends TestCase
 
         $profiler = new Profiler(fn () => null);
         $reflection = new ReflectionClass($profiler);
-        $reflection->getProperty('profiles')->setValue($profiler, [$profile1, $profile2]);
+        $reflection->getProperty('profilingDataList')->setValue($profiler, [$profile1, $profile2]);
         $reflection->getProperty('labels')->setValue($profiler, [$profile1->label => 1, $profile2->label => 1]);
 
         $this->exporter->exportProfiler($profiler);

@@ -17,7 +17,7 @@ use function trim;
  * @phpstan-import-type MetricsStat from Metrics
  * @phpstan-import-type SnapshotStat from Snapshot
  */
-final class Profile implements JsonSerializable
+final class ProfilingData implements JsonSerializable
 {
     /** @var non-empty-string */
     public readonly string $label;

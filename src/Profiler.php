@@ -17,12 +17,12 @@ use function array_key_last;
 use function count;
 
 /**
- * @implements  IteratorAggregate<int, Profile>
+ * @implements  IteratorAggregate<int, ProfilingData>
  */
 final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 {
-    /** @var array<Profile> */
-    private array $profiles;
+    /** @var array<ProfilingData> */
+    private array $profilingDataList;
     /** @var array<string, 1> */
     private array $labels;
     private Closure $callback;
@@ -129,55 +129,55 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     public function runWithLabel(?string $label, mixed ...$args): mixed
     {
         $result = ProfilingResult::profile($label, $this->callback, $this->logger, ...$args);
-        $this->profiles[] = $result->profile;
-        $this->labels[$result->profile->label] = 1;
+        $this->profilingDataList[] = $result->profilingData;
+        $this->labels[$result->profilingData->label] = 1;
 
-        return $result->value;
+        return $result->result;
     }
 
     public function count(): int
     {
-        return count($this->profiles);
+        return count($this->profilingDataList);
     }
 
     /**
-     * @return Traversable<Profile>
+     * @return Traversable<ProfilingData>
      */
     public function getIterator(): Traversable
     {
-        yield from $this->profiles;
+        yield from $this->profilingDataList;
     }
 
     /**
-     * @return array<Profile>
+     * @return array<ProfilingData>
      */
     public function jsonSerialize(): array
     {
-        return $this->profiles;
+        return $this->profilingDataList;
     }
 
     public function isEmpty(): bool
     {
-        return [] === $this->profiles;
+        return [] === $this->profilingDataList;
     }
 
-    public function last(): ?Profile
+    public function last(): ?ProfilingData
     {
-        return [] === $this->profiles ? null : $this->profiles[array_key_last($this->profiles)];
+        return [] === $this->profilingDataList ? null : $this->profilingDataList[array_key_last($this->profilingDataList)];
     }
 
-    public function first(): ?Profile
+    public function first(): ?ProfilingData
     {
-        return [] === $this->profiles ? null : $this->profiles[0];
+        return [] === $this->profilingDataList ? null : $this->profilingDataList[0];
     }
 
-    public function nth(int $offset): ?Profile
+    public function nth(int $offset): ?ProfilingData
     {
         if ($offset < 0) {
-            $offset += count($this->profiles);
+            $offset += count($this->profilingDataList);
         }
 
-        return $this->profiles[$offset] ?? null;
+        return $this->profilingDataList[$offset] ?? null;
     }
 
     /**
@@ -191,7 +191,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     /**
      * Returns the last Profile with the provided label.
      */
-    public function get(string $label): ?Profile
+    public function get(string $label): ?ProfilingData
     {
         $res = $this->getAll($label);
 
@@ -201,14 +201,14 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     /**
      * Returns all the Profiles with the provided label.
      *
-     * @return list<Profile>
+     * @return list<ProfilingData>
      */
     public function getAll(string $label): array
     {
         return array_values(
             array_filter(
-                $this->profiles,
-                fn (Profile $profile) => $profile->label === $label
+                $this->profilingDataList,
+                fn (ProfilingData $profile) => $profile->label === $label
             )
         );
     }
@@ -225,7 +225,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     public function reset(): void
     {
-        $this->profiles = [];
+        $this->profilingDataList = [];
         $this->labels = [];
     }
 }

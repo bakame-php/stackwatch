@@ -14,7 +14,7 @@ use function usleep;
  * @phpstan-import-type SnapshotStat from Snapshot
  * @phpstan-import-type MetricsStat from Metrics
  */
-#[CoversClass(Profile::class)]
+#[CoversClass(ProfilingData::class)]
 #[CoversClass(Metrics::class)]
 final class ProfileTest extends TestCase
 {
@@ -25,7 +25,7 @@ final class ProfileTest extends TestCase
         usleep(1000);
         $end = Snapshot::now();
 
-        $profile = new Profile('test', $start, $end);
+        $profile = new ProfilingData('test', $start, $end);
 
         self::assertSame('test', $profile->label);
         self::assertGreaterThan(0, $profile->metrics->executionTime);
@@ -42,7 +42,7 @@ final class ProfileTest extends TestCase
         $start = Snapshot::now();
         usleep(1000);
         $end = Snapshot::now();
-        $profile = new Profile('test', $start, $end);
+        $profile = new ProfilingData('test', $start, $end);
 
         $stats = $profile->stats();
 
@@ -62,7 +62,7 @@ final class ProfileTest extends TestCase
         $start = Snapshot::now();
         usleep(1000);
         $end = Snapshot::now();
-        $profile = new Profile('test', $start, $end);
+        $profile = new ProfilingData('test', $start, $end);
 
         /** @var non-empty-string $json */
         $json = json_encode($profile);
@@ -81,6 +81,6 @@ final class ProfileTest extends TestCase
         $start = Snapshot::now();
         usleep(1000);
         $end = Snapshot::now();
-        $profile = new Profile('_123invalid', $start, $end);
+        $profile = new ProfilingData('_123invalid', $start, $end);
     }
 }

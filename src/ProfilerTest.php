@@ -19,7 +19,7 @@ use function usleep;
 #[CoversClass(Profiler::class)]
 #[CoversClass(ProfilingResult::class)]
 /**
- * @phpstan-import-type ProfileMetrics from Profile
+ * @phpstan-import-type ProfileMetrics from ProfilingData
  */
 final class ProfilerTest extends TestCase
 {
@@ -58,7 +58,7 @@ final class ProfilerTest extends TestCase
         self::assertCount(1, $profiler);
 
         $profile = $profiler->last();
-        self::assertInstanceOf(Profile::class, $profile);
+        self::assertInstanceOf(ProfilingData::class, $profile);
     }
 
     #[Test]
@@ -81,7 +81,7 @@ final class ProfilerTest extends TestCase
         $profiler->runWithLabel('custom_label');
 
         $profile = $profiler->last();
-        self::assertInstanceOf(Profile::class, $profile);
+        self::assertInstanceOf(ProfilingData::class, $profile);
         self::assertSame('custom_label', $profile->label);
     }
 
@@ -124,7 +124,7 @@ final class ProfilerTest extends TestCase
 
         self::assertCount(4, $profiler);
         self::assertCount(2, $profiler->getAll('custom_label'));
-        self::assertInstanceOf(Profile::class, $profiler->get('custom_label'));
+        self::assertInstanceOf(ProfilingData::class, $profiler->get('custom_label'));
         self::assertNull($profiler->get('foo_bar'));
         self::assertCount(0, $profiler->getAll('foo_bar'));
         self::assertTrue($profiler->has('custom_label'));

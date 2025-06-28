@@ -8,9 +8,11 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Throwable;
 
+use function gc_collect_cycles;
+
 final class ProfilingResult
 {
-    public function __construct(public readonly Profile $profile, public readonly mixed $value)
+    public function __construct(public readonly mixed $result, public readonly ProfilingData $profilingData)
     {
     }
 
@@ -23,16 +25,18 @@ final class ProfilingResult
         LoggerInterface $logger = new NullLogger(),
         mixed ...$args
     ): self {
-        $label = $label ?? Profile::randomLabel();
+        gc_collect_cycles();
+
+        $label = $label ?? ProfilingData::randomLabel();
         try {
             $logger->info('Starting profiling for label: '.$label.'.');
             $start = Snapshot::now();
-            $value = ($callback)(...$args);
+            $result = ($callback)(...$args);
             $end = Snapshot::now();
-            $profile = new Profile($label, $start, $end);
-            $logger->info('Finished profiling for label: '.$label.'.', $profile->stats());
+            $profilingData = new ProfilingData($label, $start, $end);
+            $logger->info('Finished profiling for label: '.$label.'.', $profilingData->stats());
 
-            return new self($profile, $value);
+            return new self($result, $profilingData);
         } catch (Throwable $exception) {
             $logger->error('Profiling aborted for label: {label} due to an error in the executed code.', ['label' => $label, 'exception' => $exception]);
 
