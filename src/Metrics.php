@@ -29,9 +29,7 @@ final class Metrics implements JsonSerializable
 
     public static function fromSnapshots(Snapshot $start, Snapshot $end): self
     {
-        if ($start->timestamp > $end->timestamp) {
-            throw new UnableToProfile('The ending snapshot was taken before the starting snapshot.');
-        }
+        $start->timestamp <= $end->timestamp || throw new UnableToProfile('The ending snapshot was taken before the starting snapshot.');
 
         return new self(
             cpuTime: self::calculateCpuTime($start, $end),

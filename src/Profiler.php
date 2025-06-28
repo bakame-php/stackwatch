@@ -17,7 +17,6 @@ use function array_key_last;
 use function count;
 
 /**
- * @phpstan-import-type ProfileMetrics from Profile
  * @implements  IteratorAggregate<int, Profile>
  */
 final class Profiler implements JsonSerializable, IteratorAggregate, Countable

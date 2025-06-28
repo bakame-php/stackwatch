@@ -15,12 +15,7 @@ use function trim;
 
 /**
  * @phpstan-import-type MetricsStat from Metrics
- * @phpstan-type ProfileMetrics array{
- *     label: string,
- *     start: ?Snapshot,
- *     end: ?Snapshot,
- *     metrics: MetricsStat
- * }
+ * @phpstan-import-type SnapshotStat from Snapshot
  */
 final class Profile implements JsonSerializable
 {
@@ -32,7 +27,6 @@ final class Profile implements JsonSerializable
 
     /**
      * @throws InvalidArgument
-     * @throws RandomException
      */
     public function __construct(?string $label, Snapshot $start, Snapshot $end)
     {
@@ -51,33 +45,42 @@ final class Profile implements JsonSerializable
     }
 
     /**
-     * @throws RandomException
+     * @throws InvalidArgument
      *
      * @return non-empty-string
      */
     public static function randomLabel(): string
     {
-        return bin2hex(random_bytes(6));
+        try {
+            return bin2hex(random_bytes(6));
+        } catch (RandomException $exception) {
+            throw new InvalidArgument('Unable to generate a random label.', previous: $exception);
+        }
     }
 
     /**
-     * @return ProfileMetrics
+     * @return array{label: non-empty-string, start: SnapshotStat, end: SnapshotStat, metrics: MetricsStat}
      */
     public function stats(): array
     {
         return [
             'label' => $this->label,
-            'start' => $this->start,
-            'end' => $this->end,
+            'start' => $this->start->stats(),
+            'end' => $this->end->stats(),
             'metrics' => $this->metrics->stats(),
         ];
     }
 
     /**
-     * @return ProfileMetrics
+     * @return array{label: non-empty-string, start: Snapshot, end: Snapshot, metrics: Metrics}
      */
     public function jsonSerialize(): array
     {
-        return $this->stats();
+        return [
+            'label' => $this->label,
+            'start' => $this->start,
+            'end' => $this->end,
+            'metrics' => $this->metrics,
+        ];
     }
 }

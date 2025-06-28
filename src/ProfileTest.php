@@ -11,7 +11,8 @@ use PHPUnit\Framework\TestCase;
 use function usleep;
 
 /**
- * @phpstan-import-type ProfileMetrics from Profile
+ * @phpstan-import-type SnapshotStat from Snapshot
+ * @phpstan-import-type MetricsStat from Metrics
  */
 #[CoversClass(Profile::class)]
 #[CoversClass(Metrics::class)]
@@ -67,7 +68,7 @@ final class ProfileTest extends TestCase
         $json = json_encode($profile);
         self::assertJson($json);
 
-        /** @var ProfileMetrics $decoded */
+        /** @var array{label: non-empty-string, start: SnapshotStat, end: SnapshotStat, metrics: MetricsStat} $decoded */
         $decoded = json_decode($json, true);
         self::assertArrayHasKey('label', $decoded);
     }

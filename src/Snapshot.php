@@ -13,7 +13,7 @@ use function memory_get_peak_usage;
 use function memory_get_usage;
 
 /**
- * @phpstan-type SnapshotMetrics array{
+ * @phpstan-type SnapshotStat array{
  *     timestamp: string,
  *     metrics: array{
  *         execution_time: float,
@@ -60,17 +60,17 @@ final class Snapshot implements JsonSerializable
     }
 
     /**
-     * @return SnapshotMetrics
+     * @return SnapshotStat
      */
     public function jsonSerialize(): array
     {
-        return $this->metrics();
+        return $this->stats();
     }
 
     /**
-     * @return SnapshotMetrics
+     * @return SnapshotStat
      */
-    public function metrics(): array
+    public function stats(): array
     {
         return [
             'timestamp' => $this->timestamp->format("Y-m-d\TH:i:s.uP"),

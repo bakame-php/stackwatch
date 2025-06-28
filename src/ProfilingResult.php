@@ -6,19 +6,15 @@ namespace Bakame\Aide\Profiler;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
-use Random\RandomException;
 use Throwable;
 
 final class ProfilingResult
 {
-    public function __construct(
-        public readonly Profile $profile,
-        public readonly mixed $value
-    ) {
+    public function __construct(public readonly Profile $profile, public readonly mixed $value)
+    {
     }
 
     /**
-     * @throws RandomException
      * @throws Throwable
      */
     public static function profile(
