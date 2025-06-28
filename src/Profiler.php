@@ -29,6 +29,44 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     private array $labels;
     private Closure $callback;
 
+    public static function metrics(callable $callback): Metrics
+    {
+        $new = new self($callback, new NullLogger());
+        $new->__invoke();
+
+        return $new->last()->metrics ?? Metrics::none();
+    }
+
+    public static function cpuTime(callable $callback): float
+    {
+        return self::metrics($callback)->cpuTime;
+    }
+
+    public function executionTime(callable $callback): float
+    {
+        return self::metrics($callback)->executionTime;
+    }
+
+    public function memoryUsage(callable $callback): float
+    {
+        return self::metrics($callback)->memoryUsage;
+    }
+
+    public function realMemoryUsage(callable $callback): float
+    {
+        return self::metrics($callback)->realMemoryUsage;
+    }
+
+    public function peakMemoryUsage(callable $callback): float
+    {
+        return self::metrics($callback)->peakMemoryUsage;
+    }
+
+    public function realPeakMemoryUsage(callable $callback): float
+    {
+        return self::metrics($callback)->realPeakMemoryUsage;
+    }
+
     public function __construct(callable $callback, private LoggerInterface $logger = new NullLogger())
     {
         $this->callback = $callback instanceof Closure ? $callback : Closure::fromCallable($callback);
@@ -49,11 +87,6 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         return $result->value;
     }
 
-    public function metrics(mixed ...$args): Metrics
-    {
-        return $this->run(null, ...$args)->profile->metrics;
-    }
-
     private function run(?string $label, mixed ...$args): ProfilingResult
     {
         try {
@@ -65,36 +98,6 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
             throw $exception;
         }
-    }
-
-    public function cpuTime(mixed ...$args): float
-    {
-        return $this->metrics(...$args)->cpuTime;
-    }
-
-    public function executionTime(mixed ...$args): float
-    {
-        return $this->metrics(...$args)->executionTime;
-    }
-
-    public function memoryUsage(mixed ...$args): float
-    {
-        return $this->metrics(...$args)->memoryUsage;
-    }
-
-    public function realMemoryUsage(mixed ...$args): float
-    {
-        return $this->metrics(...$args)->realMemoryUsage;
-    }
-
-    public function peakMemoryUsage(mixed ...$args): float
-    {
-        return $this->metrics(...$args)->peakMemoryUsage;
-    }
-
-    public function realPeakMemoryUsage(mixed ...$args): float
-    {
-        return $this->metrics(...$args)->realPeakMemoryUsage;
     }
 
     public function count(): int

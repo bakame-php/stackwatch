@@ -41,7 +41,44 @@ The `Bakame\Aide\Profiler` package is a utility that simplifies profiling by eli
 
 ### Basic usage
 
-Let's re-sue the same callable now in the context of the `Profiler` class.
+Let's re-use the same callable now in the context of the `Profiler` class.
+
+```php
+use Bakame\Aide\Profiler\Profiler;
+
+$duration = Profiler::executionTime($service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24')));
+// $duration is the execution time in nanosecond using hrtime instead of microtime
+````
+They are as many methods as they are metrics:
+
+- `Profiler::executionTime()`;
+- `Profiler::cpuTime()`;
+- `Profiler::memoryUsage()`;
+- `Profiler::peakMemoryUsage()`;
+- `Profiler::realMemoryUsage()`;
+- `Profiler::realPeakMemoryUsage()`;
+
+If you want to access all the metrics at once, you can use the following method
+
+- `Profiler::metrics()`;
+
+The method returns a `Metrics` class with readonly methods for each metric.
+
+```php
+use Bakame\Aide\Profiler\Profiler;
+
+// you create a new Profiler by passing the callable or closure you want to profile
+$metrics = Profiler::executionTime($service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24')));
+
+$metrics->executionTime;
+$metrics->cpuTime; 
+$metrics->memoryUsage;
+$metrics->peakMemoryUsage;
+$metrics->realMemoryUsage;
+$metrics->realPeakMemoryUsage;
+````
+Apart from these static methods the `Profiler` can record each of the call you made, for that you
+will need to instantiate a new instance with the call you want to profile.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
@@ -54,7 +91,7 @@ $profiler = new Profiler($service->calculateHeavyStuff(...));
 $result = $profiler(new DateTimeImmutable('2024-12-24'));
 
 $profile = $profiler->last(); // returns the Profile from the last call
-// the $profile object returns a Metrics instance with following properties
+// the $profile object returns a Metrics instance
 $metrics = $profile->metrics;
 
 $metrics->executionTime;
@@ -98,18 +135,6 @@ $callable = function (int ...$args): int|float => {
 $profiler = new Profiler($callable);
 $profiler->executionTime(1, 2, 3); // will return the execution tine of the call as a float.
 ```
-They are as many methods as they are metrics:
-
-- `Profiler::executionTime()`;
-- `Profiler::>cpuTime()`;
-- `Profiler::memoryUsage()`;
-- `Profiler::peakMemoryUsage()`;
-- `Profiler::realMemoryUsage()`;
-- `Profiler::realPeakMemoryUsage()`;
-- `Profiler::metrics()`;
-
-> [!TIP]  
-> When using the more specific methods, the full profile is never recorded or stored.
 
 ### Using labels
 
