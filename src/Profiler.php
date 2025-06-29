@@ -188,7 +188,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     public function last(): ?ProfilingData
     {
-        return [] === $this->profilingDataList ? null : $this->profilingDataList[array_key_last($this->profilingDataList)];
+        return $this->nth(-1);
     }
 
     public function first(): ?ProfilingData
