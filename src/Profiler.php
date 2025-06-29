@@ -10,6 +10,7 @@ use IteratorAggregate;
 use JsonSerializable;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use Throwable;
 use Traversable;
 
 use function array_filter;
@@ -30,7 +31,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     public function __construct(callable $callback, LoggerInterface $logger = new NullLogger())
     {
-        $this->callback = $callback instanceof Closure ? $callback : Closure::fromCallable($callback);
+        $this->callback = $callback instanceof Closure ? $callback : $callback(...);
         $this->logger = $logger;
         $this->reset();
     }
@@ -43,6 +44,8 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     /**
      * Returns the value and the profiling data of the callback execution.
+     *
+     * @throws Throwable
      */
     public static function execute(callable $callback): ProfilingResult
     {
@@ -93,7 +96,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     }
 
     /**
-     * Retuns the memory usage in bytes.
+     * Returns the memory usage in bytes.
      *
      * @param int<1, max> $iterations
      *
@@ -105,7 +108,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     }
 
     /**
-     * Retuns the real memory usage in bytes.
+     * Returns the real memory usage in bytes.
      *
      * @param int<1, max> $iterations
      *
@@ -129,7 +132,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     }
 
     /**
-     * Retunrs the real peak memory usage in bytes.
+     * Returns the real peak memory usage in bytes.
      *
      * @param int<1, max> $iterations
      *
@@ -145,6 +148,9 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         return $this->runWithLabel(null, ...$args);
     }
 
+    /**
+     * @throws Throwable
+     */
     public function runWithLabel(?string $label, mixed ...$args): mixed
     {
         $result = ProfilingResult::profile($label, $this->callback, $this->logger, ...$args);
@@ -187,7 +193,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     public function first(): ?ProfilingData
     {
-        return [] === $this->profilingDataList ? null : $this->profilingDataList[0];
+        return $this->nth(0);
     }
 
     public function nth(int $offset): ?ProfilingData
