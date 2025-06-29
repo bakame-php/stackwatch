@@ -14,6 +14,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 - library packaging by removing development related files from downloads.
 - **BC BREAK:** normalize duration related metrics to be expressed in nanoseconds.
 - **BC BREAK:** normalize memory related metrics to be expressed in bytes.
+- **BC BREAK:** Adding missing field in `Metrics::stats` returned array.
 
 ### Deprecated
 

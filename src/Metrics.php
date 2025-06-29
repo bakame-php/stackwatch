@@ -6,11 +6,13 @@ namespace Bakame\Aide\Profiler;
 
 use JsonSerializable;
 
+use function array_reduce;
 use function count;
 
 /**
  * @phpstan-type MetricsStat array{
  *     cpu_time: float,
+ *     execution_time: float,
  *     memory_usage: float,
  *     real_memory_usage: float,
  *     peak_memory_usage: float,
@@ -20,7 +22,7 @@ use function count;
 final class Metrics implements JsonSerializable
 {
     /**
-     * @param float $cpuTime expressed in microseconds
+     * @param float $cpuTime expressed in nanoseconds
      * @param float $executionTime expressed in nanoseconds
      * @param float $memoryUsage expressed in bytes
      * @param float $peakMemoryUsage expressed in bytes
@@ -89,6 +91,7 @@ final class Metrics implements JsonSerializable
     {
         return [
             'cpu_time' => $this->cpuTime,
+            'execution_time' => $this->executionTime,
             'memory_usage' => $this->memoryUsage,
             'real_memory_usage' => $this->realMemoryUsage,
             'peak_memory_usage' => $this->peakMemoryUsage,
@@ -98,41 +101,38 @@ final class Metrics implements JsonSerializable
 
     public static function avg(Profiler|ProfilingResult|ProfilingData|Metrics ...$metrics): self
     {
-        $sum = Metrics::none();
-        $count = 0;
-        foreach ($metrics as $metric) {
+        /** @var array<Metrics> $metricsList */
+        $metricsList = array_reduce($metrics, function (array $carry, Profiler|ProfilingResult|ProfilingData|Metrics $metric) {
             if ($metric instanceof self) {
-                ++$count;
-                $sum = self::add($sum, $metric);
+                $carry[] = $metric;
 
-                continue;
+                return $carry;
+
             }
 
             if ($metric instanceof ProfilingData) {
-                ++$count;
-                $sum = self::add($sum, $metric->metrics);
+                $carry[] = $metric->metrics;
 
-                continue;
+                return $carry;
             }
 
             if ($metric instanceof ProfilingResult) {
-                ++$count;
-                $sum = self::add($sum, $metric->profilingData->metrics);
+                $carry[] = $metric->profilingData->metrics;
 
-                continue;
+                return $carry;
             }
 
-            $count += count($metric);
             foreach ($metric as $profile) {
-                $sum = self::add($sum, $profile->metrics);
+                $carry[] = $profile->metrics;
             }
-        }
 
-        if (1 === $count) {
-            return $sum;
-        }
+            return $carry;
+        }, []);
 
-        return new Metrics(
+        $count = count($metricsList);
+        $sum = self::add(...$metricsList);
+
+        return 2 < $count ? $sum : new Metrics(
             cpuTime: $sum->cpuTime / $count,
             executionTime: $sum->executionTime / $count,
             memoryUsage: $sum->memoryUsage / $count,
@@ -142,15 +142,19 @@ final class Metrics implements JsonSerializable
         );
     }
 
-    private static function add(Metrics $carry, Metrics $metric): Metrics
+    public static function add(Metrics ...$metrics): Metrics
     {
-        return new self(
-            cpuTime: $carry->cpuTime + $metric->cpuTime,
-            executionTime: $carry->executionTime + $metric->executionTime,
-            memoryUsage: $carry->memoryUsage + $metric->memoryUsage,
-            peakMemoryUsage: $carry->peakMemoryUsage + $metric->peakMemoryUsage,
-            realMemoryUsage: $carry->realMemoryUsage + $metric->realMemoryUsage,
-            realPeakMemoryUsage: $carry->realPeakMemoryUsage + $metric->realPeakMemoryUsage,
+        return array_reduce(
+            $metrics,
+            fn (Metrics $sum, Metrics $metric): Metrics => new self(
+                cpuTime: $sum->cpuTime + $metric->cpuTime,
+                executionTime: $sum->executionTime + $metric->executionTime,
+                memoryUsage: $sum->memoryUsage + $metric->memoryUsage,
+                peakMemoryUsage: $sum->peakMemoryUsage + $metric->peakMemoryUsage,
+                realMemoryUsage: $sum->realMemoryUsage + $metric->realMemoryUsage,
+                realPeakMemoryUsage: $sum->realPeakMemoryUsage + $metric->realPeakMemoryUsage,
+            ),
+            Metrics::none()
         );
     }
 }
