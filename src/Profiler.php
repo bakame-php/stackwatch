@@ -27,12 +27,17 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     private array $labels;
     private Closure $callback;
 
+    /**
+     * Returns the value and the profiling data of the callback execution.
+     */
     public static function execute(callable $callback): ProfilingResult
     {
         return ProfilingResult::profile(null, $callback);
     }
 
     /**
+     * Returns the metrics associated with the callback.
+     *
      * @param int<1, max> $iterations
      *
      * @throws InvalidArgument if the iterations are lesser than 1
@@ -56,6 +61,8 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     }
 
     /**
+     * Returns the CPU time in seconds.
+     *
      * @param int<1, max> $iterations
      *
      * @throws InvalidArgument if the iterations are lesser than 1
@@ -66,36 +73,44 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     }
 
     /**
+     * Returns the execution time in nanoseconds.
+     *
      * @param int<1, max> $iterations
      *
      * @throws InvalidArgument if the iterations are lesser than 1
      */
     public static function executionTime(callable $callback, int $iterations = 1): float
     {
-        return self::metrics($callback, $iterations)->executionTime / 1_000_000_000;
+        return self::metrics($callback, $iterations)->executionTime;
     }
 
     /**
+     * Retuns the memory usage in bytes.
+     *
      * @param int<1, max> $iterations
      *
      * @throws InvalidArgument if the iterations are lesser than 1
      */
     public static function memoryUsage(callable $callback, int $iterations = 1): float
     {
-        return self::metrics($callback, $iterations)->memoryUsage / 1024;
+        return self::metrics($callback, $iterations)->memoryUsage;
     }
 
     /**
+     * Retuns the real memory usage in bytes.
+     *
      * @param int<1, max> $iterations
      *
      * @throws InvalidArgument if the iterations are lesser than 1
      */
     public static function realMemoryUsage(callable $callback, int $iterations = 1): float
     {
-        return self::metrics($callback, $iterations)->realMemoryUsage / 1024;
+        return self::metrics($callback, $iterations)->realMemoryUsage;
     }
 
     /**
+     * Returns the peak memory usage in bytes.
+     *
      * @param int<1, max> $iterations
      *
      * @throws InvalidArgument if the iterations are lesser than 1
@@ -106,6 +121,8 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     }
 
     /**
+     * Retunrs the real peak memory usage in bytes.
+     *
      * @param int<1, max> $iterations
      *
      * @throws InvalidArgument if the iterations are lesser than 1
