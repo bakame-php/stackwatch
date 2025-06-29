@@ -72,7 +72,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public static function executionTime(callable $callback, int $iterations = 1): float
     {
-        return self::metrics($callback, $iterations)->executionTime;
+        return self::metrics($callback, $iterations)->executionTime / 1_000_000_000;
     }
 
     /**
@@ -82,7 +82,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public static function memoryUsage(callable $callback, int $iterations = 1): float
     {
-        return self::metrics($callback, $iterations)->memoryUsage;
+        return self::metrics($callback, $iterations)->memoryUsage / 1024;
     }
 
     /**
@@ -92,7 +92,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public static function realMemoryUsage(callable $callback, int $iterations = 1): float
     {
-        return self::metrics($callback, $iterations)->realMemoryUsage;
+        return self::metrics($callback, $iterations)->realMemoryUsage / 1024;
     }
 
     /**
@@ -102,7 +102,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public static function peakMemoryUsage(callable $callback, int $iterations = 1): float
     {
-        return self::metrics($callback, $iterations)->peakMemoryUsage;
+        return self::metrics($callback, $iterations)->peakMemoryUsage / 1024;
     }
 
     /**
@@ -112,7 +112,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public static function realPeakMemoryUsage(callable $callback, int $iterations = 1): float
     {
-        return self::metrics($callback, $iterations)->realPeakMemoryUsage;
+        return self::metrics($callback, $iterations)->realPeakMemoryUsage / 1024;
     }
 
     public function __construct(callable $callback, private LoggerInterface $logger = new NullLogger())
