@@ -128,7 +128,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public static function peakMemoryUsage(callable $callback, int $iterations = 1): float
     {
-        return self::metrics($callback, $iterations)->peakMemoryUsage / 1024;
+        return self::metrics($callback, $iterations)->peakMemoryUsage;
     }
 
     /**
@@ -140,7 +140,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public static function realPeakMemoryUsage(callable $callback, int $iterations = 1): float
     {
-        return self::metrics($callback, $iterations)->realPeakMemoryUsage / 1024;
+        return self::metrics($callback, $iterations)->realPeakMemoryUsage;
     }
 
     public function __invoke(mixed ...$args): mixed
