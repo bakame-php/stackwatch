@@ -145,7 +145,6 @@ final class ProfilerTest extends TestCase
 
         self::assertSame('info', $logger->logs[1]['level']);
         self::assertStringContainsString('Finished profiling for label: simple_test.', (string) $logger->logs[1]['message']);
-        dump($logger->logs[1]['context']);
         self::assertArrayHasKey('metrics', $logger->logs[1]['context']);
     }
 

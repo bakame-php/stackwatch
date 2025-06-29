@@ -27,9 +27,19 @@ class OpenTelemetryExporterTest extends TestCase
      */
     private function createProfilingData(string $label): ProfilingData
     {
-        $start = new Snapshot(new DateTimeImmutable(), hrtime(true), [], 1000, 2000, 3000, 4000);
+        $start = new Snapshot(new DateTimeImmutable(), hrtime(true), [
+            'ru_utime.tv_sec' => 1,
+            'ru_stime.tv_sec' => 1,
+            'ru_utime.tv_usec' => 1,
+            'ru_stime.tv_usec' => 1,
+        ], 1000, 2000, 3000, 4000);
         usleep(100);
-        $end = new Snapshot(new DateTimeImmutable(), hrtime(true) + 1, [], 1100, 2100, 3100, 4100);
+        $end = new Snapshot(new DateTimeImmutable(), hrtime(true) + 1, [
+            'ru_utime.tv_sec' => 1,
+            'ru_stime.tv_sec' => 1,
+            'ru_utime.tv_usec' => 1,
+            'ru_stime.tv_usec' => 1,
+        ], 1100, 2100, 3100, 4100);
         return new ProfilingData($label, $start, $end);
     }
 
@@ -50,7 +60,7 @@ class OpenTelemetryExporterTest extends TestCase
     }
 
     #[Test]
-    public function it_can_export_a_profile(): void
+    public function it_can_export_profiling_data(): void
     {
         $profilingData = $this->createProfilingData('test_export');
 
@@ -65,8 +75,10 @@ class OpenTelemetryExporterTest extends TestCase
 
         $otlAttributes = $span->getAttributes()->toArray();
 
-        self::assertArrayHasKey('profiler.label', $otlAttributes);
-        self::assertArrayHasKey('profiler.status', $otlAttributes);
+        self::assertSame('success', $otlAttributes['export.status']);
+        self::assertSame('test_export', $otlAttributes['profiler.label']);
+        self::assertSame('ended', $otlAttributes['profiler.status']);
+
         self::assertArrayHasKey('cpu_time', $otlAttributes);
         self::assertArrayHasKey('exec_time', $otlAttributes);
         self::assertArrayHasKey('memory_usage', $otlAttributes);
