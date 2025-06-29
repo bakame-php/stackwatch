@@ -70,7 +70,7 @@ The method returns a `Metrics` class with readonly methods for each metric.
 use Bakame\Aide\Profiler\Profiler;
 
 // you create a new Profiler by passing the callable or closure you want to profile
-$metrics = Profiler::executionTime(
+$metrics = Profiler::metrics(
     $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'))
 );
 

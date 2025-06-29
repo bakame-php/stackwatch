@@ -2,6 +2,24 @@
 
 All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
+## [Next](https://github.com/bakame-php/aide-profiler/compare/0.3.0...main) - TBD
+
+### Added
+
+- None
+
+### Fixed
+
+- None
+
+### Deprecated
+
+- None
+
+### Removed
+
+- None
+
 ## [0.3.0 - Cairo](https://github.com/bakame-php/aide-profiler/compare/0.2.0...0.3.0) - 2025-06-29
 
 ### Added
