@@ -130,7 +130,7 @@ final class Metrics implements JsonSerializable
         }, []);
 
         $count = count($metricsList);
-        $sum = self::add(...$metricsList);
+        $sum = self::sum(...$metricsList);
 
         return 2 < $count ? $sum : new Metrics(
             cpuTime: $sum->cpuTime / $count,
@@ -142,19 +142,24 @@ final class Metrics implements JsonSerializable
         );
     }
 
-    public static function add(Metrics ...$metrics): Metrics
+    public static function sum(Metrics ...$metrics): Metrics
     {
         return array_reduce(
             $metrics,
-            fn (Metrics $sum, Metrics $metric): Metrics => new self(
-                cpuTime: $sum->cpuTime + $metric->cpuTime,
-                executionTime: $sum->executionTime + $metric->executionTime,
-                memoryUsage: $sum->memoryUsage + $metric->memoryUsage,
-                peakMemoryUsage: $sum->peakMemoryUsage + $metric->peakMemoryUsage,
-                realMemoryUsage: $sum->realMemoryUsage + $metric->realMemoryUsage,
-                realPeakMemoryUsage: $sum->realPeakMemoryUsage + $metric->realPeakMemoryUsage,
-            ),
+            fn (Metrics $sum, Metrics $metric): Metrics => $sum->add($metric),
             Metrics::none()
+        );
+    }
+
+    public function add(Metrics $metric): Metrics
+    {
+        return new self(
+            cpuTime: $this->cpuTime + $metric->cpuTime,
+            executionTime: $this->executionTime + $metric->executionTime,
+            memoryUsage: $this->memoryUsage + $metric->memoryUsage,
+            peakMemoryUsage: $this->peakMemoryUsage + $metric->peakMemoryUsage,
+            realMemoryUsage: $this->realMemoryUsage + $metric->realMemoryUsage,
+            realPeakMemoryUsage: $this->realPeakMemoryUsage + $metric->realPeakMemoryUsage,
         );
     }
 }

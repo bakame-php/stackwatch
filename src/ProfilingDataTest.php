@@ -25,7 +25,7 @@ final class ProfilingDataTest extends TestCase
         usleep(1000);
         $end = Snapshot::now();
 
-        $profile = new ProfilingData('test', $start, $end);
+        $profile = new ProfilingData($start, $end, 'test');
 
         self::assertSame('test', $profile->label);
         self::assertGreaterThan(0, $profile->metrics->executionTime);
@@ -42,7 +42,7 @@ final class ProfilingDataTest extends TestCase
         $start = Snapshot::now();
         usleep(1000);
         $end = Snapshot::now();
-        $profile = new ProfilingData('test', $start, $end);
+        $profile = new ProfilingData($start, $end, 'test');
 
         $stats = $profile->stats();
 
@@ -62,7 +62,7 @@ final class ProfilingDataTest extends TestCase
         $start = Snapshot::now();
         usleep(1000);
         $end = Snapshot::now();
-        $profile = new ProfilingData('test', $start, $end);
+        $profile = new ProfilingData($start, $end, 'test');
 
         /** @var non-empty-string $json */
         $json = json_encode($profile);
@@ -81,6 +81,6 @@ final class ProfilingDataTest extends TestCase
         $start = Snapshot::now();
         usleep(1000);
         $end = Snapshot::now();
-        $profile = new ProfilingData('_123invalid', $start, $end);
+        $profile = new ProfilingData($start, $end, '_123invalid');
     }
 }

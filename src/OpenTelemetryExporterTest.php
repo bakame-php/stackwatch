@@ -23,6 +23,8 @@ class OpenTelemetryExporterTest extends TestCase
     private InMemoryExporter $otlExporter;
 
     /**
+     * @param non-empty-string $label
+     *
      * @throws ReflectionException
      */
     private function createProfilingData(string $label): ProfilingData
@@ -40,7 +42,7 @@ class OpenTelemetryExporterTest extends TestCase
             'ru_utime.tv_usec' => 1,
             'ru_stime.tv_usec' => 1,
         ], 1100, 2100, 3100, 4100);
-        return new ProfilingData($label, $start, $end);
+        return new ProfilingData($start, $end, $label);
     }
 
     protected function setUp(): void

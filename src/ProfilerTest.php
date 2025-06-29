@@ -148,12 +148,11 @@ final class ProfilerTest extends TestCase
         self::assertArrayHasKey('metrics', $logger->logs[1]['context']);
     }
 
+    #[Test]
     public function it_can_log_failure(): void
     {
         $logger = new InMemoryLogger();
-        $profiler = new Profiler(function () {
-            throw new RuntimeException('Test crash');
-        }, $logger);
+        $profiler = new Profiler(fn () => throw new RuntimeException('Test crash'), $logger);
 
         $this->expectException(RuntimeException::class);
 
@@ -163,7 +162,7 @@ final class ProfilerTest extends TestCase
             self::assertCount(2, $logger->logs);
             self::assertSame('info', $logger->logs[0]['level']);
             self::assertSame('error', $logger->logs[1]['level']);
-            self::assertStringContainsString('Profiling failed for label: fail_case', (string) $logger->logs[1]['message']);
+            self::assertStringContainsString('Profiling aborted for label: fail_case due to an error in the executed code.', (string) $logger->logs[1]['message']);
             self::assertArrayHasKey('exception', $logger->logs[1]['context']);
         }
     }

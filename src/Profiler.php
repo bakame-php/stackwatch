@@ -9,12 +9,16 @@ use Countable;
 use IteratorAggregate;
 use JsonSerializable;
 use Psr\Log\LoggerInterface;
+use Random\RandomException;
 use Throwable;
 use Traversable;
 
 use function array_filter;
 use function array_key_last;
+use function bin2hex;
 use function count;
+use function gc_collect_cycles;
+use function random_bytes;
 
 /**
  * @implements  IteratorAggregate<int, ProfilingData>
@@ -48,7 +52,51 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public static function execute(callable $callback): ProfilingResult
     {
-        return ProfilingResult::profile(null, $callback);
+        return self::profile(null, $callback);
+    }
+
+    /**
+     * @param ?non-empty-string $label
+     *
+     * @throws Throwable
+     */
+    private static function profile(
+        ?string $label,
+        callable $callback,
+        ?LoggerInterface $logger = null,
+        mixed ...$args
+    ): ProfilingResult {
+        gc_collect_cycles();
+
+        $label ??= self::randomLabel();
+        try {
+            $logger?->info('Starting profiling for label: '.$label.'.', ['label' => $label]);
+            $start = Snapshot::now();
+            $result = ($callback)(...$args);
+            $end = Snapshot::now();
+            $profilingData = new ProfilingData($start, $end, $label);
+            $logger?->info('Finished profiling for label: '.$label.'.', $profilingData->stats());
+
+            return new ProfilingResult($result, $profilingData);
+        } catch (Throwable $exception) {
+            $logger?->error('Profiling aborted for label: '.$label.' due to an error in the executed code.', ['label' => $label, 'exception' => $exception]);
+
+            throw $exception;
+        }
+    }
+
+    /**
+     * @throws InvalidArgument
+     *
+     * @return non-empty-string
+     */
+    public static function randomLabel(): string
+    {
+        try {
+            return bin2hex(random_bytes(6));
+        } catch (RandomException $exception) {
+            throw new InvalidArgument('Unable to generate a random label.', previous: $exception);
+        }
     }
 
     /**
@@ -56,7 +104,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @param int<1, max> $iterations
      *
-     * @throws InvalidArgument if the iterations are lesser than 1
+     * @throws InvalidArgument|Throwable
      */
     public static function metrics(callable $callback, int $iterations = 1): Metrics
     {
@@ -75,7 +123,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @param int<1, max> $iterations
      *
-     * @throws InvalidArgument if the iterations are lesser than 1
+     * @throws InvalidArgument|Throwable
      */
     public static function cpuTime(callable $callback, int $iterations = 1): float
     {
@@ -87,7 +135,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @param int<1, max> $iterations
      *
-     * @throws InvalidArgument if the iterations are lesser than 1
+     * @throws InvalidArgument|Throwable
      */
     public static function executionTime(callable $callback, int $iterations = 1): float
     {
@@ -99,7 +147,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @param int<1, max> $iterations
      *
-     * @throws InvalidArgument if the iterations are lesser than 1
+     * @throws InvalidArgument|Throwable
      */
     public static function memoryUsage(callable $callback, int $iterations = 1): float
     {
@@ -111,7 +159,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @param int<1, max> $iterations
      *
-     * @throws InvalidArgument if the iterations are lesser than 1
+     * @throws InvalidArgument|Throwable
      */
     public static function realMemoryUsage(callable $callback, int $iterations = 1): float
     {
@@ -123,7 +171,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @param int<1, max> $iterations
      *
-     * @throws InvalidArgument if the iterations are lesser than 1
+     * @throws InvalidArgument|Throwable
      */
     public static function peakMemoryUsage(callable $callback, int $iterations = 1): float
     {
@@ -135,24 +183,29 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @param int<1, max> $iterations
      *
-     * @throws InvalidArgument if the iterations are lesser than 1
+     * @throws InvalidArgument|Throwable
      */
     public static function realPeakMemoryUsage(callable $callback, int $iterations = 1): float
     {
         return self::metrics($callback, $iterations)->realPeakMemoryUsage;
     }
 
+    /**
+     * @throws Throwable
+     */
     public function __invoke(mixed ...$args): mixed
     {
         return $this->runWithLabel(null, ...$args);
     }
 
     /**
+     * @param ?non-empty-string $label
+     *
      * @throws Throwable
      */
     public function runWithLabel(?string $label, mixed ...$args): mixed
     {
-        $result = ProfilingResult::profile($label, $this->callback, $this->logger, ...$args);
+        $result = self::profile($label, $this->callback, $this->logger, ...$args);
         $this->profilingDataList[] = $result->profilingData;
         $this->labels[$result->profilingData->label] = 1;
 

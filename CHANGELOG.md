@@ -6,8 +6,8 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 ### Added
 
-- `ProfilingResult` implements the `JsonSeriazilable` interface and returns the same JSON as `ProfilingData`.
 - `Metrics::avg` supports `ProfilingData` instances.
+- `Metrics::add` public method.
 
 ### Fixed
 
@@ -22,7 +22,8 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 ### Removed
 
-- None
+- **BC BREAK:** `ProfilingResult::profile` static method removed
+- **BC BREAK:** `ProfilingData::randomLabel` static method removed
 
 ## [0.3.0 - Cairo](https://github.com/bakame-php/aide-profiler/compare/0.2.0...0.3.0) - 2025-06-29
 
