@@ -44,7 +44,7 @@ final class OpenTelemetryExporter implements Exporter
         $span->setAttribute('export.status', 'success');
         $span->setAttribute('profiler.label', $profilingData->label);
         $span->setAttribute('profiler.status', 'ended');
-        $span->setAttribute('cpu_time', $metrics->cpuTime);
+        $span->setAttribute('cpu_time', $metrics->cpuTime * 1000);
         $span->setAttribute('exec_time', $metrics->executionTime);
         $span->setAttribute('memory_usage', $metrics->memoryUsage);
         $span->setAttribute('real_memory_usage', $metrics->realMemoryUsage);

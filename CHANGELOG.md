@@ -12,6 +12,8 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 ### Fixed
 
 - library packaging by removing development related files from downloads.
+- **BC BREAK:** cpuTime is expressed in microseconds
+- **BC BREAK:** cpuTime is open telemetry is expressed in nanoseconds.
 
 ### Deprecated
 

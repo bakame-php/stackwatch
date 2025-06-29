@@ -19,6 +19,14 @@ use function count;
  */
 final class Metrics implements JsonSerializable
 {
+    /**
+     * @param float $cpuTime expressed in microseconds
+     * @param float $executionTime expressed in nanoseconds
+     * @param float $memoryUsage expressed in bytes
+     * @param float $peakMemoryUsage expressed in bytes
+     * @param float $realMemoryUsage expressed in bytes
+     * @param float $realPeakMemoryUsage expressed in bytes
+     */
     public function __construct(
         public readonly float $cpuTime,
         public readonly float $executionTime,
@@ -60,8 +68,8 @@ final class Metrics implements JsonSerializable
         $cpuStart = $start->cpu;
         $cpuEnd = $end->cpu;
 
-        $utime = ($cpuEnd['ru_utime.tv_sec'] - $cpuStart['ru_utime.tv_sec']) + ($cpuEnd['ru_utime.tv_usec'] - $cpuStart['ru_utime.tv_usec']) / 1_000_000;
-        $stime = ($cpuEnd['ru_stime.tv_sec'] - $cpuStart['ru_stime.tv_sec']) + ($cpuEnd['ru_stime.tv_usec'] - $cpuStart['ru_stime.tv_usec']) / 1_000_000;
+        $utime = ($cpuEnd['ru_utime.tv_sec'] - $cpuStart['ru_utime.tv_sec']) + ($cpuEnd['ru_utime.tv_usec'] - $cpuStart['ru_utime.tv_usec']);
+        $stime = ($cpuEnd['ru_stime.tv_sec'] - $cpuStart['ru_stime.tv_sec']) + ($cpuEnd['ru_stime.tv_usec'] - $cpuStart['ru_stime.tv_usec']);
 
         return $utime + $stime;
     }
