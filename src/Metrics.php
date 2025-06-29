@@ -133,12 +133,12 @@ final class Metrics implements JsonSerializable
         $sum = self::sum(...$metricsList);
 
         return 2 < $count ? $sum : new Metrics(
-            cpuTime: $sum->cpuTime / $count,
-            executionTime: $sum->executionTime / $count,
-            memoryUsage: $sum->memoryUsage / $count,
-            peakMemoryUsage: $sum->peakMemoryUsage / $count,
-            realMemoryUsage: $sum->realMemoryUsage / $count,
-            realPeakMemoryUsage: $sum->realPeakMemoryUsage / $count,
+            cpuTime: 0.0 !== $sum->cpuTime ? $sum->cpuTime / $count : 0.0,
+            executionTime: 0.0 !== $sum->executionTime ? $sum->executionTime / $count : 0.0,
+            memoryUsage: 0.0 !== $sum->memoryUsage ? $sum->memoryUsage / $count : 0.0,
+            peakMemoryUsage: 0.0 !== $sum->peakMemoryUsage ? $sum->peakMemoryUsage / $count : 0.0,
+            realMemoryUsage: 0.0 !== $sum->realMemoryUsage ? $sum->realMemoryUsage / $count : 0.0,
+            realPeakMemoryUsage: 0.0 !== $sum->realPeakMemoryUsage ? $sum->realPeakMemoryUsage / $count : 0.0,
         );
     }
 

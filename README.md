@@ -108,6 +108,10 @@ use Bakame\Aide\Profiler\Profiler;
 $profiling = Profiler::execute($service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24')));
 $profiling->result; // the result of executing the `calculateHeavyStuff` method
 $profiling->profilingData; // the profiling data associated with the call.
+$profiling->profilingData->metrics; // returns a Metrics instance
+$profiling->profilingData->start;   // returns a Snapshot instance
+$profiling->profilingData->end;     // returns a Snapshot instance
+$profiling->profilingData->label;   // returns a identiifier as a string
 ````
 
 ### Metrics recording

@@ -57,8 +57,9 @@ final class ProfilerTest extends TestCase
         self::assertSame('result', $result);
         self::assertCount(1, $profiler);
 
-        $profile = $profiler->last();
-        self::assertInstanceOf(ProfilingData::class, $profile);
+        $profilingData = $profiler->last();
+        self::assertInstanceOf(ProfilingData::class, $profilingData);
+        self::assertSame($profiler->last(), $profiler->first());
     }
 
     #[Test]
