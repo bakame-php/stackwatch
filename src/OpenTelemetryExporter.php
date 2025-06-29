@@ -8,16 +8,15 @@ use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\API\Trace\TracerInterface;
 use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use Throwable;
 
 final class OpenTelemetryExporter implements Exporter
 {
     private readonly TracerProviderInterface $tracerProvider;
     private readonly TracerInterface $tracer;
-    private readonly LoggerInterface $logger;
+    private readonly ?LoggerInterface $logger;
 
-    public function __construct(TracerProviderInterface $tracerProvider, LoggerInterface $logger = new NullLogger())
+    public function __construct(TracerProviderInterface $tracerProvider, ?LoggerInterface $logger = null)
     {
         $this->tracerProvider = $tracerProvider;
         $this->tracer = $this->tracerProvider->getTracer('profiler-exporter');
@@ -69,7 +68,7 @@ final class OpenTelemetryExporter implements Exporter
         try {
             $this->tracerProvider->shutdown();
         } catch (Throwable $exception) {
-            $this->logger->error('Exporting the Profiler aborted due to an error with the tracer provider.', ['exception' => $exception]);
+            $this->logger?->error('Exporting the Profiler aborted due to an error with the tracer provider.', ['exception' => $exception]);
         }
     }
 }

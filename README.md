@@ -22,10 +22,7 @@ composer require bakame/aide-profiler
 
 ### System Requirements
 
-You need:
-
-- **PHP >= 8.1** but the latest stable version of PHP is recommended
-- [PSR-3](https://packagist.org/packages/psr/log?query=psr%2Flog) implementing package
+You need **PHP >= 8.1** but the latest stable version of PHP is recommended
 
 ## Usage
 
@@ -219,6 +216,7 @@ $profiler->isEmpty(); // return true
 ### Logging
 
 The `Profiler` can optionally take a `Psr\LoggerInterface` implementing object to log the profiling process.
+First you need to install and configure a `PSR-3` compliant package as shown below:
 
 ```php
 use Bakame\Aide\Profiler\Profiler;

@@ -9,7 +9,6 @@ use Countable;
 use IteratorAggregate;
 use JsonSerializable;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use Throwable;
 use Traversable;
 
@@ -23,13 +22,13 @@ use function count;
 final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 {
     private readonly Closure $callback;
-    private readonly LoggerInterface $logger;
+    private readonly ?LoggerInterface $logger;
     /** @var list<ProfilingData> */
     private array $profilingDataList;
     /** @var array<string, 1> */
     private array $labels;
 
-    public function __construct(callable $callback, LoggerInterface $logger = new NullLogger())
+    public function __construct(callable $callback, ?LoggerInterface $logger = null)
     {
         $this->callback = $callback instanceof Closure ? $callback : $callback(...);
         $this->logger = $logger;
