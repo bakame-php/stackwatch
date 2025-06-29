@@ -22,8 +22,8 @@ use function count;
  */
 final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 {
-    private Closure $callback;
-    private LoggerInterface $logger;
+    private readonly Closure $callback;
+    private readonly LoggerInterface $logger;
     /** @var list<ProfilingData> */
     private array $profilingDataList;
     /** @var array<string, 1> */

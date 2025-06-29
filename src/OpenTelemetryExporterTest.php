@@ -14,6 +14,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionException;
 
+use function hrtime;
 use function usleep;
 
 class OpenTelemetryExporterTest extends TestCase
@@ -24,11 +25,11 @@ class OpenTelemetryExporterTest extends TestCase
     /**
      * @throws ReflectionException
      */
-    private function createProfile(string $label): ProfilingData
+    private function createProfilingData(string $label): ProfilingData
     {
-        $start = new Snapshot(new DateTimeImmutable(), microtime(true), [], 1000, 2000, 3000, 4000);
+        $start = new Snapshot(new DateTimeImmutable(), hrtime(true), [], 1000, 2000, 3000, 4000);
         usleep(100);
-        $end = new Snapshot(new DateTimeImmutable(), microtime(true) + 1, [], 1100, 2100, 3100, 4100);
+        $end = new Snapshot(new DateTimeImmutable(), hrtime(true) + 1, [], 1100, 2100, 3100, 4100);
         return new ProfilingData($label, $start, $end);
     }
 
@@ -51,16 +52,16 @@ class OpenTelemetryExporterTest extends TestCase
     #[Test]
     public function it_can_export_a_profile(): void
     {
-        $profile = $this->createProfile('test_export');
+        $profilingData = $this->createProfilingData('test_export');
 
-        $this->exporter->exportProfilingData($profile);
+        $this->exporter->exportProfilingData($profilingData);
 
         $spans = $this->otlExporter->getSpans();
         self::assertCount(1, $spans);
         /** @var ImmutableSpan $span */
         $span = $spans[0];
 
-        self::assertSame($profile->label, $span->getName());
+        self::assertSame($profilingData->label, $span->getName());
 
         $otlAttributes = $span->getAttributes()->toArray();
 
@@ -77,13 +78,13 @@ class OpenTelemetryExporterTest extends TestCase
     #[Test]
     public function it_can_export_a_profiler(): void
     {
-        $profile1 = $this->createProfile('profile1');
-        $profile2 = $this->createProfile('profile2');
+        $profilingData1 = $this->createProfilingData('profile1');
+        $profilingData2 = $this->createProfilingData('profile2');
 
         $profiler = new Profiler(fn () => null);
         $reflection = new ReflectionClass($profiler);
-        $reflection->getProperty('profilingDataList')->setValue($profiler, [$profile1, $profile2]);
-        $reflection->getProperty('labels')->setValue($profiler, [$profile1->label => 1, $profile2->label => 1]);
+        $reflection->getProperty('profilingDataList')->setValue($profiler, [$profilingData1, $profilingData2]);
+        $reflection->getProperty('labels')->setValue($profiler, [$profilingData1->label => 1, $profilingData2->label => 1]);
 
         $this->exporter->exportProfiler($profiler);
         $spans = $this->otlExporter->getSpans();
@@ -92,11 +93,11 @@ class OpenTelemetryExporterTest extends TestCase
         /** @var ImmutableSpan $span */
         $span = $spans[0];
         $otlAttributes = $span->getAttributes()->toArray();
-        self::assertSame($otlAttributes['profiler.label'], $profile1->label);
+        self::assertSame($otlAttributes['profiler.label'], $profilingData1->label);
 
         /** @var ImmutableSpan $span */
         $span = $spans[1];
         $otlAttributes = $span->getAttributes()->toArray();
-        self::assertSame($otlAttributes['profiler.label'], $profile2->label);
+        self::assertSame($otlAttributes['profiler.label'], $profilingData2->label);
     }
 }
