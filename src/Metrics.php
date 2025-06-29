@@ -68,10 +68,10 @@ final class Metrics implements JsonSerializable
         $cpuStart = $start->cpu;
         $cpuEnd = $end->cpu;
 
-        $utime = ($cpuEnd['ru_utime.tv_sec'] - $cpuStart['ru_utime.tv_sec']) + ($cpuEnd['ru_utime.tv_usec'] - $cpuStart['ru_utime.tv_usec']);
-        $stime = ($cpuEnd['ru_stime.tv_sec'] - $cpuStart['ru_stime.tv_sec']) + ($cpuEnd['ru_stime.tv_usec'] - $cpuStart['ru_stime.tv_usec']);
-
-        return $utime + $stime;
+        return ($cpuEnd['ru_utime.tv_sec'] - $cpuStart['ru_utime.tv_sec'])
+            + ($cpuEnd['ru_utime.tv_usec'] - $cpuStart['ru_utime.tv_usec'])
+            + ($cpuEnd['ru_stime.tv_sec'] - $cpuStart['ru_stime.tv_sec'])
+            + ($cpuEnd['ru_stime.tv_usec'] - $cpuStart['ru_stime.tv_usec']);
     }
 
     /**
