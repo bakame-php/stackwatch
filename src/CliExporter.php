@@ -22,22 +22,22 @@ final class CliExporter implements Exporter
             $profilingData = $profilingData->profilingData;
         }
 
-        $table = $this->setHeader();
+        $table = $this->createTable();
         $table->addRow($this->profilingDataToRow($profilingData));
         $table->render();
     }
 
     public function exportProfiler(Profiler $profiler): void
     {
-        $table = $this->setHeader();
-        foreach ($profiler as $profile) {
-            $table->addRow($this->profilingDataToRow($profile));
+        $table = $this->createTable();
+        foreach ($profiler as $profilingData) {
+            $table->addRow($this->profilingDataToRow($profilingData));
         }
 
         $table->render();
     }
 
-    private function setHeader(): Table
+    private function createTable(): Table
     {
         $table = new Table($this->output);
         return $table->setHeaders([

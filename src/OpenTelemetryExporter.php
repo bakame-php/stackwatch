@@ -59,8 +59,8 @@ final class OpenTelemetryExporter implements Exporter
         $parent = $this->tracer->spanBuilder('profiler-run')->startSpan();
         $scope = $parent->activate();
 
-        foreach ($profiler as $profile) {
-            $this->exportProfilingData($profile);
+        foreach ($profiler as $profilingData) {
+            $this->exportProfilingData($profilingData);
         }
 
         $parent->end();
