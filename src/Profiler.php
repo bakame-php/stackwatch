@@ -62,16 +62,16 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     {
         1 <= $iterations || throw new InvalidArgument('The iterations argument must be a positive integer greater than or equal to 1.');
 
-        $new = new self($callback);
+        $new = [];
         for ($i = 0; $i < $iterations; ++$i) {
-            $new();
+            $new[] = ProfilingResult::profile(null, $callback)->profilingData->metrics;
         }
 
-        return Metrics::avg($new);
+        return Metrics::avg(...$new);
     }
 
     /**
-     * Returns the CPU time in seconds.
+     * Returns the CPU time in nanoseconds.
      *
      * @param int<1, max> $iterations
      *
