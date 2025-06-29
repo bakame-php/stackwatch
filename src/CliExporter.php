@@ -60,7 +60,7 @@ final class CliExporter implements Exporter
 
         return [
             $profile->label,
-            number_format($metrics->cpuTime / 1_000_000, 6),
+            number_format($metrics->cpuTime / 1_000_000_000, 9),
             number_format($metrics->executionTime / 1_000_000_000, 9),
             number_format($metrics->memoryUsage / 1024, 1),
             number_format($metrics->realMemoryUsage / 1024, 1),
