@@ -30,7 +30,7 @@ final class ProfilingResult implements JsonSerializable
 
         $label = $label ?? ProfilingData::randomLabel();
         try {
-            $logger->info('Starting profiling for label: '.$label.'.');
+            $logger->info('Starting profiling for label: '.$label.'.', ['label' => $label]);
             $start = Snapshot::now();
             $result = ($callback)(...$args);
             $end = Snapshot::now();
@@ -39,7 +39,7 @@ final class ProfilingResult implements JsonSerializable
 
             return new self($result, $profilingData);
         } catch (Throwable $exception) {
-            $logger->error('Profiling aborted for label: {label} due to an error in the executed code.', ['label' => $label, 'exception' => $exception]);
+            $logger->error('Profiling aborted for label: '.$label.' due to an error in the executed code.', ['label' => $label, 'exception' => $exception]);
 
             throw $exception;
         }
