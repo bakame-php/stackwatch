@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Bakame\Aide\Profiler;
 
+use JsonSerializable;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Throwable;
 
 use function gc_collect_cycles;
 
-final class ProfilingResult
+final class ProfilingResult implements JsonSerializable
 {
     public function __construct(public readonly mixed $result, public readonly ProfilingData $profilingData)
     {
@@ -42,5 +43,10 @@ final class ProfilingResult
 
             throw $exception;
         }
+    }
+
+    public function jsonSerialize(): ProfilingData
+    {
+        return $this->profilingData;
     }
 }

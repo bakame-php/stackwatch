@@ -6,7 +6,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 ### Added
 
-- None
+- `ProfilingResult` implements the `JsonSeriazilable` interface and returns the same JSON as `ProfilingData`.
 
 ### Fixed
 

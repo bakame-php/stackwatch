@@ -16,7 +16,7 @@ use function usleep;
  */
 #[CoversClass(ProfilingData::class)]
 #[CoversClass(Metrics::class)]
-final class ProfileTest extends TestCase
+final class ProfilingDataTest extends TestCase
 {
     #[Test]
     public function it_has_a_specific_lifecycle(): void
