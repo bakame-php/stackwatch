@@ -64,7 +64,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
         $new = [];
         for ($i = 0; $i < $iterations; ++$i) {
-            $new[] = ProfilingResult::profile(null, $callback)->profilingData->metrics;
+            $new[] = self::execute($callback)->profilingData->metrics;
         }
 
         return Metrics::avg(...$new);
