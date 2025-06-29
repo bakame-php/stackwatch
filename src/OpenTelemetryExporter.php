@@ -24,8 +24,12 @@ final class OpenTelemetryExporter implements Exporter
         $this->logger = $logger;
     }
 
-    public function exportProfilingData(ProfilingData $profilingData): void
+    public function exportProfilingData(ProfilingResult|ProfilingData $profilingData): void
     {
+        if ($profilingData instanceof ProfilingResult) {
+            $profilingData = $profilingData->profilingData;
+        }
+
         $start = $profilingData->start;
         $end = $profilingData->end;
 

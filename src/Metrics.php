@@ -29,6 +29,18 @@ final class Metrics implements JsonSerializable
     ) {
     }
 
+    public static function none(): self
+    {
+        return new self(
+            cpuTime: 0,
+            executionTime: 0,
+            memoryUsage: 0,
+            peakMemoryUsage: 0,
+            realMemoryUsage: 0,
+            realPeakMemoryUsage: 0,
+        );
+    }
+
     public static function fromSnapshots(Snapshot $start, Snapshot $end): self
     {
         $start->timestamp <= $end->timestamp || throw new UnableToProfile('The ending snapshot was taken before the starting snapshot.');
@@ -40,18 +52,6 @@ final class Metrics implements JsonSerializable
             peakMemoryUsage: $end->peakMemoryUsage - $start->peakMemoryUsage,
             realMemoryUsage: $end->realMemoryUsage - $start->realMemoryUsage,
             realPeakMemoryUsage: $end->realPeakMemoryUsage - $start->realPeakMemoryUsage,
-        );
-    }
-
-    public static function none(): self
-    {
-        return new self(
-            cpuTime: 0,
-            executionTime: 0,
-            memoryUsage: 0,
-            peakMemoryUsage: 0,
-            realMemoryUsage: 0,
-            realPeakMemoryUsage: 0,
         );
     }
 

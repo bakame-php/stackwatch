@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Bakame\Aide\Profiler;
 
 use Symfony\Component\Console\Helper\Table;
-use Symfony\Component\Console\Helper\TableCell;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -17,36 +16,20 @@ final class CliExporter implements Exporter
     {
     }
 
-    public function exportProfilingData(ProfilingData $profilingData): void
+    public function exportProfilingData(ProfilingResult|ProfilingData $profilingData): void
     {
-        $table = new Table($this->output);
-        $table->setHeaders([
-            'Label',
-            'CPU Time (s)',
-            'Exec Time (s)',
-            'Memory (kB)',
-            'Real Mem (kB)',
-            'Peak Mem (kB)',
-            'Real Peak (kB)',
-        ]);
+        if ($profilingData instanceof ProfilingResult) {
+            $profilingData = $profilingData->profilingData;
+        }
 
+        $table = $this->setHeader();
         $table->addRow($this->profilingDataToRow($profilingData));
         $table->render();
     }
 
     public function exportProfiler(Profiler $profiler): void
     {
-        $table = new Table($this->output);
-        $table->setHeaders([
-            'Label',
-            'CPU Time (s)',
-            'Exec Time (s)',
-            'Memory (kB)',
-            'Real Mem (kB)',
-            'Peak Mem (kB)',
-            'Real Peak (kB)',
-        ]);
-
+        $table = $this->setHeader();
         foreach ($profiler as $profile) {
             $table->addRow($this->profilingDataToRow($profile));
         }
@@ -54,8 +37,22 @@ final class CliExporter implements Exporter
         $table->render();
     }
 
+    private function setHeader(): Table
+    {
+        $table = new Table($this->output);
+        return $table->setHeaders([
+            'Label',
+            'CPU Time (s)',
+            'Exec Time (s)',
+            'Memory (kB)',
+            'Real Mem (kB)',
+            'Peak Mem (kB)',
+            'Real Peak (kB)',
+        ]);
+    }
+
     /**
-     * @return list<string|TableCell>
+     * @return list<string>
      */
     private function profilingDataToRow(ProfilingData $profile): array
     {
@@ -64,7 +61,7 @@ final class CliExporter implements Exporter
         return [
             $profile->label,
             number_format($metrics->cpuTime, 9),
-            number_format($metrics->executionTime, 9),
+            number_format($metrics->executionTime / 1_000_000_000, 9),
             number_format($metrics->memoryUsage / 1024, 1),
             number_format($metrics->realMemoryUsage / 1024, 1),
             number_format($metrics->peakMemoryUsage / 1024, 1),
