@@ -21,11 +21,25 @@ use function count;
  */
 final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 {
-    /** @var array<ProfilingData> */
+    private Closure $callback;
+    private LoggerInterface $logger;
+    /** @var list<ProfilingData> */
     private array $profilingDataList;
     /** @var array<string, 1> */
     private array $labels;
-    private Closure $callback;
+
+    public function __construct(callable $callback, LoggerInterface $logger = new NullLogger())
+    {
+        $this->callback = $callback instanceof Closure ? $callback : Closure::fromCallable($callback);
+        $this->logger = $logger;
+        $this->reset();
+    }
+
+    public function reset(): void
+    {
+        $this->profilingDataList = [];
+        $this->labels = [];
+    }
 
     /**
      * Returns the value and the profiling data of the callback execution.
@@ -47,12 +61,6 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         1 <= $iterations || throw new InvalidArgument('The iterations argument must be a positive integer greater than or equal to 1.');
 
         $new = new self($callback);
-        if (1 === $iterations) {
-            $new();
-
-            return $new->last()->metrics ?? Metrics::none();
-        }
-
         for ($i = 0; $i < $iterations; ++$i) {
             $new();
         }
@@ -130,12 +138,6 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     public static function realPeakMemoryUsage(callable $callback, int $iterations = 1): float
     {
         return self::metrics($callback, $iterations)->realPeakMemoryUsage / 1024;
-    }
-
-    public function __construct(callable $callback, private LoggerInterface $logger = new NullLogger())
-    {
-        $this->callback = $callback instanceof Closure ? $callback : Closure::fromCallable($callback);
-        $this->reset();
     }
 
     public function __invoke(mixed ...$args): mixed
@@ -238,11 +240,5 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     public function labels(): array
     {
         return array_keys($this->labels);
-    }
-
-    public function reset(): void
-    {
-        $this->profilingDataList = [];
-        $this->labels = [];
     }
 }

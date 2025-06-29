@@ -102,7 +102,7 @@ The `$iterations` argument is available for all metrics.
 
 Last but not least, it is possible to access the result from executing a call as well as its associated profile
 using the static method `Profiler::execute`. The method returns a `ProfilingResult`
-instance where the `result` property represents the returned value of the callback execution while its `profile`
+instance where the `result` property represents the returned value of the callback execution while its `profilingData`
 property contains all the data related to profiling the call.
 
 ```php
@@ -155,13 +155,13 @@ $profiler->isEmpty(); //returns false because the profiler already contains reco
 ```
 
 You can access any profile by index using the `nth` method, or use the `first` and `last` methods
-to quickly retrieve the first and last recorded `Profile`. The `nth` method also accepts negative
+to quickly retrieve the first and last recorded `ProfilingData`. The `nth` method also accepts negative
 integers to simplify access from the end of the list.
 
 ### Using labels
 
 To add a custom label to each run, use `Profiler::runWithLabel`. This method works like the `__invoke`
-method but allows you to assign a custom label to the returned `Profile` object via its first argument.
+method but allows you to assign a custom label to the returned `ProfilingData` object via its first argument.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
@@ -174,13 +174,13 @@ $callable = function (int ...$args): int|float => {
 
 $profiler = new Profiler($callable);
 $profiler(1, 2, 3); // returns 6
-$profile = $profiler->last(); // returns the last ProfilingData object from the last call
-$profiler->runWithLabel('my_test', 7, 8, 9); // returns 24
-$namedProfile = $profiler->get('my_test'); // will return the associated ProfilingData
+$profilingData = $profiler->last();              // returns the last ProfilingData object from the last call
+$profiler->runWithLabel('my_test', 7, 8, 9);     // returns 24
+$namedProfilingData = $profiler->get('my_test'); // returns the associated ProfilingData
 
 $profiler->get('foobar'); // returns null because the `foobar` label does not exist
-$profiler->has('foobar'); // return false because the label does not exist
-$profiler->labels(); //will return all the labels attached to the Profiler
+$profiler->has('foobar'); // returns false because the label does not exist
+$profiler->labels();      // returns all the labels attached to the Profiler
 ````
 
 > [!NOTE]  
@@ -251,7 +251,7 @@ You will see in your terminal the following output since we used Monolog `Stream
 
 You can export the `Profiler` as a JSON string using the `json_encode` method.
 The JSON representation will return the timestamp, the snapshots as well as the metrics
-associated to all the `Profile` instances attached to the object.
+associated to all the `ProfilingData` instances attached to the object.
 
 ```php
 echo json_encode($profiler), PHP_EOL;

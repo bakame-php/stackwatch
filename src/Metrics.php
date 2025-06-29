@@ -88,7 +88,7 @@ final class Metrics implements JsonSerializable
         ];
     }
 
-    public static function avg(Metrics|Profiler ...$metrics): self
+    public static function avg(Profiler|ProfilingData|Metrics ...$metrics): self
     {
         $sum = Metrics::none();
         $count = 0;
@@ -100,10 +100,21 @@ final class Metrics implements JsonSerializable
                 continue;
             }
 
+            if ($metric instanceof ProfilingData) {
+                ++$count;
+                $sum = self::add($sum, $metric->metrics);
+
+                continue;
+            }
+
             $count += count($metric);
             foreach ($metric as $profile) {
                 $sum = self::add($sum, $profile->metrics);
             }
+        }
+
+        if (1 === $count) {
+            return $sum;
         }
 
         return new Metrics(

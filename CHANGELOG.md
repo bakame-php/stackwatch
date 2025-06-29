@@ -7,6 +7,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 ### Added
 
 - `ProfilingResult` implements the `JsonSeriazilable` interface and returns the same JSON as `ProfilingData`.
+- `Metrics::avg` supports `ProfilingData` instances.
 
 ### Fixed
 
