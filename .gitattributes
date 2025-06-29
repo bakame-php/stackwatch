@@ -1,6 +1,14 @@
 * text=auto
 
-.github export-ignore
-.gitattributes export-ignore
-README.md export-ignore
-**/*Test.php export-ignore
+.editorconfig                export-ignore
+.gitattributes               export-ignore
+.github                      export-ignore
+.gitignore                   export-ignore
+.php-cs-fixer.php            export-ignore
+build                        export-ignore
+CHANGELOG.md                 export-ignore
+phpstan.neon                 export-ignore
+phpunit.xml                  export-ignore
+README.md                    export-ignore
+**/*Test.php                 export-ignore
+**/*TestCase.php             export-ignore

@@ -10,7 +10,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 ### Fixed
 
-- None
+- library packaging by removing development related files from downloads.
 
 ### Deprecated
 
