@@ -12,7 +12,6 @@ use OpenTelemetry\SDK\Trace\TracerProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
-use ReflectionException;
 
 use function hrtime;
 use function usleep;
@@ -24,8 +23,6 @@ class OpenTelemetryExporterTest extends TestCase
 
     /**
      * @param non-empty-string $label
-     *
-     * @throws ReflectionException
      */
     private function createProfilingData(string $label): ProfilingData
     {
