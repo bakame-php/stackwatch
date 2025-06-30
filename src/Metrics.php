@@ -122,8 +122,8 @@ final class Metrics implements JsonSerializable
                 return $carry;
             }
 
-            foreach ($metric as $profile) {
-                $carry[] = $profile->metrics;
+            foreach ($metric as $profilingData) {
+                $carry[] = $profilingData->metrics;
             }
 
             return $carry;

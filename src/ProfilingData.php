@@ -11,6 +11,7 @@ use function preg_match;
 /**
  * @phpstan-import-type MetricsStat from Metrics
  * @phpstan-import-type SnapshotStat from Snapshot
+ * @phpstan-type ProfilingDataStat array{label: non-empty-string, start: SnapshotStat, end: SnapshotStat, metrics: MetricsStat}
  */
 final class ProfilingData implements JsonSerializable
 {
@@ -32,7 +33,7 @@ final class ProfilingData implements JsonSerializable
     }
 
     /**
-     * @return array{label: non-empty-string, start: SnapshotStat, end: SnapshotStat, metrics: MetricsStat}
+     * @return ProfilingDataStat
      */
     public function stats(): array
     {

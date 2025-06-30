@@ -65,12 +65,12 @@ final class ConsoleTableExporter implements Exporter
     /**
      * @return list<string>
      */
-    private function profilingDataToRow(ProfilingData $profile): array
+    private function profilingDataToRow(ProfilingData $profilingData): array
     {
-        $metrics = $profile->metrics;
+        $metrics = $profilingData->metrics;
 
         return [
-            $profile->label,
+            $profilingData->label,
             number_format($metrics->cpuTime / 1_000_000_000, 9),
             number_format($metrics->executionTime / 1_000_000_000, 9),
             number_format($metrics->memoryUsage / 1024, 1),

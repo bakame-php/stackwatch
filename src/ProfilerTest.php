@@ -19,7 +19,7 @@ use function usleep;
 #[CoversClass(Profiler::class)]
 #[CoversClass(ProfilingResult::class)]
 /**
- * @phpstan-import-type ProfileMetrics from ProfilingData
+ * @phpstan-import-type ProfilingDataStat from ProfilingData
  */
 final class ProfilerTest extends TestCase
 {
@@ -70,8 +70,8 @@ final class ProfilerTest extends TestCase
         $profiler(3);
 
         self::assertCount(2, $profiler);
-        foreach ($profiler as $profile) {
-            self::assertIsFloat($profile->metrics->executionTime);
+        foreach ($profiler as $profilingData) {
+            self::assertIsFloat($profilingData->metrics->executionTime);
         }
     }
 
@@ -81,9 +81,9 @@ final class ProfilerTest extends TestCase
         $profiler = new Profiler(fn () => 42);
         $profiler->runWithLabel('custom_label');
 
-        $profile = $profiler->last();
-        self::assertInstanceOf(ProfilingData::class, $profile);
-        self::assertSame('custom_label', $profile->label);
+        $profilingData = $profiler->last();
+        self::assertInstanceOf(ProfilingData::class, $profilingData);
+        self::assertSame('custom_label', $profilingData->label);
     }
 
     #[Test]
@@ -104,14 +104,14 @@ final class ProfilerTest extends TestCase
         $profiler();
         /** @var non-empty-string $json */
         $json = json_encode($profiler);
-        /** @var array<ProfileMetrics> $data */
+        /** @var array<ProfilingDataStat> $data */
         $data = json_decode($json, true); /** @phpstan-ignore-line */
-        /** @var ProfileMetrics $profile */
-        $profile = $data[0];  /* @phpstan-ignore-line */
+        /** @var ProfilingDataStat $profilingStats */
+        $profilingStats = $data[0];  /* @phpstan-ignore-line */
 
-        self::assertIsArray($profile);
-        self::assertArrayHasKey('label', $profile);
-        self::assertArrayHasKey('metrics', $profile);
+        self::assertIsArray($profilingStats);
+        self::assertArrayHasKey('label', $profilingStats);
+        self::assertArrayHasKey('metrics', $profilingStats);
     }
 
     #[Test]

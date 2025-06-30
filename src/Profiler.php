@@ -285,7 +285,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         return array_values(
             array_filter(
                 $this->profilingDataList,
-                fn (ProfilingData $profile): bool => $profile->label === $label
+                fn (ProfilingData $profilingData): bool => $profilingData->label === $label
             )
         );
     }
