@@ -101,9 +101,9 @@ final class Metrics implements JsonSerializable
 
     public static function avg(Profiler|ProfilingResult|ProfilingData|Metrics ...$metrics): self
     {
-        /** @var array<Metrics> $metricsList */
-        $metricsList = array_reduce($metrics, function (array $carry, Profiler|ProfilingResult|ProfilingData|Metrics $metric) {
-            if ($metric instanceof self) {
+        /** @var array<Metrics> $metricList */
+        $metricList = array_reduce($metrics, function (array $carry, Profiler|ProfilingResult|ProfilingData|Metrics $metric) {
+            if ($metric instanceof Metrics) {
                 $carry[] = $metric;
 
                 return $carry;
@@ -129,8 +129,8 @@ final class Metrics implements JsonSerializable
             return $carry;
         }, []);
 
-        $count = count($metricsList);
-        $sum = self::sum(...$metricsList);
+        $count = count($metricList);
+        $sum = self::sum(...$metricList);
 
         return 2 < $count ? $sum : new Metrics(
             cpuTime: 0.0 !== $sum->cpuTime ? $sum->cpuTime / $count : 0.0,
