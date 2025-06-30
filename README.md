@@ -66,7 +66,7 @@ The method returns a `Metrics` class with readonly methods for each metric.
 ```php
 use Bakame\Aide\Profiler\Profiler;
 
-// you create a new Profiler by passing the callable or closure you want to profile
+// you create a new Profiler by passing the callback you want to profile
 $metrics = Profiler::metrics(
     $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'))
 );
@@ -122,10 +122,10 @@ will need to instantiate a new `Profiler` instance with the call you want to pro
 ```php
 use Bakame\Aide\Profiler\Profiler;
 
-// you create a new Profiler by passing the callable or closure you want to profile
+// you create a new Profiler by passing the callback you want to profile
 $profiler = new Profiler($service->calculateHeavyStuff(...));
 
-//we invoke the __invoke method of the profile which will execute the callable
+//we invoke the __invoke method of the profile which will execute the callback
 //$result is the result of executing the calculateHeavyStuff method
 $result = $profiler(new DateTimeImmutable('2024-12-24'));
 
@@ -224,11 +224,12 @@ First you need to install and configure a `PSR-3` compliant package as shown bel
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
+use Monolog\Level;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
 $logger = new Logger('profiler');
-$logger->pushHandler(new StreamHandler('php://stdout', Logger::DEBUG));
+$logger->pushHandler(new StreamHandler('php://stdout', Level::Debug));
 
 $profiler = new Profiler(function () {
     usleep(1000);
@@ -308,25 +309,26 @@ To do so, first install the package if it is not yet the case, then do the follo
 ```php
 use Bakame\Aide\Profiler\OpenTelemetryExporter;
 use Bakame\Aide\Profiler\Profiler;
+use Monolog\Level;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use OpenTelemetry\SDK\Trace\SpanExporter\InMemoryExporter;
 use OpenTelemetry\SDK\Trace\SpanProcessor\SimpleSpanProcessor;
 use OpenTelemetry\SDK\Trace\TracerProvider;
 
-// add a logger is optional.
+// adding a logger is optional.
 $logger = new Logger('profiler');
-$logger->pushHandler(new StreamHandler('php://stdout', Logger::DEBUG));
+$logger->pushHandler(new StreamHandler('php://stdout', Level::Debug));
 $tracerProvider = new TracerProvider(new SimpleSpanProcessor(new InMemoryExporter()));
 $exporter = new OpenTelemetryExporter($tracerProvider, $logger);
 
-$callable = function (int ...$args): int|float => {
+$callback = function (int ...$args): int|float => {
     usleep(100)
     
     return array_sum($args);
 }; 
 
-$profiler = new Profiler($callable);
+$profiler = new Profiler($callback);
 $profiler->runWithLabel('first_run', 1, 2);
 $profiler->runWithLabel('last_run', 1, 2);
 $profiler(1, 2);
