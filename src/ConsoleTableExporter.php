@@ -8,8 +8,6 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use function number_format;
-
 final class ConsoleTableExporter implements Exporter
 {
     public function __construct(private readonly OutputInterface $output = new ConsoleOutput())
@@ -71,12 +69,12 @@ final class ConsoleTableExporter implements Exporter
 
         return [
             $profilingData->label,
-            number_format($metrics->cpuTime / 1_000_000_000, 9),
-            number_format($metrics->executionTime / 1_000_000_000, 9),
-            number_format($metrics->memoryUsage / 1024, 1),
-            number_format($metrics->realMemoryUsage / 1024, 1),
-            number_format($metrics->peakMemoryUsage / 1024, 1),
-            number_format($metrics->realPeakMemoryUsage / 1024, 1),
+            TimeUnit::Second->formatFromNanoseconds($metrics->cpuTime, 9),
+            TimeUnit::Second->formatFromNanoseconds($metrics->executionTime, 9),
+            MemoryUnit::Kilobyte->formatFromBytes($metrics->memoryUsage, 1),
+            MemoryUnit::Kilobyte->formatFromBytes($metrics->realMemoryUsage, 1),
+            MemoryUnit::Kilobyte->formatFromBytes($metrics->peakMemoryUsage, 1),
+            MemoryUnit::Kilobyte->formatFromBytes($metrics->realPeakMemoryUsage, 1),
         ];
     }
 }

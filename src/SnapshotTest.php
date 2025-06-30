@@ -23,8 +23,7 @@ final class SnapshotTest extends TestCase
     #[Test]
     public function it_can_generate_a_valid_json_representation(): void
     {
-        $snapshot = Snapshot::now();
-        $data = $snapshot->jsonSerialize();
+        $data = Snapshot::now()->jsonSerialize();
 
         self::assertArrayHasKey('timestamp', $data);
         self::assertArrayHasKey('metrics', $data);

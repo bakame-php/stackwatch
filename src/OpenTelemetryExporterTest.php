@@ -9,6 +9,8 @@ use OpenTelemetry\SDK\Trace\ImmutableSpan;
 use OpenTelemetry\SDK\Trace\SpanExporter\InMemoryExporter;
 use OpenTelemetry\SDK\Trace\SpanProcessor\SimpleSpanProcessor;
 use OpenTelemetry\SDK\Trace\TracerProvider;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -16,6 +18,9 @@ use ReflectionClass;
 use function hrtime;
 use function usleep;
 
+#[CoversClass(OpenTelemetryExporter::class)]
+#[CoversClass(TimeUnit::class)]
+#[CoversClass(MemoryUnit::class)]
 class OpenTelemetryExporterTest extends TestCase
 {
     private OpenTelemetryExporter $exporter;
@@ -24,7 +29,7 @@ class OpenTelemetryExporterTest extends TestCase
     /**
      * @param non-empty-string $label
      */
-    private function createProfilingData(string $label): ProfilingData
+    private static function createProfilingData(string $label): ProfilingData
     {
         $start = new Snapshot(new DateTimeImmutable(), hrtime(true), [
             'ru_utime.tv_sec' => 1,
@@ -59,11 +64,12 @@ class OpenTelemetryExporterTest extends TestCase
     }
 
     #[Test]
-    public function it_can_export_profiling_data(): void
+    #[DataProvider('providesProfilingData')]
+    public function it_can_export_profiling_data(ProfilingData|ProfilingResult $profiling): void
     {
-        $profilingData = $this->createProfilingData('test_export');
+        $this->exporter->exportProfilingData($profiling);
 
-        $this->exporter->exportProfilingData($profilingData);
+        $profilingData = $profiling instanceof ProfilingData ? $profiling : $profiling->profilingData;
 
         $spans = $this->otlExporter->getSpans();
         self::assertCount(1, $spans);
@@ -86,11 +92,26 @@ class OpenTelemetryExporterTest extends TestCase
         self::assertArrayHasKey('real_peak_memory_usage', $otlAttributes);
     }
 
+    /**
+     * @return iterable<string, array{profiling: ProfilingResult|ProfilingData}>
+     */
+    public static function providesProfilingData(): iterable
+    {
+        yield 'the profiling data comes from a ProfilingData instance' => [
+            'profiling' => self::createProfilingData('test_export'),
+        ];
+
+        yield 'the profiling data comes from a ProfilingResult instance' => [
+            'profiling' => new ProfilingResult('result', self::createProfilingData('test_export')),
+        ];
+    }
+
+
     #[Test]
     public function it_can_export_a_profiler(): void
     {
-        $profilingData1 = $this->createProfilingData('profile1');
-        $profilingData2 = $this->createProfilingData('profile2');
+        $profilingData1 = self::createProfilingData('profile1');
+        $profilingData2 = self::createProfilingData('profile2');
 
         $profiler = new Profiler(fn () => null);
         $reflection = new ReflectionClass($profiler);

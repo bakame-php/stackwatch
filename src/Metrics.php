@@ -56,7 +56,7 @@ final class Metrics implements JsonSerializable
         $start->timestamp <= $end->timestamp || throw new UnableToProfile('The ending snapshot was taken before the starting snapshot.');
 
         return new self(
-            cpuTime: self::calculateCpuTime($start, $end) * 1000,
+            cpuTime: TimeUnit::Millisecond->toNanoseconds(self::calculateCpuTime($start, $end)),
             executionTime: $end->executionTime - $start->executionTime,
             memoryUsage: $end->memoryUsage - $start->memoryUsage,
             peakMemoryUsage: $end->peakMemoryUsage - $start->peakMemoryUsage,
