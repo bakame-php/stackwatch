@@ -11,14 +11,14 @@ use Symfony\Component\Console\Output\BufferedOutput;
 
 use function usleep;
 
-#[CoversClass(CliExporter::class)]
-final class CliExporterTest extends TestCase
+#[CoversClass(ConsoleTableExporter::class)]
+final class ConsoleTableExporterTest extends TestCase
 {
     #[Test]
     public function it_can_output_a_cli_table_for_the_profiler(): void
     {
         $output = new BufferedOutput();
-        $renderer = new CliExporter($output);
+        $renderer = new ConsoleTableExporter($output);
 
         $profiler = new Profiler(fn () => usleep(1000));
         $profiler->runWithLabel('cli_test');
@@ -37,7 +37,7 @@ final class CliExporterTest extends TestCase
     public function it_can_output_a_cli_table_for_the_profiling_data(): void
     {
         $output = new BufferedOutput();
-        $renderer = new CliExporter($output);
+        $renderer = new ConsoleTableExporter($output);
 
         $profilingData = Profiler::execute(fn () => usleep(1000));
         $renderer->exportProfilingData($profilingData);

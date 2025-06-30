@@ -80,7 +80,7 @@ $metrics->realPeakMemoryUsage;
 ````
 ### Iterations
 
-If you need to access the average usage for a specific metrics you can use the second argument.
+If you need to access the average usage for a specific metric, you can use the second argument.
 When executing a callback more than once, the average value for that specific metric across all iterations
 will be returned:
 
@@ -111,7 +111,7 @@ $profiling->profilingData; // the profiling data associated with the call.
 $profiling->profilingData->metrics; // returns a Metrics instance
 $profiling->profilingData->start;   // returns a Snapshot instance
 $profiling->profilingData->end;     // returns a Snapshot instance
-$profiling->profilingData->label;   // returns a identiifier as a string
+$profiling->profilingData->label;   // returns an identifier as a string
 ````
 
 ### Metrics recording
@@ -148,14 +148,14 @@ $result1 = $profiler(new DateTimeImmutable('2024-12-24'));
 $result2 = $profiler(new DateTimeImmutable('2025-03-02'));
 $result3 = $profiler(new DateTimeImmutable('2024-05-11'));
 
-count($profiler);     // the number of Profile already recordded
-$profiler->last();    // returns the Profile from the last call
-$profiler->nth(-1);   // returns the same Profile as Profile::last
-$profiler->first();    // returns the first Profile ever generated
-$profiler->isEmpty(); //returns false because the profiler already contains recorded Profiles
+count($profiler);     // the number of ProfilingData already recorded
+$profiler->last();    // returns the ProfilingData from the last call
+$profiler->nth(-1);   // returns the same ProfilingData as Profile::last
+$profiler->first();   // returns the first ProfilingData ever generated
+$profiler->isEmpty(); // returns false because the profiler already contains recorded ProfilingData
 ```
 
-You can access any profile by index using the `nth` method, or use the `first` and `last` methods
+You can access any `ProfilingData` by index using the `nth` method, or use the `first` and `last` methods
 to quickly retrieve the first and last recorded `ProfilingData`. The `nth` method also accepts negative
 integers to simplify access from the end of the list.
 
@@ -167,13 +167,13 @@ method but allows you to assign a custom label to the returned `ProfilingData` o
 ```php
 use Bakame\Aide\Profiler\Profiler;
 
-$callable = function (int ...$args): int|float => {
+$callback = function (int ...$args): int|float => {
     usleep(100)
     
     return array_sum($args);
 }; 
 
-$profiler = new Profiler($callable);
+$profiler = new Profiler($callback);
 $profiler(1, 2, 3); // returns 6
 $profilingData = $profiler->last();              // returns the last ProfilingData object from the last call
 $profiler->runWithLabel('my_test', 7, 8, 9);     // returns 24
@@ -189,18 +189,18 @@ $profiler->labels();      // returns all the labels attached to the Profiler
 
 ### Resetting the Profiler
 
-At any given time you can reset the `Profiler` by clearing all the profiles already recorded.
+At any given time you can reset the `Profiler` by clearing all the `ProfilingData` already recorded.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
 
-$callable = function (int ...$args): int|float => {
+$callback = function (int ...$args): int|float => {
     usleep(100)
     
     return array_sum($args);
 }; 
 
-$profiler = new Profiler($callable);
+$profiler = new Profiler($callback);
 $profiler(1, 2, 3);
 $profiler->runWithLabel('my_test', 4, 5, 6);
 $profiler(7, 8, 9);
@@ -249,7 +249,11 @@ You will see in your terminal the following output since we used Monolog `Stream
 [2025-06-26T16:26:54.938688+00:00] profiler.INFO: Finished profiling for label: tata {"cpu_time":1.3000000000000001e-5,"memory_usage":2536.0,"real_memory_usage":0.0,"peak_memory_usage":0.0,"real_peak_memory
 ```
 
-### JSON Exporter
+### Exporters
+
+The package can help with exporting its `ProfilingData` using different mechanisms.
+
+#### JSON Exporter
 
 You can export the `Profiler` as a JSON string using the `json_encode` method.
 The JSON representation will return the timestamp, the snapshots as well as the metrics
@@ -259,7 +263,7 @@ associated to all the `ProfilingData` instances attached to the object.
 echo json_encode($profiler), PHP_EOL;
 ```
 
-### CLI Exporter
+#### CLI Exporter
 
 If you have the `symfony\console` package installed in your application, you can export
 the `Profiler` using a table showing all the profiles recorded by the profiler using
@@ -267,20 +271,20 @@ the `CliTableRenderer` class.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
-use Bakame\Aide\Profiler\CliExporter;
+use Bakame\Aide\Profiler\ConsoleTableExporter;
 
-$callable = function (int ...$args): int|float => {
+$callback = function (int ...$args): int|float => {
     usleep(100)
     
     return array_sum($args);
 }; 
 
-$profiler = new Profiler($callable);
+$profiler = new Profiler($callback);
 $profiler->runWithLabel('first_run', 1, 2);
 $profiler->runWithLabel('last_run', 1, 2);
 $profiler(1, 2);
 
-$renderer = new CliExporter();
+$renderer = new ConsoleTableExporter();
 $renderer->exportProfiler($profiler);
 ```
 the following table will be outputted in your terminal.
@@ -295,7 +299,7 @@ the following table will be outputted in your terminal.
 +--------------+--------------+---------------+-------------+---------------+---------------+----------------+
 ```
 
-### Open Telemetry Exporter
+#### Open Telemetry Exporter
 
 The `Profiler` results can be exported to a Open telemetry compatible server using the `open-telemetry/exporter-otlp` package.
 

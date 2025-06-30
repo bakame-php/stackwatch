@@ -10,7 +10,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use function number_format;
 
-final class CliExporter implements Exporter
+final class ConsoleTableExporter implements Exporter
 {
     public function __construct(private readonly OutputInterface $output = new ConsoleOutput())
     {
@@ -18,23 +18,34 @@ final class CliExporter implements Exporter
 
     public function exportProfilingData(ProfilingResult|ProfilingData $profilingData): void
     {
-        if ($profilingData instanceof ProfilingResult) {
-            $profilingData = $profilingData->profilingData;
-        }
-
-        $table = $this->createTable();
-        $table->addRow($this->profilingDataToRow($profilingData));
-        $table->render();
+        $this->profilingDataToTable($profilingData)->render();
     }
 
     public function exportProfiler(Profiler $profiler): void
+    {
+        $this->profilerToTable($profiler)->render();
+    }
+
+    public function profilerToTable(Profiler $profiler): Table
     {
         $table = $this->createTable();
         foreach ($profiler as $profilingData) {
             $table->addRow($this->profilingDataToRow($profilingData));
         }
 
-        $table->render();
+        return $table;
+    }
+
+    public function profilingDataToTable(ProfilingResult|ProfilingData $profilingData): Table
+    {
+        if ($profilingData instanceof ProfilingResult) {
+            $profilingData = $profilingData->profilingData;
+        }
+
+        $table = $this->createTable();
+        $table->addRow($this->profilingDataToRow($profilingData));
+
+        return $table;
     }
 
     private function createTable(): Table

@@ -2,6 +2,24 @@
 
 All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
+## [Next](https://github.com/bakame-php/aide-profiler/compare/0.4.0...main) - TBD
+
+### Added
+
+- None
+
+### Fixed
+
+- None
+
+### Deprecated
+
+- None
+
+### Removed
+
+- **BC BREAK:** renamed `CliExporter` as `ConsoleTableExporter`
+
 ## [0.4.0 - Durban](https://github.com/bakame-php/aide-profiler/compare/0.3.0...0.4.0) - 2025-06-29
 
 ### Added
