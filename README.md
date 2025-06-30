@@ -249,6 +249,8 @@ You will see in your terminal the following output since we used Monolog `Stream
 [2025-06-26T16:26:54.937570+00:00] profiler.INFO: Starting profiling for label: tata [] []
 [2025-06-26T16:26:54.938688+00:00] profiler.INFO: Finished profiling for label: tata {"cpu_time":1.3000000000000001e-5,"memory_usage":2536.0,"real_memory_usage":0.0,"peak_memory_usage":0.0,"real_peak_memory
 ```
+> [!TIP]  
+> Logging can be done also on the static methods, they all optionally accept a `LoggerInterface` argument.
 
 ### Exporters
 

@@ -13,12 +13,12 @@ use function memory_get_peak_usage;
 use function memory_get_usage;
 
 /**
- * @phpstan-type CpuStats array{'ru_utime.tv_sec': int, 'ru_utime.tv_usec': int, 'ru_stime.tv_sec': int, 'ru_stime.tv_usec': int}
+ * @phpstan-type CpuStat array{'ru_utime.tv_sec': int, 'ru_utime.tv_usec': int, 'ru_stime.tv_sec': int, 'ru_stime.tv_usec': int}
  * @phpstan-type SnapshotStat array{
  *     timestamp: string,
  *     metrics: array{
  *         execution_time: float,
- *         cpu: CpuStats,
+ *         cpu: CpuStat,
  *         memory_usage: int,
  *         real_memory_usage: int,
  *         peak_memory_usage: int,
@@ -29,7 +29,7 @@ use function memory_get_usage;
 final class Snapshot implements JsonSerializable
 {
     /**
-     * @param CpuStats $cpu
+     * @param CpuStat $cpu
      */
     public function __construct(
         public readonly DateTimeImmutable $timestamp,
@@ -47,7 +47,7 @@ final class Snapshot implements JsonSerializable
      */
     public static function now(): self
     {
-        /** @var CpuStats|false $cpu */
+        /** @var CpuStat|false $cpu */
         $cpu = getrusage();
         false !== $cpu || throw new UnableToProfile('Unable to get the current resource usage.');
 

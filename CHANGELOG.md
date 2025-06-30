@@ -6,7 +6,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 ### Added
 
-- None
+- All `Profiler` static methods can have a logger attached to them
 
 ### Fixed
 
