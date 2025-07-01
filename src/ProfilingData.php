@@ -16,20 +16,24 @@ use function preg_match;
 final class ProfilingData implements JsonSerializable
 {
     public readonly Metrics $metrics;
+    public readonly Snapshot $start;
+    public readonly Snapshot $end;
+    /** @var non-empty-string */
+    public readonly string $label;
 
     /**
      * @param non-empty-string $label
      *
      * @throws InvalidArgument
      */
-    public function __construct(
-        public readonly Snapshot $start,
-        public readonly Snapshot $end,
-        public readonly string $label
-    ) {
-        1 === preg_match('/^[a-z0-9][a-z0-9_]*$/', $this->label) || throw new InvalidArgument('The label must start with a lowercased letter or a digit and only contain lowercased letters, digits, or underscores.');
+    public function __construct(Snapshot $start, Snapshot $end, string $label)
+    {
+        1 === preg_match('/^[a-z0-9][a-z0-9_]*$/', $label) || throw new InvalidArgument('The label must start with a lowercased letter or a digit and only contain lowercased letters, digits, or underscores.');
 
-        $this->metrics = Metrics::fromSnapshots($this->start, $this->end);
+        $this->metrics = Metrics::fromSnapshots($start, $end);
+        $this->start = $start;
+        $this->end = $end;
+        $this->label = $label;
     }
 
     /**

@@ -28,11 +28,11 @@ final class ConsoleTableExporterTest extends TestCase
         $content = $output->fetch();
 
         self::assertStringContainsString('Label', $content);
-        self::assertStringContainsString('CPU Time (s)', $content);
-        self::assertStringContainsString('Exec Time (s)', $content);
+        self::assertStringContainsString('CPU Time', $content);
+        self::assertStringContainsString('Exec Time', $content);
 
         self::assertStringContainsString('cli_test', $content);
-        self::assertMatchesRegularExpression('/\d+\.\d{6}/', $content); // cpu or exec time
+        self::assertMatchesRegularExpression('/\d+\.\d{3}/', $content); // cpu or exec time
     }
 
     #[Test]
@@ -46,10 +46,10 @@ final class ConsoleTableExporterTest extends TestCase
         $content = $output->fetch();
 
         self::assertStringContainsString('Label', $content);
-        self::assertStringContainsString('CPU Time (s)', $content);
-        self::assertStringContainsString('Exec Time (s)', $content);
+        self::assertStringContainsString('CPU Time', $content);
+        self::assertStringContainsString('Exec Time', $content);
 
         self::assertMatchesRegularExpression('/[a-z0-9][a-z0-9_]*/', $content); //random label
-        self::assertMatchesRegularExpression('/\d+\.\d{6}/', $content); // cpu or exec time
+        self::assertMatchesRegularExpression('/\d+\.\d{3}/', $content); // cpu or exec time
     }
 }

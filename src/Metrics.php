@@ -142,7 +142,7 @@ final class Metrics implements JsonSerializable
         );
     }
 
-    public static function sum(Metrics ...$metrics): Metrics
+    public static function sum(Metrics ...$metrics): self
     {
         return array_reduce(
             $metrics,
@@ -151,7 +151,7 @@ final class Metrics implements JsonSerializable
         );
     }
 
-    public function add(Metrics $metric): Metrics
+    public function add(Metrics $metric): self
     {
         return new self(
             cpuTime: $this->cpuTime + $metric->cpuTime,

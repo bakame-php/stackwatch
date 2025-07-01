@@ -2,6 +2,24 @@
 
 All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
+## [Next](https://github.com/bakame-php/aide-profiler/compare/0.5.0...main) - TBD
+
+### Added
+
+- `MemoryUnit::format` and `TimeUnit::format` to ease metrics values conversion.
+
+### Fixed
+
+- **BC BREAK:** simplify `ConsoleTableExporter` memory and time unit display
+
+### Deprecated
+
+- None
+
+### Removed
+
+- **BC BREAK:**  remove `MemoryUnit::formatFromBytes` and `TimeUnit::formatFromNanoseconds` methods
+
 ## [0.5.0 - Enugu](https://github.com/bakame-php/aide-profiler/compare/0.4.0...0.5.0) - 2025-07-01
 
 ### Added

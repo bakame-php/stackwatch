@@ -51,12 +51,12 @@ final class ConsoleTableExporter implements Exporter
         $table = new Table($this->output);
         return $table->setHeaders([
             'Label',
-            'CPU Time (s)',
-            'Exec Time (s)',
-            'Memory (kB)',
-            'Real Mem (kB)',
-            'Peak Mem (kB)',
-            'Real Peak (kB)',
+            'CPU Time',
+            'Exec Time',
+            'Memory',
+            'Real Mem',
+            'Peak Mem',
+            'Real Peak',
         ]);
     }
 
@@ -69,12 +69,12 @@ final class ConsoleTableExporter implements Exporter
 
         return [
             $profilingData->label,
-            TimeUnit::Second->formatFromNanoseconds($metrics->cpuTime, 9),
-            TimeUnit::Second->formatFromNanoseconds($metrics->executionTime, 9),
-            MemoryUnit::Kilobyte->formatFromBytes($metrics->memoryUsage, 1),
-            MemoryUnit::Kilobyte->formatFromBytes($metrics->realMemoryUsage, 1),
-            MemoryUnit::Kilobyte->formatFromBytes($metrics->peakMemoryUsage, 1),
-            MemoryUnit::Kilobyte->formatFromBytes($metrics->realPeakMemoryUsage, 1),
+            TimeUnit::format($metrics->cpuTime, 3),
+            TimeUnit::format($metrics->executionTime, 3),
+            MemoryUnit::format($metrics->memoryUsage, 1),
+            MemoryUnit::format($metrics->realMemoryUsage, 1),
+            MemoryUnit::format($metrics->peakMemoryUsage, 1),
+            MemoryUnit::format($metrics->realPeakMemoryUsage, 1),
         ];
     }
 }
