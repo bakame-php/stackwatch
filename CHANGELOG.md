@@ -6,7 +6,8 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 ### Added
 
-- `MemoryUnit::format` and `TimeUnit::format` to ease metrics values conversion.
+- `MemoryUnit::parse`. `MemoryUnit::tryParse` and `MemoryUnit::format` to ease metrics values conversion.
+- `TimeUnit::parse`. `TimeUnit::tryParse`  and `TimeUnit::format` to ease metrics values conversion.
 
 ### Fixed
 

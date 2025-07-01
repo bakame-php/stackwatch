@@ -37,6 +37,19 @@ final class UnitTest extends TestCase
     }
 
     #[Test]
+    public function it_can_parse_from_byte_format(): void
+    {
+        self::assertSame(0, MemoryUnit::tryParse('0 b'));
+        self::assertSame(0, MemoryUnit::tryParse('0 byte'));
+        self::assertSame(0, MemoryUnit::tryParse('0 bytes'));
+        self::assertSame(1_024, MemoryUnit::tryParse('1 kB'));
+        self::assertSame(1_024 ** 3, MemoryUnit::tryParse('1.0 GB'));
+        self::assertSame(1_024 ** 4, MemoryUnit::tryParse('1    TB'));
+        self::assertSame(1_024 ** 2, MemoryUnit::tryParse('1.00 MB'));
+        self::assertNull(MemoryUnit::tryParse('1.23 OB'));
+    }
+
+    #[Test]
     public function it_can_convert_to_nanoseconds(): void
     {
         self::assertSame(1_000 ** 3, TimeUnit::Second->toNanoseconds(1));
@@ -57,6 +70,21 @@ final class UnitTest extends TestCase
         self::assertSame('1 h', TimeUnit::format(1_000_000_000 * 3_600));
         self::assertSame('24.0 h', TimeUnit::format(1_000_000_000 * 86_400, 1));
         self::assertSame('1.000 ms', TimeUnit::format(1_000_000, 3));
+    }
+
+    #[Test]
+    public function it_can_parse_from_duration_format(): void
+    {
+        self::assertSame(0, TimeUnit::tryParse('0 n'));
+        self::assertSame(0, TimeUnit::tryParse('0 n'));
+        self::assertSame(0, TimeUnit::tryParse('0 N'));
+        self::assertSame(1_000, TimeUnit::tryParse('1 us'));
+        self::assertSame(1_000 ** 2, TimeUnit::tryParse('1.0 ms'));
+        self::assertSame(1_000 ** 3, TimeUnit::tryParse('1.0 s'));
+        self::assertSame(1_000 ** 3 * 60, TimeUnit::tryParse('1    Min'));
+        self::assertSame(1_000 ** 3 * 60, TimeUnit::tryParse('1.00 min'));
+        self::assertSame(1_000_000_000 * 86_400, TimeUnit::tryParse('24.0 h'));
+        self::assertNull(TimeUnit::tryParse('21.58 days'));
     }
 
     #[Test]
