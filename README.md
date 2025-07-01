@@ -14,13 +14,9 @@ It fills the gap between a basic timer and full-blown profilers like [Xdebug](ht
 
 ## Installation
 
-### Composer
-
 ~~~
 composer require bakame/aide-profiler
 ~~~
-
-### System Requirements
 
 You need **PHP >= 8.1** but the latest stable version of PHP is recommended
 
