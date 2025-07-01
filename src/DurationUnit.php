@@ -14,12 +14,19 @@ use function preg_match;
 use function round;
 use function strtolower;
 
-enum TimeUnit: int
+enum DurationUnit: int
 {
     private const REGEXP_PATTERN = '/^
         (?<number>\d+(?:\.\d+)?)
         \s*
-        (?<unit>n|us|µs|ms|s|min|h)
+        (?<unit>
+            n|ns|nanosecond|nanoseconds|
+            us|µs|microsecond|microseconds|
+            ms|millisecond|milliseconds|
+            s|second|seconds|
+            min|minute|minutes|
+            h|hour|hours
+        )
     $/ix';
 
     case Hour = 1_000 ** 3 * 3_600;
@@ -107,12 +114,12 @@ enum TimeUnit: int
         1 === preg_match(self::REGEXP_PATTERN, $value, $matches) || throw new InvalidArgument('The value must be a valid time duration formatted string.');
 
         $unit = match (strtolower($matches['unit'])) {
-            'n', 'ns' => self::Nanosecond,
-            'us', 'µs' => self::Microsecond,
-            'ms' => self::Millisecond,
-            's' => self::Second,
-            'min' => self::Minute,
-            'h' => self::Hour,
+            'n', 'ns', 'nanosecond', 'nanoseconds' => self::Nanosecond,
+            'us', 'µs', 'microsecond', 'microseconds' => self::Microsecond,
+            'ms', 'millisecond', 'milliseconds' => self::Millisecond,
+            's', 'second', 'seconds' => self::Second,
+            'min', 'minute', 'minutes' => self::Minute,
+            'h' , 'hour', 'hours' => self::Hour,
             default => throw new InvalidArgument('Invalid or unsupported time unit.'),
         };
 

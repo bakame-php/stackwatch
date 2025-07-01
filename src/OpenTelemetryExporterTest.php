@@ -19,7 +19,7 @@ use function hrtime;
 use function usleep;
 
 #[CoversClass(OpenTelemetryExporter::class)]
-#[CoversClass(TimeUnit::class)]
+#[CoversClass(DurationUnit::class)]
 #[CoversClass(MemoryUnit::class)]
 class OpenTelemetryExporterTest extends TestCase
 {

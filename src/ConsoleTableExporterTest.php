@@ -12,7 +12,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
 use function usleep;
 
 #[CoversClass(ConsoleTableExporter::class)]
-#[CoversClass(TimeUnit::class)]
+#[CoversClass(DurationUnit::class)]
 #[CoversClass(MemoryUnit::class)]
 final class ConsoleTableExporterTest extends TestCase
 {

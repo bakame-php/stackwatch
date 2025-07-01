@@ -69,8 +69,8 @@ final class ConsoleTableExporter implements Exporter
 
         return [
             $profilingData->label,
-            TimeUnit::format($metrics->cpuTime, 3),
-            TimeUnit::format($metrics->executionTime, 3),
+            DurationUnit::format($metrics->cpuTime, 3),
+            DurationUnit::format($metrics->executionTime, 3),
             MemoryUnit::format($metrics->memoryUsage, 1),
             MemoryUnit::format($metrics->realMemoryUsage, 1),
             MemoryUnit::format($metrics->peakMemoryUsage, 1),

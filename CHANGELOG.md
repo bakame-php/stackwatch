@@ -7,7 +7,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 ### Added
 
 - `MemoryUnit::parse`. `MemoryUnit::tryParse` and `MemoryUnit::format` to ease metrics values conversion.
-- `TimeUnit::parse`. `TimeUnit::tryParse`  and `TimeUnit::format` to ease metrics values conversion.
+- `DurationUnit::parse`. `DurationUnit::tryParse`  and `DurationUnit::format` to ease metrics values conversion.
 
 ### Fixed
 
@@ -20,6 +20,8 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 ### Removed
 
 - **BC BREAK:**  remove `MemoryUnit::formatFromBytes` and `TimeUnit::formatFromNanoseconds` methods
+- **BC BREAK:**  renamed `TimeUnit` as `DurationUnit` methods
+- **BC BREAK:**  remove `DurationUnit::formatFromBytes` and `DurationUnit::formatFromNanoseconds` methods
 
 ## [0.5.0 - Enugu](https://github.com/bakame-php/aide-profiler/compare/0.4.0...0.5.0) - 2025-07-01
 

@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ValueError;
 
-#[CoversClass(TimeUnit::class)]
+#[CoversClass(DurationUnit::class)]
 #[CoversClass(MemoryUnit::class)]
 final class UnitTest extends TestCase
 {
@@ -52,39 +52,39 @@ final class UnitTest extends TestCase
     #[Test]
     public function it_can_convert_to_nanoseconds(): void
     {
-        self::assertSame(1_000 ** 3, TimeUnit::Second->toNanoseconds(1));
-        self::assertSame(1_000 ** 2, TimeUnit::Millisecond->toNanoseconds(1));
-        self::assertSame(1_000, TimeUnit::Microsecond->toNanoseconds(1));
-        self::assertSame(1, TimeUnit::Nanosecond->toNanoseconds(1));
+        self::assertSame(1_000 ** 3, DurationUnit::Second->toNanoseconds(1));
+        self::assertSame(1_000 ** 2, DurationUnit::Millisecond->toNanoseconds(1));
+        self::assertSame(1_000, DurationUnit::Microsecond->toNanoseconds(1));
+        self::assertSame(1, DurationUnit::Nanosecond->toNanoseconds(1));
     }
 
     #[Test]
     public function it_can_convert_from_nanoseconds(): void
     {
-        self::assertSame('0 n', TimeUnit::format(0));
-        self::assertSame('1 s', TimeUnit::format(1_000_000_000));
-        self::assertSame('1 ms', TimeUnit::format(1_000_000));
-        self::assertSame('1 µs', TimeUnit::format(1_000));
-        self::assertSame('1 n', TimeUnit::format(1));
-        self::assertSame('1 min', TimeUnit::format(1_000_000_000 * 60));
-        self::assertSame('1 h', TimeUnit::format(1_000_000_000 * 3_600));
-        self::assertSame('24.0 h', TimeUnit::format(1_000_000_000 * 86_400, 1));
-        self::assertSame('1.000 ms', TimeUnit::format(1_000_000, 3));
+        self::assertSame('0 n', DurationUnit::format(0));
+        self::assertSame('1 s', DurationUnit::format(1_000_000_000));
+        self::assertSame('1 ms', DurationUnit::format(1_000_000));
+        self::assertSame('1 µs', DurationUnit::format(1_000));
+        self::assertSame('1 n', DurationUnit::format(1));
+        self::assertSame('1 min', DurationUnit::format(1_000_000_000 * 60));
+        self::assertSame('1 h', DurationUnit::format(1_000_000_000 * 3_600));
+        self::assertSame('24.0 h', DurationUnit::format(1_000_000_000 * 86_400, 1));
+        self::assertSame('1.000 ms', DurationUnit::format(1_000_000, 3));
     }
 
     #[Test]
     public function it_can_parse_from_duration_format(): void
     {
-        self::assertSame(0, TimeUnit::tryParse('0 n'));
-        self::assertSame(0, TimeUnit::tryParse('0 n'));
-        self::assertSame(0, TimeUnit::tryParse('0 N'));
-        self::assertSame(1_000, TimeUnit::tryParse('1 us'));
-        self::assertSame(1_000 ** 2, TimeUnit::tryParse('1.0 ms'));
-        self::assertSame(1_000 ** 3, TimeUnit::tryParse('1.0 s'));
-        self::assertSame(1_000 ** 3 * 60, TimeUnit::tryParse('1    Min'));
-        self::assertSame(1_000 ** 3 * 60, TimeUnit::tryParse('1.00 min'));
-        self::assertSame(1_000_000_000 * 86_400, TimeUnit::tryParse('24.0 h'));
-        self::assertNull(TimeUnit::tryParse('21.58 days'));
+        self::assertSame(0, DurationUnit::tryParse('0 n'));
+        self::assertSame(0, DurationUnit::tryParse('0 n'));
+        self::assertSame(0, DurationUnit::tryParse('0 N'));
+        self::assertSame(1_000, DurationUnit::tryParse('1 us'));
+        self::assertSame(1_000 ** 2, DurationUnit::tryParse('1.0 ms'));
+        self::assertSame(1_000 ** 3, DurationUnit::tryParse('1.0 s'));
+        self::assertSame(1_000 ** 3 * 60, DurationUnit::tryParse('1    Min'));
+        self::assertSame(1_000 ** 3 * 60, DurationUnit::tryParse('1.00 min'));
+        self::assertSame(1_000_000_000 * 86_400, DurationUnit::tryParse('24.0 h'));
+        self::assertNull(DurationUnit::tryParse('21.58 days'));
     }
 
     #[Test]
@@ -92,7 +92,7 @@ final class UnitTest extends TestCase
     {
         $this->expectException(ValueError::class);
 
-        TimeUnit::format(-1);
+        DurationUnit::format(-1);
     }
 
     #[Test]

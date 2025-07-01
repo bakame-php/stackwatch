@@ -19,7 +19,13 @@ enum MemoryUnit: int
     private const REGEXP_PATTERN = '/^
         (?<number>\d+(?:\.\d+)?)
         \s*
-        (?<unit>b|byte|bytes|kb|mb|gb|tb|m|g|t|k)
+        (?<unit>
+            b|byte|bytes|
+            k|kb|kilobyte|kilobytes|
+            m|mb|megabyte|megabytes|
+            g|gb|gigabyte|gigabytes|
+            t|tb|terbyte|terabytes|
+        )
     $/ix';
 
     case Terabyte = 1_024 ** 4;
@@ -107,11 +113,11 @@ enum MemoryUnit: int
         1 === preg_match(self::REGEXP_PATTERN, $value, $matches) || throw new InvalidArgument('The value must be a valid memory formatted string.');
 
         $unit = match (strtoupper($matches['unit'])) {
-            'B', 'BYTES', 'BYTE' => self::Byte,
-            'KB', 'K' => self::Kilobyte,
-            'MB', 'M' => self::Megabyte,
-            'GB', 'G' => self::Gigabyte,
-            'TB', 'T' => self::Terabyte,
+            'B', 'BYTE', 'BYTES' => self::Byte,
+            'K', 'KB', 'KILOBYTE', 'KYLOBYTES' => self::Kilobyte,
+            'M', 'MB', 'MEGABYTE', 'MEGABYTES' => self::Megabyte,
+            'G', 'GB', 'GIGABYTE', 'GIGABYTES' => self::Gigabyte,
+            'T', 'TB', 'TERABYTE', 'TERABYTES' => self::Terabyte,
             default => throw new InvalidArgument('Invalid or unsupported memory unit.'),
         };
 
