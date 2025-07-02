@@ -35,7 +35,7 @@ final class OpenTelemetryExporter implements Exporter
         $span = $this->tracer
             ->spanBuilder($profilingData->label)
             ->setSpanKind(SpanKind::KIND_INTERNAL)
-            ->setStartTimestamp(DurationUnit::Millisecond->toNanoseconds((int) $start->timestamp->format('Uu')))
+            ->setStartTimestamp(DurationUnit::Millisecond->convertToNano((int) $start->timestamp->format('Uu')))
             ->startSpan();
 
         $metrics = $profilingData->metrics;
@@ -50,7 +50,7 @@ final class OpenTelemetryExporter implements Exporter
         $span->setAttribute('peak_memory_usage', $metrics->peakMemoryUsage);
         $span->setAttribute('real_peak_memory_usage', $metrics->realPeakMemoryUsage);
 
-        $span->end(DurationUnit::Millisecond->toNanoseconds((int) $end->timestamp->format('Uu')));
+        $span->end(DurationUnit::Millisecond->convertToNano((int) $end->timestamp->format('Uu')));
     }
 
     public function exportProfiler(Profiler $profiler): void

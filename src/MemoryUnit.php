@@ -28,65 +28,32 @@ enum MemoryUnit: int
         )
     $/ix';
 
+    //should be declared in descending order!
     case Terabyte = 1_024 ** 4;
     case Gigabyte = 1_024 ** 3;
     case Megabyte = 1_024 ** 2;
     case Kilobyte = 1_024;
     case Byte = 1;
 
-    public function suffix(): string
+    public static function tryFromUnit(string $unit): ?self
     {
-        return match ($this) {
-            self::Byte => 'B',
-            self::Kilobyte => 'KB',
-            self::Megabyte => 'MB',
-            self::Gigabyte => 'GB',
-            self::Terabyte => 'TB',
+        try {
+            return self::fromUnit($unit);
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    public static function fromUnit(string $unit): self
+    {
+        return match (strtoupper($unit)) {
+            'B', 'BYTE', 'BYTES' => self::Byte,
+            'K', 'KB', 'KILOBYTE', 'KYLOBYTES' => self::Kilobyte,
+            'M', 'MB', 'MEGABYTE', 'MEGABYTES' => self::Megabyte,
+            'G', 'GB', 'GIGABYTE', 'GIGABYTES' => self::Gigabyte,
+            'T', 'TB', 'TERABYTE', 'TERABYTES' => self::Terabyte,
+            default => throw new InvalidArgument('Invalid or unsupported memory unit.'),
         };
-    }
-
-    public function fromBytes(float|int $bytes): float|int
-    {
-        $converted = self::filterBytes($bytes) / $this->value;
-
-        return is_float($converted) && 0.0 === fmod($converted, 1.0) ? (int) $converted : $converted;
-    }
-
-    public function toBytes(float|int $value): int
-    {
-        return (int) round(self::filterBytes($value) * $this->value);
-    }
-
-    private function formatFromBytes(float|int $bytes, ?int $precision = null): float|int|string
-    {
-        $value = $this->fromBytes($bytes);
-
-        return null === $precision
-            ? $value
-            : number_format($value, $precision, '.', '');
-    }
-
-    /**
-     * Format bytes into human-readable string with the appropriate unit.
-     *
-     * @param float|int $bytes Number of bytes (non-negative).
-     *
-     * @throws ValueError If bytes are negative.
-     */
-    public static function format(float|int $bytes, ?int $precision = null): string
-    {
-        $bytes = self::filterBytes($bytes);
-        if (0 === $bytes) {
-            return '0 '.self::Byte->suffix();
-        }
-
-        foreach (self::cases() as $unit) {
-            if ($bytes >= $unit->value) {
-                return $unit->formatFromBytes($bytes, $precision).' '.$unit->suffix();
-            }
-        }
-
-        return self::Byte->formatFromBytes($bytes, $precision).' '.self::Byte->suffix();
     }
 
     /**
@@ -106,30 +73,83 @@ enum MemoryUnit: int
     }
 
     /**
+     * Converts bytes to this unit.
+     */
+    public function convertFromBytes(float|int $bytes): float|int
+    {
+        $converted = self::filterBytes($bytes) / $this->value;
+
+        return is_float($converted) && 0.0 === fmod($converted, 1.0) ? (int) $converted : $converted;
+    }
+
+    /**
+     * Converts a value in this unit to bytes.
+     */
+    public function convertToBytes(float|int $value): int
+    {
+        return (int) round(self::filterBytes($value) * $this->value);
+    }
+
+    /**
+     * Tries to parse human-readable string into bytes and returns null on failure.
+     */
+    public static function tryParse(string $value): ?int
+    {
+        try {
+            return self::parse($value);
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * Parses human-readable string into bytes.
+     *
      * @throws InvalidArgument If the parsing fails
      */
     public static function parse(string $value): int
     {
         1 === preg_match(self::REGEXP_PATTERN, $value, $matches) || throw new InvalidArgument('The value must be a valid memory formatted string.');
 
-        $unit = match (strtoupper($matches['unit'])) {
-            'B', 'BYTE', 'BYTES' => self::Byte,
-            'K', 'KB', 'KILOBYTE', 'KYLOBYTES' => self::Kilobyte,
-            'M', 'MB', 'MEGABYTE', 'MEGABYTES' => self::Megabyte,
-            'G', 'GB', 'GIGABYTE', 'GIGABYTES' => self::Gigabyte,
-            'T', 'TB', 'TERABYTE', 'TERABYTES' => self::Terabyte,
-            default => throw new InvalidArgument('Invalid or unsupported memory unit.'),
-        };
-
-        return $unit->toBytes((float) $matches['number']);
+        return self::fromUnit($matches['unit'])->convertToBytes((float) $matches['number']);
     }
 
-    public static function tryParse(string $value): ?int
+    /**
+     * Formats the given memory (in bytes) into a human-readable string,
+     * using the largest fitting memory unit (e.g., "1.5 GB", "200 KB").
+     *
+     * @param float|int $bytes Memory in bytes.
+     * @param int|null $precision Optional number of decimal places to format.
+     *
+     * @throws ValueError If duration is negative.
+     */
+    public static function format(float|int $bytes, ?int $precision = null): string
     {
-        try {
-            return self::parse($value);
-        } catch (Throwable $exception) {
-            return null;
+        $bytes = self::filterBytes($bytes);
+        foreach (self::cases() as $unit) {
+            if ($bytes >= $unit->value) {
+                return $unit->formatFromBytes($bytes, $precision).' '.$unit->suffix();
+            }
         }
+
+        return self::Byte->formatFromBytes($bytes, $precision).' '.self::Byte->suffix();
+    }
+
+    private function formatFromBytes(float|int $bytes, ?int $precision = null): float|int|string
+    {
+        return null === $precision
+            ? $this->convertFromBytes($bytes)
+            : number_format($this->convertFromBytes($bytes), $precision, '.', '');
+    }
+
+    private function suffix(): string
+    {
+        return match ($this) {
+            self::Byte => 'B',
+            self::Kilobyte => 'KB',
+            self::Megabyte => 'MB',
+            self::Gigabyte => 'GB',
+            self::Terabyte => 'TB',
+        };
     }
 }
