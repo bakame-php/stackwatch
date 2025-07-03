@@ -33,7 +33,7 @@ final class Snapshot implements JsonSerializable
      */
     public function __construct(
         public readonly DateTimeImmutable $timestamp,
-        public readonly float $executionTime,
+        public readonly float $hrtime,
         public readonly array $cpu,
         public readonly int $memoryUsage,
         public readonly int $realMemoryUsage,
@@ -78,7 +78,7 @@ final class Snapshot implements JsonSerializable
         return [
             'timestamp' => $this->timestamp->format("Y-m-d\TH:i:s.uP"),
             'metrics' => [
-                'execution_time' => $this->executionTime,
+                'execution_time' => $this->hrtime,
                 'cpu' => $this->cpu,
                 'memory_usage' => $this->memoryUsage,
                 'real_memory_usage' => $this->realMemoryUsage,
@@ -91,7 +91,7 @@ final class Snapshot implements JsonSerializable
     public function equals(mixed $other): bool
     {
         return $other instanceof self
-            && $this->executionTime === $other->executionTime
+            && $this->hrtime === $other->hrtime
             && $this->cpu === $other->cpu
             && $this->memoryUsage === $other->memoryUsage
             && $this->peakMemoryUsage === $other->peakMemoryUsage

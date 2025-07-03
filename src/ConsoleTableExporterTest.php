@@ -52,4 +52,21 @@ final class ConsoleTableExporterTest extends TestCase
         self::assertMatchesRegularExpression('/[a-z0-9][a-z0-9_]*/', $content); //random label
         self::assertMatchesRegularExpression('/\d+\.\d{3}/', $content); // cpu or exec time
     }
+
+
+    #[Test]
+    public function it_can_output_a_cli_table_for_a_snapshot(): void
+    {
+        $output = new BufferedOutput();
+        $renderer = new ConsoleTableExporter($output);
+
+        $profilingResult = Profiler::execute(fn () => usleep(1000));
+        $renderer->exportSnapshot($profilingResult->profilingData->start);
+        $content = $output->fetch();
+
+        self::assertStringContainsString('Timestamp', $content);
+        self::assertStringContainsString('Real Peak Memory Usage', $content);
+        self::assertStringContainsString('"ru_oublock"', $content);
+        self::assertStringContainsString('CPU', $content);
+    }
 }

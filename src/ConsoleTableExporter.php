@@ -8,6 +8,10 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function json_encode;
+
+use const JSON_PRETTY_PRINT;
+
 final class ConsoleTableExporter implements Exporter
 {
     public function __construct(private readonly OutputInterface $output = new ConsoleOutput())
@@ -16,40 +20,28 @@ final class ConsoleTableExporter implements Exporter
 
     public function exportProfilingData(ProfilingResult|ProfilingData $profilingData): void
     {
-        $this->profilingDataToTable($profilingData)->render();
-    }
-
-    public function exportProfiler(Profiler $profiler): void
-    {
-        $this->profilerToTable($profiler)->render();
-    }
-
-    public function profilerToTable(Profiler $profiler): Table
-    {
-        $table = $this->createTable();
-        foreach ($profiler as $profilingData) {
-            $table->addRow($this->profilingDataToRow($profilingData));
-        }
-
-        return $table;
-    }
-
-    public function profilingDataToTable(ProfilingResult|ProfilingData $profilingData): Table
-    {
         if ($profilingData instanceof ProfilingResult) {
             $profilingData = $profilingData->profilingData;
         }
 
         $table = $this->createTable();
         $table->addRow($this->profilingDataToRow($profilingData));
+        $table->render();
+    }
 
-        return $table;
+    public function exportProfiler(Profiler $profiler): void
+    {
+        $table = $this->createTable();
+        foreach ($profiler as $profilingData) {
+            $table->addRow($this->profilingDataToRow($profilingData));
+        }
+        $table->render();
     }
 
     private function createTable(): Table
     {
-        $table = new Table($this->output);
-        return $table->setHeaders([
+        return (new Table($this->output))
+            ->setHeaders([
             'Label',
             'CPU Time',
             'Exec Time',
@@ -76,5 +68,29 @@ final class ConsoleTableExporter implements Exporter
             MemoryUnit::format($metrics->peakMemoryUsage, 1),
             MemoryUnit::format($metrics->realPeakMemoryUsage, 1),
         ];
+    }
+
+    /**
+     * @return list<array{0:string, 1:string}>
+     */
+    private function snapshotToRow(Snapshot $snapshot): array
+    {
+        return [
+            ['Timestamp', $snapshot->timestamp->format('Y-m-d\TH:i:s.uP')],
+            ['Memory Usage', MemoryUnit::format($snapshot->memoryUsage, 3)],
+            ['Real Memory Usage', MemoryUnit::format($snapshot->realMemoryUsage, 3)],
+            ['Peak Memory Usage', MemoryUnit::format($snapshot->peakMemoryUsage, 3)],
+            ['Real Peak Memory Usage', MemoryUnit::format($snapshot->realPeakMemoryUsage, 3)],
+            ['CPU', (string) json_encode($snapshot->cpu, JSON_PRETTY_PRINT)],
+        ];
+    }
+
+    public function exportSnapshot(Snapshot $snapshot): void
+    {
+        $table = (new Table($this->output))
+            ->setHeaders(['Metric', 'Value'])
+            ->setRows($this->snapshotToRow($snapshot));
+
+        $table->render();
     }
 }

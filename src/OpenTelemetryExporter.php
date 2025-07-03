@@ -4,23 +4,22 @@ declare(strict_types=1);
 
 namespace Bakame\Aide\Profiler;
 
+use DateTimeInterface;
+use OpenTelemetry\API\Trace\Span;
 use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\API\Trace\TracerInterface;
+use OpenTelemetry\Context\Context;
 use OpenTelemetry\SDK\Trace\TracerProviderInterface;
-use Psr\Log\LoggerInterface;
-use Throwable;
 
 final class OpenTelemetryExporter implements Exporter
 {
     private readonly TracerProviderInterface $tracerProvider;
     private readonly TracerInterface $tracer;
-    private readonly ?LoggerInterface $logger;
 
-    public function __construct(TracerProviderInterface $tracerProvider, ?LoggerInterface $logger = null)
+    public function __construct(TracerProviderInterface $tracerProvider)
     {
         $this->tracerProvider = $tracerProvider;
         $this->tracer = $this->tracerProvider->getTracer('profiler-exporter');
-        $this->logger = $logger;
     }
 
     public function exportProfilingData(ProfilingResult|ProfilingData $profilingData): void
@@ -38,18 +37,18 @@ final class OpenTelemetryExporter implements Exporter
             ->setStartTimestamp(DurationUnit::Millisecond->convertToNano((int) $start->timestamp->format('Uu')))
             ->startSpan();
 
+        $this->exportSnapshot($start);
         $metrics = $profilingData->metrics;
-
         $span->setAttribute('export.status', 'success');
         $span->setAttribute('profiler.label', $profilingData->label);
         $span->setAttribute('profiler.status', 'ended');
-        $span->setAttribute('cpu_time', $metrics->cpuTime);
-        $span->setAttribute('exec_time', $metrics->executionTime);
-        $span->setAttribute('memory_usage', $metrics->memoryUsage);
-        $span->setAttribute('real_memory_usage', $metrics->realMemoryUsage);
-        $span->setAttribute('peak_memory_usage', $metrics->peakMemoryUsage);
-        $span->setAttribute('real_peak_memory_usage', $metrics->realPeakMemoryUsage);
-
+        $span->setAttribute('cpu.time', $metrics->cpuTime);
+        $span->setAttribute('execution.time', $metrics->executionTime);
+        $span->setAttribute('memory.usage', $metrics->memoryUsage);
+        $span->setAttribute('memory.usage.real', $metrics->realMemoryUsage);
+        $span->setAttribute('memory.peak', $metrics->peakMemoryUsage);
+        $span->setAttribute('memory.peak.real', $metrics->realPeakMemoryUsage);
+        $this->exportSnapshot($end);
         $span->end(DurationUnit::Millisecond->convertToNano((int) $end->timestamp->format('Uu')));
     }
 
@@ -64,11 +63,30 @@ final class OpenTelemetryExporter implements Exporter
 
         $parent->end();
         $scope->detach();
+    }
 
-        try {
-            $this->tracerProvider->shutdown();
-        } catch (Throwable $exception) {
-            $this->logger?->error('Exporting the Profiler aborted due to an error with the tracer provider.', ['exception' => $exception]);
+    public function exportSnapshot(Snapshot $snapshot): void
+    {
+        $activeSpan = Span::fromContext(Context::getCurrent());
+        if (!$activeSpan->isRecording()) {
+            return;
         }
+
+        $timestampNs = DurationUnit::Millisecond->convertToNano((int) $snapshot->timestamp->format('Uu'));
+
+        $attributes = [
+            'snapshot.execution.time,ns' => $snapshot->hrtime,
+            'snapshot.memory.usage' => $snapshot->memoryUsage,
+            'snapshot.memory.usage.real' => $snapshot->realMemoryUsage,
+            'snapshot.memory.peak' => $snapshot->peakMemoryUsage,
+            'snapshot.memory.peak.real' => $snapshot->realPeakMemoryUsage,
+            'snapshot.timestamp.iso' => $snapshot->timestamp->format(DateTimeInterface::ATOM),
+        ];
+
+        foreach ($snapshot->cpu as $key => $value) {
+            $attributes["snapshot.cpu.$key"] = $value;
+        }
+
+        $activeSpan->addEvent('snapshot', $attributes, $timestampNs);
     }
 }

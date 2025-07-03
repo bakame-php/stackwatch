@@ -57,7 +57,7 @@ final class Metrics implements JsonSerializable
 
         return new self(
             cpuTime: DurationUnit::Millisecond->convertToNano(self::calculateCpuTime($start, $end)),
-            executionTime: $end->executionTime - $start->executionTime,
+            executionTime: $end->hrtime - $start->hrtime,
             memoryUsage: $end->memoryUsage - $start->memoryUsage,
             peakMemoryUsage: $end->peakMemoryUsage - $start->peakMemoryUsage,
             realMemoryUsage: $end->realMemoryUsage - $start->realMemoryUsage,

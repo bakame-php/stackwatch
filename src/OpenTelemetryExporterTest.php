@@ -84,12 +84,12 @@ class OpenTelemetryExporterTest extends TestCase
         self::assertSame('test_export', $otlAttributes['profiler.label']);
         self::assertSame('ended', $otlAttributes['profiler.status']);
 
-        self::assertArrayHasKey('cpu_time', $otlAttributes);
-        self::assertArrayHasKey('exec_time', $otlAttributes);
-        self::assertArrayHasKey('memory_usage', $otlAttributes);
-        self::assertArrayHasKey('real_memory_usage', $otlAttributes);
-        self::assertArrayHasKey('peak_memory_usage', $otlAttributes);
-        self::assertArrayHasKey('real_peak_memory_usage', $otlAttributes);
+        self::assertArrayHasKey('cpu.time', $otlAttributes);
+        self::assertArrayHasKey('execution.time', $otlAttributes);
+        self::assertArrayHasKey('memory.usage', $otlAttributes);
+        self::assertArrayHasKey('memory.usage.real', $otlAttributes);
+        self::assertArrayHasKey('memory.peak', $otlAttributes);
+        self::assertArrayHasKey('memory.peak.real', $otlAttributes);
     }
 
     /**

@@ -7,11 +7,13 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 ### Added
 
 - `DurationUnit` to replace  `TimeUnit`Enum.
+- Adding `Exporter::exportSnapshot` method.
 
 ### Fixed
 
 - **BC BREAK:** simplify `ConsoleTableExporter` memory and time unit display
 - **BC BREAK:** rewrite and simplify `MemoryUnit` and `DurationUnit` Enum
+- **BC BREAK:** `Snapshot::executionTime` is renamed `Snapshot::hrtime`.
 - 
 ### Deprecated
 

@@ -39,7 +39,7 @@ final class SnapshotTest extends TestCase
 
         $snapshot2 = new Snapshot(
             $snapshot1->timestamp,
-            $snapshot1->executionTime,
+            $snapshot1->hrtime,
             $snapshot1->cpu,
             $snapshot1->memoryUsage,
             $snapshot1->realMemoryUsage,
