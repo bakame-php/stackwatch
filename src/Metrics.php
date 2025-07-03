@@ -53,11 +53,11 @@ final class Metrics implements JsonSerializable
 
     public static function fromSnapshots(Snapshot $start, Snapshot $end): self
     {
-        $start->timestamp <= $end->timestamp || throw new UnableToProfile('The ending snapshot was taken before the starting snapshot.');
+        ($excutionTime = $end->hrtime - $start->hrtime) >= 0 || throw new UnableToProfile('The ending snapshot was taken before the starting snapshot.');
 
         return new self(
             cpuTime: DurationUnit::Millisecond->convertToNano(self::calculateCpuTime($start, $end)),
-            executionTime: $end->hrtime - $start->hrtime,
+            executionTime: $excutionTime,
             memoryUsage: $end->memoryUsage - $start->memoryUsage,
             peakMemoryUsage: $end->peakMemoryUsage - $start->peakMemoryUsage,
             realMemoryUsage: $end->realMemoryUsage - $start->realMemoryUsage,
@@ -65,41 +65,7 @@ final class Metrics implements JsonSerializable
         );
     }
 
-    private static function calculateCpuTime(Snapshot $start, Snapshot $end): float
-    {
-        $cpuStart = $start->cpu;
-        $cpuEnd = $end->cpu;
-
-        return ($cpuEnd['ru_utime.tv_sec'] - $cpuStart['ru_utime.tv_sec'])
-            + ($cpuEnd['ru_utime.tv_usec'] - $cpuStart['ru_utime.tv_usec'])
-            + ($cpuEnd['ru_stime.tv_sec'] - $cpuStart['ru_stime.tv_sec'])
-            + ($cpuEnd['ru_stime.tv_usec'] - $cpuStart['ru_stime.tv_usec']);
-    }
-
-    /**
-     * @return MetricsStat
-     */
-    public function jsonSerialize(): array
-    {
-        return $this->stats();
-    }
-
-    /**
-     * @return MetricsStat
-     */
-    public function stats(): array
-    {
-        return [
-            'cpu_time' => $this->cpuTime,
-            'execution_time' => $this->executionTime,
-            'memory_usage' => $this->memoryUsage,
-            'real_memory_usage' => $this->realMemoryUsage,
-            'peak_memory_usage' => $this->peakMemoryUsage,
-            'real_peak_memory_usage' => $this->realPeakMemoryUsage,
-        ];
-    }
-
-    public static function avg(Profiler|ProfilingResult|ProfilingData|Metrics ...$metrics): self
+    public static function average(Profiler|ProfilingResult|ProfilingData|Metrics ...$metrics): self
     {
         /** @var array<Metrics> $metricList */
         $metricList = array_reduce($metrics, function (array $carry, Profiler|ProfilingResult|ProfilingData|Metrics $metric) {
@@ -149,6 +115,40 @@ final class Metrics implements JsonSerializable
             fn (Metrics $sum, Metrics $metric): Metrics => $sum->add($metric),
             Metrics::none()
         );
+    }
+
+    private static function calculateCpuTime(Snapshot $start, Snapshot $end): float
+    {
+        $cpuStart = $start->cpu;
+        $cpuEnd = $end->cpu;
+
+        return ($cpuEnd['ru_utime.tv_sec'] - $cpuStart['ru_utime.tv_sec'])
+            + ($cpuEnd['ru_utime.tv_usec'] - $cpuStart['ru_utime.tv_usec'])
+            + ($cpuEnd['ru_stime.tv_sec'] - $cpuStart['ru_stime.tv_sec'])
+            + ($cpuEnd['ru_stime.tv_usec'] - $cpuStart['ru_stime.tv_usec']);
+    }
+
+    /**
+     * @return MetricsStat
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->stats();
+    }
+
+    /**
+     * @return MetricsStat
+     */
+    public function stats(): array
+    {
+        return [
+            'cpu_time' => $this->cpuTime,
+            'execution_time' => $this->executionTime,
+            'memory_usage' => $this->memoryUsage,
+            'real_memory_usage' => $this->realMemoryUsage,
+            'peak_memory_usage' => $this->peakMemoryUsage,
+            'real_peak_memory_usage' => $this->realPeakMemoryUsage,
+        ];
     }
 
     public function add(Metrics $metric): self

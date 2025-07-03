@@ -42,7 +42,7 @@ final class MetricsTest extends TestCase
     {
         self::assertEquals(
             Metrics::none(),
-            Metrics::avg(Metrics::none(), Metrics::none(), Metrics::none()),
+            Metrics::average(Metrics::none(), Metrics::none(), Metrics::none()),
         );
     }
 
@@ -51,7 +51,7 @@ final class MetricsTest extends TestCase
     {
         $profilingData = $this->createProfilingData('empty_label');
 
-        self::assertEquals($profilingData->metrics, Metrics::avg($profilingData, Metrics::none(), Metrics::none()));
+        self::assertEquals($profilingData->metrics, Metrics::average($profilingData, Metrics::none(), Metrics::none()));
     }
 
     #[Test]
@@ -66,8 +66,8 @@ final class MetricsTest extends TestCase
         $reflection->getProperty('labels')->setValue($profiler, [$profilingData1->label => 1, $profilingData2->label => 1]);
 
         self::assertEquals(
-            Metrics::avg($profiler),
-            Metrics::avg($profilingData1, $profilingData2),
+            Metrics::average($profiler),
+            Metrics::average($profilingData1, $profilingData2),
         );
     }
 }

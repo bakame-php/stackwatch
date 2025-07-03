@@ -6,7 +6,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 ### Added
 
-- `DurationUnit` to replace  `TimeUnit`Enum.
+- `DurationUnit` replaces `TimeUnit` Enum.
 - Adding `Exporter::exportSnapshot` method.
 
 ### Fixed
@@ -14,14 +14,15 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 - **BC BREAK:** simplify `ConsoleTableExporter` memory and time unit display
 - **BC BREAK:** rewrite and simplify `MemoryUnit` and `DurationUnit` Enum
 - **BC BREAK:** `Snapshot::executionTime` is renamed `Snapshot::hrtime`.
-- 
+- **BC BREAK:** `Metrics::avg` is renamed `Metrics::average`.
+
 ### Deprecated
 
 - None
 
 ### Removed
 
-- **BC BREAK:**  renamed `TimeUnit` as `DurationUnit` Enum
+- **BC BREAK:**  `TimeUnit` is removed in favor of `DurationUnit` Enum
 
 ## [0.5.0 - Enugu](https://github.com/bakame-php/aide-profiler/compare/0.4.0...0.5.0) - 2025-07-01
 
