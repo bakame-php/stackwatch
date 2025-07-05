@@ -2,13 +2,14 @@
 
 All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
-## [Next](https://github.com/bakame-php/aide-profiler/compare/0.6.0...main) - TBD
+## [0.7.0 - Gaborone](https://github.com/bakame-php/aide-profiler/compare/0.6.0...0.7.0) - 2025-07-05
 
 ### Added
 
 - `Profiler::average`
 - `Environment` class
 - `ConsoleTableExporter::exportEnvironment` to visually show the environment settings
+- `ConsoleTableExporter::exportProfiler` also provide the average as a summary
 
 ### Fixed
 
@@ -21,7 +22,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 ### Removed
 
-- **BC BREAK:**  `TimeUnit` is removed in favor of `DurationUnit` Enum
+- None
 
 ## [0.6.0 - Fezzan](https://github.com/bakame-php/aide-profiler/compare/0.5.0...0.6.0) - 2025-07-03
 
