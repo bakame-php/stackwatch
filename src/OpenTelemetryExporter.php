@@ -52,12 +52,12 @@ final class OpenTelemetryExporter implements Exporter
         $span->end(DurationUnit::Millisecond->convertToNano((int) $end->timestamp->format('Uu')));
     }
 
-    public function exportProfiler(Profiler $profiler): void
+    public function exportProfiler(Profiler $profiler, ?string $label = null): void
     {
         $parent = $this->tracer->spanBuilder('profiler-run')->startSpan();
         $scope = $parent->activate();
-
-        foreach ($profiler as $profilingData) {
+        $input = null === $label ? $profiler : $profiler->getAll($label);
+        foreach ($input as $profilingData) {
             $this->exportProfilingData($profilingData);
         }
 

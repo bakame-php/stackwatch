@@ -51,7 +51,7 @@ final class MetricsTest extends TestCase
     {
         $profilingData = $this->createProfilingData('empty_label');
 
-        self::assertEquals($profilingData->metrics, Metrics::average($profilingData, Metrics::none(), Metrics::none()));
+        self::assertEquals($profilingData->metrics, Metrics::average($profilingData));
     }
 
     #[Test]

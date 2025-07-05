@@ -2,6 +2,25 @@
 
 All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
+## [Next](https://github.com/bakame-php/aide-profiler/compare/0.6.0...main) - TBD
+
+### Added
+
+- `Profiler::average`
+
+### Fixed
+
+- `Exporter::exportProfiler` now takes a second parameter to filter using the label.
+- `Metrics::average`, fix bug in the calculation.
+
+### Deprecated
+
+- None
+
+### Removed
+
+- **BC BREAK:**  `TimeUnit` is removed in favor of `DurationUnit` Enum
+
 ## [0.6.0 - Fezzan](https://github.com/bakame-php/aide-profiler/compare/0.5.0...0.6.0) - 2025-07-03
 
 ### Added

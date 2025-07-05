@@ -285,6 +285,18 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     }
 
     /**
+     * Returns the average metrics associated with the callback.
+     */
+    public function average(?string $label = null): Metrics
+    {
+        if (null === $label) {
+            return Metrics::average($this);
+        }
+
+        return Metrics::average(...$this->getAll($label));
+    }
+
+    /**
      * Returns the list of all distinct label present in the Profiler.
      *
      * @return list<string>

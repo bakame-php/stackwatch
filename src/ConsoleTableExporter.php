@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bakame\Aide\Profiler;
 
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -29,12 +30,25 @@ final class ConsoleTableExporter implements Exporter
         $table->render();
     }
 
-    public function exportProfiler(Profiler $profiler): void
+    public function exportProfiler(Profiler $profiler, ?string $label = null): void
     {
+        $input = null === $label ? $profiler : $profiler->getAll($label);
         $table = $this->createTable();
-        foreach ($profiler as $profilingData) {
+        foreach ($input as $profilingData) {
             $table->addRow($this->profilingDataToRow($profilingData));
         }
+        $table->addRow(new TableSeparator());
+        $metrics = $profiler->average($label);
+        $row = [
+            '<fg=green>Average</>',
+            DurationUnit::format($metrics->cpuTime, 3),
+            DurationUnit::format($metrics->executionTime, 3),
+            MemoryUnit::format($metrics->memoryUsage, 1),
+            MemoryUnit::format($metrics->realMemoryUsage, 1),
+            MemoryUnit::format($metrics->peakMemoryUsage, 1),
+            MemoryUnit::format($metrics->realPeakMemoryUsage, 1),
+        ];
+        $table->addRow($row);
         $table->render();
     }
 

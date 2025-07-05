@@ -10,5 +10,5 @@ interface Exporter
 
     public function exportProfilingData(ProfilingResult|ProfilingData $profilingData): void;
 
-    public function exportProfiler(Profiler $profiler): void;
+    public function exportProfiler(Profiler $profiler, ?string $label = null): void;
 }
