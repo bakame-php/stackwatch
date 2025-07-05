@@ -74,6 +74,7 @@ $metrics->peakMemoryUsage;
 $metrics->realMemoryUsage;
 $metrics->realPeakMemoryUsage;
 ````
+
 ### Iterations
 
 If you need to access the average usage for a specific metric, you can use the second argument.
@@ -149,6 +150,7 @@ $profiler->last();    // returns the ProfilingData from the last call
 $profiler->nth(-1);   // returns the same ProfilingData as Profile::last
 $profiler->first();   // returns the first ProfilingData ever generated
 $profiler->isEmpty(); // returns false because the profiler already contains recorded ProfilingData
+$profiler->average(); // returns a Metrics instance representing the average metrics of all the calls performed by the profiler instance
 ```
 
 You can access any `ProfilingData` by index using the `nth` method, or use the `first` and `last` methods
@@ -178,10 +180,15 @@ $namedProfilingData = $profiler->get('my_test'); // returns the associated Profi
 $profiler->get('foobar'); // returns null because the `foobar` label does not exist
 $profiler->has('foobar'); // returns false because the label does not exist
 $profiler->labels();      // returns all the labels attached to the Profiler
+$profiler->average('my_test'); // returns the Metrics average for all the calls whose label is `my_test`
 ````
 
-> [!NOTE]  
-> If you do not provide a label, the `Profiler` will generate a unique label for each run.
+You can reuse the same label multiple times. Calling `Profiler::get()` returns the most recent
+entry associated with the given label. In contrast, `Profiler::getAll()` returns an `array` of
+all entries recorded under that label, ordered from the oldest to the newest. If the label
+is invalid or has never been used, an empty `array` will be returned. To check whether
+a label has been used, you can call `Profiler::has()`, which returns `true`
+if the label exists, or `false` otherwise.
 
 ### Resetting the Profiler
 
@@ -225,7 +232,7 @@ use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 
 $logger = new Logger('profiler');
-$logger->pushHandler(new StreamHandler('php://stdout', Level::Debug));
+$logger->pushHandler(new StreamHandler(STDOUT, Level::Debug));
 
 $profiler = new Profiler(function () {
     usleep(1000);
@@ -338,6 +345,73 @@ $exporter->exportProfilter($profiler);
 ```
 
 Remember to change the `$tracerProvider` to connect to your own environment and server.
+
+### Helpers
+
+To correctly show the memory and duration unit, the package comes with 2 helper Enum:
+
+- `MemoryUnit` to help formatting and converting to and from bytes.
+- `DurationUnit` to help formatting and converting to and from nanoseconds.
+
+```php
+use Bakame\Aide\Profiler\MemoryUnit;
+use Bakame\Aide\Profiler\DurationUnit;
+
+MemoryUnit::format(1_024 ** 2); // returns '1 MB'
+MemoryUnit::parse('1 kb'); // returns 1000 in bytes
+
+DurationUnit::Second->convertToNano(1); // returns 1_000_000_000
+DurationUnit::format('23_000'); // returns 23 µs
+DurationUnit::tryParse('28 kb'); // returns null
+```
+
+The package also includes an `Environment` class that collects information about the current system
+for profiling purposes.
+
+```php
+use Bakame\Aide\Profiler\Environment;Environment;
+
+$system = Environment::current();
+$system->os; // the Operating System
+$system->osFamily; // OS Family
+$system->hostname; // the hostname
+$system->machine; // the Architecture
+$system->phpIntSize; // PHP Integer Size
+$system->phpArchitecture; //returns 64-bits
+$system->sapi; // SAPI
+$system->memoryLimit; // Memory Limit
+$system->cpuCores; // CPU Cores
+$system->totalDisk; // the total available disk space in bytes
+$system->freeDisk; // the remaining free disk space in bytes
+
+var_dump($system->stats()); // returns the values as an associative array
+array(12) {
+  ["os"]=>
+  string(5) "Linux"
+  ["osFamily"]=>
+  string(5) "Linux"
+  ["hostname"]=>
+  string(8) "example.org"
+  ["machine"]=>
+  string(6) "x86_64"
+  ["phpIntSize"]=>
+  int(8)
+  ["phpArchitecture"]=>
+  string(6) "64-bit"
+  ["phpVersion"]=>
+  string(6) "8.3.18"
+  ["sapi"]=>
+  string(3) "cli"
+  ["memoryLimit"]=>
+  string(3) "64M"
+  ["cpuCores"]=>
+  int(1)
+  ["totalDisk"]=>
+  float(0)
+  ["freeDisk"]=>
+  float(0)
+}
+```
 
 ## Testing
 

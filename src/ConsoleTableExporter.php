@@ -9,6 +9,7 @@ use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function is_float;
 use function json_encode;
 
 use const JSON_PRETTY_PRINT;
@@ -84,26 +85,44 @@ final class ConsoleTableExporter implements Exporter
         ];
     }
 
-    /**
-     * @return list<array{0:string, 1:string}>
-     */
-    private function snapshotToRow(Snapshot $snapshot): array
-    {
-        return [
-            ['Timestamp', $snapshot->timestamp->format('Y-m-d\TH:i:s.uP')],
-            ['Memory Usage', MemoryUnit::format($snapshot->memoryUsage, 3)],
-            ['Real Memory Usage', MemoryUnit::format($snapshot->realMemoryUsage, 3)],
-            ['Peak Memory Usage', MemoryUnit::format($snapshot->peakMemoryUsage, 3)],
-            ['Real Peak Memory Usage', MemoryUnit::format($snapshot->realPeakMemoryUsage, 3)],
-            ['CPU', (string) json_encode($snapshot->cpu, JSON_PRETTY_PRINT)],
-        ];
-    }
-
     public function exportSnapshot(Snapshot $snapshot): void
     {
         $table = (new Table($this->output))
             ->setHeaders(['Metric', 'Value'])
-            ->setRows($this->snapshotToRow($snapshot));
+            ->setRows([
+                ['Timestamp', $snapshot->timestamp->format('Y-m-d\TH:i:s.uP')],
+                ['Memory Usage', MemoryUnit::format($snapshot->memoryUsage, 3)],
+                ['Real Memory Usage', MemoryUnit::format($snapshot->realMemoryUsage, 3)],
+                ['Peak Memory Usage', MemoryUnit::format($snapshot->peakMemoryUsage, 3)],
+                ['Real Peak Memory Usage', MemoryUnit::format($snapshot->realPeakMemoryUsage, 3)],
+                ['CPU', (string) json_encode($snapshot->cpu, JSON_PRETTY_PRINT)],
+            ]);
+
+        $table->render();
+    }
+
+    public function exportEnvironment(Environment $environment): void
+    {
+        $memoryLimit = $environment->memoryLimit;
+        if (is_float($memoryLimit) && $memoryLimit > 0) {
+            $memoryLimit = MemoryUnit::format($memoryLimit);
+        }
+
+        $table = (new Table($this->output))
+            ->setHeaders(['Property', 'Value'])
+            ->setRows([
+                ['Operating System', $environment->os],
+                ['OS Family', $environment->osFamily],
+                ['Hostname', $environment->hostname],
+                ['Architecture', $environment->machine],
+                ['PHP Integer Size', $environment->phpIntSize],
+                ['PHP Architecture', $environment->phpArchitecture],
+                ['SAPI', $environment->sapi],
+                ['Memory Limit', $memoryLimit],
+                ['CPU Cores', $environment->cpuCores],
+                ['Disk Size', MemoryUnit::format($environment->totalDisk, 1)],
+                ['Free Disk Space', MemoryUnit::format($environment->freeDisk, 1)],
+            ]);
 
         $table->render();
     }

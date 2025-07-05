@@ -14,6 +14,7 @@ use function usleep;
 #[CoversClass(ConsoleTableExporter::class)]
 #[CoversClass(DurationUnit::class)]
 #[CoversClass(MemoryUnit::class)]
+#[CoversClass(Environment::class)]
 final class ConsoleTableExporterTest extends TestCase
 {
     #[Test]
@@ -53,7 +54,6 @@ final class ConsoleTableExporterTest extends TestCase
         self::assertMatchesRegularExpression('/\d+\.\d{3}/', $content); // cpu or exec time
     }
 
-
     #[Test]
     public function it_can_output_a_cli_table_for_a_snapshot(): void
     {
@@ -67,6 +67,21 @@ final class ConsoleTableExporterTest extends TestCase
         self::assertStringContainsString('Timestamp', $content);
         self::assertStringContainsString('Real Peak Memory Usage', $content);
         self::assertStringContainsString('"ru_oublock"', $content);
+        self::assertStringContainsString('CPU', $content);
+    }
+
+    #[Test]
+    public function it_can_output_a_cli_table_for_the_current_system(): void
+    {
+        $output = new BufferedOutput();
+        $renderer = new ConsoleTableExporter($output);
+
+        $renderer->exportEnvironment(Environment::current());
+        $content = $output->fetch();
+
+        self::assertStringContainsString('Operating System', $content);
+        self::assertStringContainsString('PHP Architecture', $content);
+        self::assertStringContainsString('Free Disk Space', $content);
         self::assertStringContainsString('CPU', $content);
     }
 }

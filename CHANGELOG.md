@@ -7,6 +7,8 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 ### Added
 
 - `Profiler::average`
+- `Environment` class
+- `ConsoleTableExporter::exportEnvironment` to visually show the environment settings
 
 ### Fixed
 
