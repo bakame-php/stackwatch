@@ -11,7 +11,6 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
 use function hrtime;
-use function usleep;
 
 #[CoversClass(Metrics::class)]
 final class MetricsTest extends TestCase
@@ -27,7 +26,6 @@ final class MetricsTest extends TestCase
             'ru_utime.tv_usec' => 1,
             'ru_stime.tv_usec' => 1,
         ], 1000, 2000, 3000, 4000);
-        usleep(100);
         $end = new Snapshot(new DateTimeImmutable(), hrtime(true) + 1, [
             'ru_utime.tv_sec' => 1,
             'ru_stime.tv_sec' => 1,
@@ -69,5 +67,29 @@ final class MetricsTest extends TestCase
             Metrics::average($profiler),
             Metrics::average($profilingData1, $profilingData2),
         );
+    }
+
+    #[Test]
+    public function it_correctly_returns_the_cpu_time_in_nanoseconds(): void
+    {
+        $start = new Snapshot(new DateTimeImmutable(), hrtime(true), [
+            'ru_utime.tv_sec'  => 1,
+            'ru_utime.tv_usec' => 500_000, // 1.5s user
+            'ru_stime.tv_sec'  => 0,
+            'ru_stime.tv_usec' => 250_000, // 0.25s system
+        ], 1000, 2000, 3000, 4000);
+        $end = new Snapshot(new DateTimeImmutable(), hrtime(true) + 1, [
+            'ru_utime.tv_sec'  => 2,
+            'ru_utime.tv_usec' => 0,       // 2.0s user
+            'ru_stime.tv_sec'  => 0,
+            'ru_stime.tv_usec' => 750_000, // 0.75s system
+        ], 1100, 2100, 3100, 4100);
+
+        // Expected:
+        // User time: 2.0 - 1.5 = 0.5s = 500_000_000 ns
+        // System time: 0.75 - 0.25 = 0.5s = 500_000_000 ns
+        // Total = 1_000_000_000 ns
+
+        self::assertSame(1_000_000_000.0, Metrics::fromSnapshots($start, $end)->cpuTime);
     }
 }

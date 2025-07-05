@@ -56,7 +56,7 @@ final class Metrics implements JsonSerializable
         ($excutionTime = $end->hrtime - $start->hrtime) >= 0 || throw new UnableToProfile('The ending snapshot was taken before the starting snapshot.');
 
         return new self(
-            cpuTime: DurationUnit::Millisecond->convertToNano(self::calculateCpuTime($start, $end)),
+            cpuTime: self::calculateCpuTime($start, $end),
             executionTime: $excutionTime,
             memoryUsage: $end->memoryUsage - $start->memoryUsage,
             peakMemoryUsage: $end->peakMemoryUsage - $start->peakMemoryUsage,
@@ -122,10 +122,10 @@ final class Metrics implements JsonSerializable
         $cpuStart = $start->cpu;
         $cpuEnd = $end->cpu;
 
-        return ($cpuEnd['ru_utime.tv_sec'] - $cpuStart['ru_utime.tv_sec'])
-            + ($cpuEnd['ru_utime.tv_usec'] - $cpuStart['ru_utime.tv_usec'])
-            + ($cpuEnd['ru_stime.tv_sec'] - $cpuStart['ru_stime.tv_sec'])
-            + ($cpuEnd['ru_stime.tv_usec'] - $cpuStart['ru_stime.tv_usec']);
+        return ($cpuEnd['ru_utime.tv_sec'] * 1000 ** 3) - ($cpuStart['ru_utime.tv_sec'] * 1000 ** 3)
+            + ($cpuEnd['ru_utime.tv_usec'] * 1000) - ($cpuStart['ru_utime.tv_usec'] * 1000)
+            + ($cpuEnd['ru_stime.tv_sec'] * 1000 ** 3) - ($cpuStart['ru_stime.tv_sec'] * 1000 ** 3)
+            + ($cpuEnd['ru_stime.tv_usec'] * 1000) - ($cpuStart['ru_stime.tv_usec'] * 1000);
     }
 
     /**
