@@ -92,7 +92,7 @@ $cpuTime = Profiler::cpuTime(
 ````
 The `$iterations` argument is available for all metrics.
 
-### Profiling while returning the call result
+### Returning the result
 
 Last but not least, it is possible to access the result from executing a call as well as its associated profile
 using the static method `Profiler::execute`. The method returns a `ProfilingResult`
@@ -365,8 +365,7 @@ DurationUnit::format('23_000'); // returns 23 µs
 DurationUnit::tryParse('28 kb'); // returns null
 ```
 
-The package also includes an `Environment` class that collects information about the current system
-for profiling purposes.
+The package also includes an `Environment class that collects information about the current system for profiling purposes.
 
 ```php
 use Bakame\Aide\Profiler\Environment;Environment;
@@ -384,8 +383,8 @@ $system->cpuCores; // CPU Cores
 $system->totalDisk; // the total available disk space in bytes
 $system->freeDisk; // the remaining free disk space in bytes
 
-var_dump($system->stats()); // returns the values as an associative array
-array(12) {
+var_dump($system->toArray()); // returns the values as an associative array
+array(13) {
   ["os"]=>
   string(5) "Linux"
   ["osFamily"]=>
@@ -414,6 +413,18 @@ array(12) {
   float(0)
 }
 ```
+
+Appart from returnong raw information about your system, the instance can be used to detect the PHP architecture
+used or if the memory is unlimited using boolean returning methods:
+
+```php
+use Bakame\Aide\Profiler\Environment;Environment;
+
+$system = Environment::current();
+$system->is32Bit(); // returns true on a 32-bit architecture
+$system->is64Bit(); // returns true on a 64-bit architecture
+$system->unlimitedMemory(); // returns true if there is no memory limit
+````
 
 ## Testing
 

@@ -39,13 +39,13 @@ final class ProfilingData implements JsonSerializable
     /**
      * @return ProfilingDataStat
      */
-    public function stats(): array
+    public function toArray(): array
     {
         return [
             'label' => $this->label,
-            'start' => $this->start->stats(),
-            'end' => $this->end->stats(),
-            'metrics' => $this->metrics->stats(),
+            'start' => $this->start->toArray(),
+            'end' => $this->end->toArray(),
+            'metrics' => $this->metrics->toArray(),
         ];
     }
 

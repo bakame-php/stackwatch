@@ -133,13 +133,13 @@ final class Metrics implements JsonSerializable
      */
     public function jsonSerialize(): array
     {
-        return $this->stats();
+        return $this->toArray();
     }
 
     /**
      * @return MetricsStat
      */
-    public function stats(): array
+    public function toArray(): array
     {
         return [
             'cpu_time' => $this->cpuTime,

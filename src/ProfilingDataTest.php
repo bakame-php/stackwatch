@@ -45,7 +45,7 @@ final class ProfilingDataTest extends TestCase
         $end = Snapshot::now();
         $profilingData = new ProfilingData($start, $end, 'test');
 
-        $stats = $profilingData->stats();
+        $stats = $profilingData->toArray();
 
         self::assertArrayHasKey('label', $stats);
         self::assertArrayHasKey('start', $stats);

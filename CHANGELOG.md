@@ -6,11 +6,15 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 ### Added
 
-- Added `Environment::rawMemoryLimit` to keep the original value if it can not be properly parsed.
+- Added `Environment::rawMemoryLimit` to keep the original value if it cannot be properly parsed.
 
 ### Fixed
 
 - **BC BREAK:** `Environment::memoryLimit` is a nullable int  
+- **BC BREAK:**  Renamed `Metrics::stats` to `Metrics::toArray`
+- **BC BREAK:**  Renamed `Snapshot::stats` to `Snapshot::toArray`
+- **BC BREAK:**  Renamed `ProfilingData::stats`  to `ProfilingData::toArray`
+- **BC BREAK:**  Renamed `Environment::stats`  to `Environment::toArray`
 
 ### Deprecated
 

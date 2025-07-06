@@ -191,7 +191,7 @@ final class Environment implements JsonSerializable
      *
      * @return EnvironmentStats
      */
-    public function stats(): array
+    public function toArray(): array
     {
         return [
             'os' => $this->os,
@@ -215,7 +215,7 @@ final class Environment implements JsonSerializable
      */
     public function jsonSerialize(): array
     {
-        return $this->stats();
+        return $this->toArray();
     }
 
     /**
