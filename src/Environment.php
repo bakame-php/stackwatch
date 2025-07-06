@@ -37,8 +37,9 @@ use const PHP_OS_FAMILY;
  *     phpArchitecture: string,
  *     phpVersion: string,
  *     sapi: string,
+ *     memoryLimit: ?int,
+ *     rawMemoryLimit: string,
  *     cpuCores: int,
- *     memoryLimit: float|string,
  *     totalDisk: float,
  *     freeDisk: float,
  * }
@@ -46,9 +47,11 @@ use const PHP_OS_FAMILY;
 final class Environment implements JsonSerializable
 {
     /**
-     * @param float $memoryLimit expressed in bytes
      * @param float $totalDisk expressed in bytes
      * @param float $freeDisk expressed in bytes
+     * @param ?int $memoryLimit Parsed memory limit in bytes.
+     *                          `-1` if unlimited, `null` if parsing failed.
+     * @param string $rawMemoryLimit Original INI value, e.g., "128M", "-1"
      */
     public function __construct(
         public readonly string $os,
@@ -59,7 +62,8 @@ final class Environment implements JsonSerializable
         public readonly string $phpArchitecture,
         public readonly string $phpVersion,
         public readonly string $sapi,
-        public readonly float|string $memoryLimit,
+        public readonly ?int $memoryLimit,
+        public readonly string $rawMemoryLimit,
         public readonly int $cpuCores,
         public readonly float $totalDisk,
         public readonly float $freeDisk,
@@ -95,50 +99,66 @@ final class Environment implements JsonSerializable
             phpVersion: phpversion(),
             sapi: php_sapi_name(),
             memoryLimit: self::detectMemoryLimit(),
+            rawMemoryLimit: ini_get('memory_limit'),
             cpuCores:  self::detectCpuCores(),
             totalDisk: $totalDisk,
             freeDisk: $freeDisk,
         );
     }
 
-    public static function detectMemoryLimit(): int|string
+    public static function detectMemoryLimit(): ?int
     {
         $iniValue = ini_get('memory_limit');
         if (false === $iniValue) {
-            return '';
+            return null;
         }
 
         if ('-1' === $iniValue) {
             return -1;
         }
 
-        return MemoryUnit::tryParse($iniValue) ?? '';
+        return MemoryUnit::tryParse($iniValue);
     }
 
     public static function detectCpuCores(): int
     {
         $shellExec = static fn (string $cmd): string => trim((string) shell_exec($cmd));
-        if (0 === strncasecmp(PHP_OS, 'WIN', 3)) {
-            $cores = getenv('NUMBER_OF_PROCESSORS');
-
-            return max(1, filter_var($cores, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'default' => 0]]));
+        if (self::isWindows()) {
+            return self::getCpuCoresCount(getenv('NUMBER_OF_PROCESSORS'));
         }
 
         /** @var bool $isReadable */
         $isReadable = self::cloak(is_readable(...), '/proc/cpuinfo');
         if ($isReadable) {
+            /** @var string $cores */
             $cores = self::cloak($shellExec, 'nproc');
 
-            return max(1, filter_var($cores, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'default' => 0]]));
+            return self::getCpuCoresCount($cores);
         }
 
-        if (0 === stripos(PHP_OS, 'Darwin')) {
-            $cores =  self::cloak($shellExec, 'sysctl -n hw.ncpu');
+        if (self::isMac()) {
+            /** @var string $cores */
+            $cores = self::cloak($shellExec, 'sysctl -n hw.ncpu');
 
-            return max(1, filter_var($cores, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'default' => 0]]));
+            return self::getCpuCoresCount($cores);
         }
 
         return 1;
+    }
+
+    private static function isWindows(): bool
+    {
+        return 0 === strncasecmp(PHP_OS, 'WIN', 3);
+    }
+
+    private static function isMac(): bool
+    {
+        return 0 === stripos(PHP_OS, 'Darwin');
+    }
+
+    private static function getCpuCoresCount(int|string|float|bool $cores): int
+    {
+        return max(1, filter_var($cores, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'default' => 0]]));
     }
 
     /**
@@ -158,6 +178,17 @@ final class Environment implements JsonSerializable
     }
 
     /**
+     * Returns true if the memory limit is unlimited.
+     */
+    public function unlimitedMemory(): bool
+    {
+        return -1 === (int) $this->rawMemoryLimit;
+    }
+
+    /**
+     *  - `memoryLimit`: int|null — bytes, -1 if unlimited, null if undetected
+     *  - `rawMemoryLimit`: string — raw INI string, e.g., "512M" or "-1".
+     *
      * @return EnvironmentStats
      */
     public function stats(): array
@@ -171,8 +202,9 @@ final class Environment implements JsonSerializable
             'phpArchitecture' => $this->phpArchitecture,
             'phpVersion' => $this->phpVersion,
             'sapi' => $this->sapi,
-            'cpuCores' => $this->cpuCores,
             'memoryLimit' => $this->memoryLimit,
+            'rawMemoryLimit' => $this->rawMemoryLimit,
+            'cpuCores' => $this->cpuCores,
             'totalDisk' => $this->totalDisk,
             'freeDisk' => $this->freeDisk,
         ];

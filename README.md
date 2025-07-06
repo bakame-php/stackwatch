@@ -402,7 +402,9 @@ array(12) {
   string(6) "8.3.18"
   ["sapi"]=>
   string(3) "cli"
-  ["memoryLimit"]=>
+  ["memoryLimit"]=> 
+  int(67108864)
+  ["rawMemoryLimit"]=>
   string(3) "64M"
   ["cpuCores"]=>
   int(1)

@@ -2,6 +2,24 @@
 
 All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
+## [Next](https://github.com/bakame-php/aide-profiler/compare/0.7.1...main) - TBD
+
+### Added
+
+- Added `Environment::rawMemoryLimit` to keep the original value if it can not be properly parsed.
+
+### Fixed
+
+- **BC BREAK:** `Environment::memoryLimit` is a nullable int  
+
+### Deprecated
+
+- None
+
+### Removed
+
+- None
+
 ## [0.7.1 - Gaborone](https://github.com/bakame-php/aide-profiler/compare/0.7.0...0.7.1) - 2025-07-06
 
 ### Added

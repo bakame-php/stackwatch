@@ -67,7 +67,7 @@
     "suggest": {
         "psr/log": "to log the profiling process",
         "symfony/console": "to render the profiler in your CLI command",
-        "open-telemetry/exporter-otlp": "to export the profiler results to an opentelemetry profile"
+        "open-telemetry/exporter-otlp": "to export the profiler results to an opentelemetry compatible server"
     },
     "extra": {
         "branch-alias": {

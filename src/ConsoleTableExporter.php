@@ -9,7 +9,6 @@ use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use function is_float;
 use function json_encode;
 
 use const JSON_PRETTY_PRINT;
@@ -104,7 +103,7 @@ final class ConsoleTableExporter implements Exporter
     public function exportEnvironment(Environment $environment): void
     {
         $memoryLimit = $environment->memoryLimit;
-        if (is_float($memoryLimit) && $memoryLimit > 0) {
+        if (null !== $memoryLimit && 0 < $memoryLimit) {
             $memoryLimit = MemoryUnit::format($memoryLimit);
         }
 
@@ -119,6 +118,7 @@ final class ConsoleTableExporter implements Exporter
                 ['PHP Architecture', $environment->phpArchitecture],
                 ['SAPI', $environment->sapi],
                 ['Memory Limit', $memoryLimit],
+                ['Raw Memory Limit', $environment->rawMemoryLimit],
                 ['CPU Cores', $environment->cpuCores],
                 ['Disk Size', MemoryUnit::format($environment->totalDisk, 1)],
                 ['Free Disk Space', MemoryUnit::format($environment->freeDisk, 1)],

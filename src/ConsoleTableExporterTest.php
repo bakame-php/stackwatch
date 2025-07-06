@@ -83,5 +83,6 @@ final class ConsoleTableExporterTest extends TestCase
         self::assertStringContainsString('PHP Architecture', $content);
         self::assertStringContainsString('Free Disk Space', $content);
         self::assertStringContainsString('CPU', $content);
+        self::assertStringContainsString('Raw Memory Limit', $content);
     }
 }
