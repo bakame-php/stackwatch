@@ -2,6 +2,24 @@
 
 All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
+## [0.7.1 - Gaborone](https://github.com/bakame-php/aide-profiler/compare/0.7.0...0.7.1) - 2025-07-06
+
+### Added
+
+- None
+
+### Fixed
+
+- `Metrics::cpuTime` calculation
+
+### Deprecated
+
+- None
+
+### Removed
+
+- None
+
 ## [0.7.0 - Gaborone](https://github.com/bakame-php/aide-profiler/compare/0.6.0...0.7.0) - 2025-07-05
 
 ### Added
