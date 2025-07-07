@@ -7,6 +7,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 ### Added
 
 - Added `Metrics::forHuman` to ease getting human-readable metrics representations.
+- Added `Environment` OS Platform related methods.
 
 ### Fixed
 

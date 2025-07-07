@@ -451,9 +451,12 @@ used or if the memory is unlimited using boolean returning methods:
 use Bakame\Aide\Profiler\Environment;Environment;
 
 $system = Environment::current();
-$system->is32Bit(); // returns true on a 32-bit architecture
-$system->is64Bit(); // returns true on a 64-bit architecture
+$system->is32Bit();         // returns true on a 32-bit architecture
+$system->is64Bit();         // returns true on a 64-bit architecture
 $system->unlimitedMemory(); // returns true if there is no memory limit
+$system->isWindows();       // returns true if the OS is a Windows
+$system->isMac();           // returns true if the OS is a Mac
+$system->isUnixLike();      // returns true if the OS is a Unix like
 ````
 
 ## Testing

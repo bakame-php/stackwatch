@@ -18,8 +18,6 @@ use function phpversion;
 use function restore_error_handler;
 use function set_error_handler;
 use function shell_exec;
-use function stripos;
-use function strncasecmp;
 use function trim;
 
 use const FILTER_VALIDATE_INT;
@@ -123,7 +121,7 @@ final class Environment implements JsonSerializable
     public static function detectCpuCores(): int
     {
         $shellExec = static fn (string $cmd): string => trim((string) shell_exec($cmd));
-        if (self::isWindows()) {
+        if (self::isWindowsPlatform()) {
             return self::getCpuCoresCount(getenv('NUMBER_OF_PROCESSORS'));
         }
 
@@ -136,7 +134,7 @@ final class Environment implements JsonSerializable
             return self::getCpuCoresCount($cores);
         }
 
-        if (self::isMac()) {
+        if (self::isMacPlatform()) {
             /** @var string $cores */
             $cores = self::cloak($shellExec, 'sysctl -n hw.ncpu');
 
@@ -146,14 +144,14 @@ final class Environment implements JsonSerializable
         return 1;
     }
 
-    private static function isWindows(): bool
+    private static function isWindowsPlatform(): bool
     {
-        return 0 === strncasecmp(PHP_OS, 'WIN', 3);
+        return PHP_OS_FAMILY === 'Windows';
     }
 
-    private static function isMac(): bool
+    private static function isMacPlatform(): bool
     {
-        return 0 === stripos(PHP_OS, 'Darwin');
+        return PHP_OS_FAMILY === 'Darwin';
     }
 
     private static function getCpuCoresCount(int|string|float|bool $cores): int
@@ -183,6 +181,30 @@ final class Environment implements JsonSerializable
     public function unlimitedMemory(): bool
     {
         return -1 === (int) $this->rawMemoryLimit;
+    }
+
+    /**
+     * Returns true if the system is running on a Unix Like Operating System.
+     */
+    public function isWindows(): bool
+    {
+        return 'Windows' === $this->osFamily;
+    }
+
+    /**
+     * Returns true if the system is running on a Unix Like Operating System.
+     */
+    public function isMac(): bool
+    {
+        return 'Darwin' === $this->osFamily;
+    }
+
+    /**
+     * Returns true if the system is running on a Unix Like Operating System.
+     */
+    public function isUnixLike(): bool
+    {
+        return ! $this->isWindows();
     }
 
     /**
