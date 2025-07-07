@@ -6,8 +6,10 @@ namespace Bakame\Aide\Profiler;
 
 use JsonSerializable;
 
+use function array_keys;
 use function array_reduce;
 use function count;
+use function implode;
 
 /**
  * @phpstan-type MetricsStat array{
@@ -17,6 +19,14 @@ use function count;
  *     real_memory_usage: float,
  *     peak_memory_usage: float,
  *     real_peak_memory_usage: float
+ * }
+ * @phpstan-type MetricsHumanReadable array{
+ *      cpu_time: string,
+ *      execution_time: string,
+ *      memory_usage: string,
+ *      real_memory_usage: string,
+ *      peak_memory_usage: string,
+ *     real_peak_memory_usage: string
  * }
  */
 final class Metrics implements JsonSerializable
@@ -149,6 +159,29 @@ final class Metrics implements JsonSerializable
             'peak_memory_usage' => $this->peakMemoryUsage,
             'real_peak_memory_usage' => $this->realPeakMemoryUsage,
         ];
+    }
+
+    /**
+     * @throws InvalidArgument if the metrics property is unknown or not supported.
+     *
+     * @return MetricsHumanReadable|string
+     */
+    public function forHuman(?string $property = null): array|string
+    {
+        $humans =  [
+            'cpu_time' => DurationUnit::format($this->cpuTime, 3),
+            'execution_time' => DurationUnit::format($this->executionTime, 3),
+            'memory_usage' => MemoryUnit::format($this->memoryUsage, 1),
+            'real_memory_usage' => MemoryUnit::format($this->realMemoryUsage, 1),
+            'peak_memory_usage' => MemoryUnit::format($this->peakMemoryUsage, 1),
+            'real_peak_memory_usage' => MemoryUnit::format($this->realPeakMemoryUsage, 1),
+        ];
+
+        if (null === $property) {
+            return $humans;
+        }
+
+        return $humans[$property] ?? throw new InvalidArgument('Unknown metrics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
     }
 
     public function add(Metrics $metric): self

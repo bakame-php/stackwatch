@@ -13,6 +13,9 @@ use function json_encode;
 
 use const JSON_PRETTY_PRINT;
 
+/**
+ * @phpstan-import-type MetricsHumanReadable from Metrics
+ */
 final class ConsoleTableExporter implements Exporter
 {
     public function __construct(private readonly OutputInterface $output = new ConsoleOutput())
@@ -38,15 +41,16 @@ final class ConsoleTableExporter implements Exporter
             $table->addRow($this->profilingDataToRow($profilingData));
         }
         $table->addRow(new TableSeparator());
-        $metrics = $profiler->average($label);
+        /** @var MetricsHumanReadable $metrics */
+        $metrics = $profiler->average($label)->forHuman();
         $row = [
             '<fg=green>Average</>',
-            DurationUnit::format($metrics->cpuTime, 3),
-            DurationUnit::format($metrics->executionTime, 3),
-            MemoryUnit::format($metrics->memoryUsage, 1),
-            MemoryUnit::format($metrics->realMemoryUsage, 1),
-            MemoryUnit::format($metrics->peakMemoryUsage, 1),
-            MemoryUnit::format($metrics->realPeakMemoryUsage, 1),
+            $metrics['cpu_time'],
+            $metrics['execution_time'],
+            $metrics['memory_usage'],
+            $metrics['real_memory_usage'],
+            $metrics['peak_memory_usage'],
+            $metrics['real_peak_memory_usage'],
         ];
         $table->addRow($row);
         $table->render();
@@ -71,16 +75,17 @@ final class ConsoleTableExporter implements Exporter
      */
     private function profilingDataToRow(ProfilingData $profilingData): array
     {
-        $metrics = $profilingData->metrics;
+        /** @var MetricsHumanReadable $metrics */
+        $metrics = $profilingData->metrics->forHuman();
 
         return [
             $profilingData->label,
-            DurationUnit::format($metrics->cpuTime, 3),
-            DurationUnit::format($metrics->executionTime, 3),
-            MemoryUnit::format($metrics->memoryUsage, 1),
-            MemoryUnit::format($metrics->realMemoryUsage, 1),
-            MemoryUnit::format($metrics->peakMemoryUsage, 1),
-            MemoryUnit::format($metrics->realPeakMemoryUsage, 1),
+            $metrics['cpu_time'],
+            $metrics['execution_time'],
+            $metrics['memory_usage'],
+            $metrics['real_memory_usage'],
+            $metrics['peak_memory_usage'],
+            $metrics['real_peak_memory_usage'],
         ];
     }
 

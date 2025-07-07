@@ -75,6 +75,36 @@ $metrics->realMemoryUsage;
 $metrics->realPeakMemoryUsage;
 ````
 
+The `Metrics` instance provides access to its statistics in a human-readable format via the 
+`Metrics::forHuman()` method.
+
+You can either:
+
+- Call the method without arguments to retrieve **all metrics** as formatted strings in an associative `array`.
+- Or pass the name of a specific metric to retrieve **only that value**, formatted for human readability.
+
+```php
+use Bakame\Aide\Profiler\Profiler;
+
+// you create a new Profiler by passing the callback you want to profile
+$metrics = Profiler::metrics(
+    $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'))
+);
+
+$metrics->forHuman();
+// returns 
+// [
+//   "cpu_time" => "30.000 µs"
+//   "execution_time" => "1.271 ms"
+//   "memory_usage" => "2.5 KB"
+//   "real_memory_usage" => "0.0 B"
+//   "peak_memory_usage" => "0.0 B"
+//   "real_peak_memory_usage" => "0.0 B"
+// ]
+
+$metrics->forHuman('memory_usage'); //returns "2.5 KB"
+```
+
 ### Iterations
 
 If you need to access the average usage for a specific metric, you can use the second argument.
