@@ -27,8 +27,6 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
 {
     /** @var array<non-empty-string, Snapshot> */
     private array $snapshots = [];
-    /** @var array<non-empty-string, 1> */
-    private array $labels = [];
     private ?LoggerInterface $logger;
 
     public function __construct(?LoggerInterface $logger = null)
@@ -41,7 +39,6 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
     {
         gc_collect_cycles();
         $this->snapshots = [];
-        $this->labels = [];
     }
 
     /**
@@ -50,9 +47,7 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
     public function take(string $label): void
     {
         $label = Label::fromString($label);
-        if ($this->has($label)) {
-            throw new InvalidArgument('The label "'.$label.'" already exists.');
-        }
+        ! $this->has($label) || throw new InvalidArgument('The label "'.$label.'" already exists.');
 
         $from = array_key_last($this->snapshots);
         $lastSnapshot = $this->snapshots[$from] ?? null;
@@ -63,7 +58,6 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
 
         $this->logger?->info('snapshot for label: '.$label.'.', ['snapshot' => $newSnapshot->toArray()]);
         $this->snapshots[$label] = $newSnapshot;
-        $this->labels[$label] = 1;
     }
 
     public function get(string $label): Snapshot
@@ -73,9 +67,7 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
 
     public function delta(string $from, string $to, ?string $metric = null): ProfilingData|float
     {
-        if (!$this->has($from) || !$this->has($to)) {
-            throw new InvalidArgument('The labels "'.$from.'" and/or "'.$to.'" do not exist.');
-        }
+        ($this->has($from) && $this->has($to)) || throw new InvalidArgument('The labels "'.$from.'" and/or "'.$to.'" do not exist.');
 
         $profilingData = new ProfilingData($this->snapshots[$from], $this->snapshots[$to], $from.'_'.$to);
         if (null === $metric) {
@@ -140,7 +132,7 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
      */
     public function labels(): array
     {
-        return array_keys($this->labels);
+        return array_keys($this->snapshots);
     }
 
     /**
@@ -148,12 +140,8 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
      */
     public function reports(): iterable
     {
-        if (! $this->hasIntervals()) {
-            return;
-        }
-
         $labels = $this->labels();
-        $count = count($labels);
+        $count = count($this->snapshots);
         for ($i = 1; $i < $count; $i++) {
             /** @var ProfilingData $profilingData */
             $profilingData = $this->delta($labels[$i - 1], $labels[$i]);
@@ -164,7 +152,7 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
 
     public function latest(): ?Snapshot
     {
-        return $this->snapshots[array_key_last($this->snapshots)] ?? null;
+        return $this->nth(-1);
     }
 
     public function first(): ?Snapshot
@@ -205,8 +193,8 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
             return null;
         }
 
-        $from = array_key_first($this->labels);
-        $to = array_key_last($this->labels);
+        $from = array_key_first($this->snapshots);
+        $to = array_key_last($this->snapshots);
 
         return new ProfilingData($this->snapshots[$from], $this->snapshots[$to], Label::fromString($label ?? $from.'_'.$to));
     }
