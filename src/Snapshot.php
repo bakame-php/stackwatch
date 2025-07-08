@@ -18,7 +18,14 @@ use function memory_get_usage;
 use const JSON_PRETTY_PRINT;
 
 /**
- * @phpstan-type CpuStat array{'ru_utime.tv_sec': int, 'ru_utime.tv_usec': int, 'ru_stime.tv_sec': int, 'ru_stime.tv_usec': int, 'ru_inblock': int, 'ru_inblock': int}
+ * @phpstan-type CpuStat array{
+ *     'ru_utime.tv_sec': int,
+ *     'ru_utime.tv_usec': int,
+ *     'ru_stime.tv_sec': int,
+ *     'ru_stime.tv_usec': int,
+ *     ru_inblock: int,
+ *     ru_oublock: int,
+ * }
  * @phpstan-type SnapshotStat array{
  *     timestamp: string,
  *     metrics: array{

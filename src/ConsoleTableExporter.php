@@ -39,18 +39,7 @@ final class ConsoleTableExporter implements Exporter
             $table->addRow($this->profilingDataToRow($profilingData));
         }
         $table->addRow(new TableSeparator());
-        /** @var MetricsHumanReadable $metrics */
-        $metrics = $profiler->average($label)->forHuman();
-        $row = [
-            '<fg=green>Average</>',
-            $metrics['cpu_time'],
-            $metrics['execution_time'],
-            $metrics['memory_usage'],
-            $metrics['real_memory_usage'],
-            $metrics['peak_memory_usage'],
-            $metrics['real_peak_memory_usage'],
-        ];
-        $table->addRow($row);
+        $table->addRow($this->metricsToRow('<fg=green>Average</>', $profiler->average($label)));
         $table->render();
     }
 
@@ -69,18 +58,8 @@ final class ConsoleTableExporter implements Exporter
         $table->addRow(new TableSeparator());
         /** @var ProfilingData $summary */
         $summary = $timeline->summary();
-        /** @var MetricsHumanReadable $metrics */
-        $metrics = $summary->metrics->forHuman();
-        $row = [
-            '<fg=green>Summary</>',
-            $metrics['cpu_time'],
-            $metrics['execution_time'],
-            $metrics['memory_usage'],
-            $metrics['real_memory_usage'],
-            $metrics['peak_memory_usage'],
-            $metrics['real_peak_memory_usage'],
-        ];
-        $table->addRow($row);
+
+        $table->addRow($this->metricsToRow('<fg=green>Summary</>', $summary->metrics));
         $table->render();
     }
 
@@ -95,6 +74,7 @@ final class ConsoleTableExporter implements Exporter
             'Real Mem',
             'Peak Mem',
             'Real Peak',
+            new TableCell('<fg=green>Disk Access</>', ['colspan' => 2]),
         ]);
     }
 
@@ -103,17 +83,27 @@ final class ConsoleTableExporter implements Exporter
      */
     private function profilingDataToRow(ProfilingData $profilingData): array
     {
-        /** @var MetricsHumanReadable $metrics */
-        $metrics = $profilingData->metrics->forHuman();
+        return $this->metricsToRow($profilingData->label, $profilingData->metrics);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function metricsToRow(string $formattedLabel, Metrics $metrics): array
+    {
+        /** @var MetricsHumanReadable $formattedMetrics */
+        $formattedMetrics = $metrics->forHuman();
 
         return [
-            $profilingData->label,
-            $metrics['cpu_time'],
-            $metrics['execution_time'],
-            $metrics['memory_usage'],
-            $metrics['real_memory_usage'],
-            $metrics['peak_memory_usage'],
-            $metrics['real_peak_memory_usage'],
+            $formattedLabel,
+            $formattedMetrics['cpu_time'],
+            $formattedMetrics['execution_time'],
+            $formattedMetrics['memory_usage'],
+            $formattedMetrics['real_memory_usage'],
+            $formattedMetrics['peak_memory_usage'],
+            $formattedMetrics['real_peak_memory_usage'],
+            $formattedMetrics['disk_read'],
+            $formattedMetrics['disk_write'],
         ];
     }
 
@@ -123,15 +113,13 @@ final class ConsoleTableExporter implements Exporter
         $stats = $snapshot->forHuman();
         $table = (new Table($this->output))
             ->setHeaders(['Timestamp', 'Memory Usage', 'Real Memory Usage', 'Peak Memory Usage', 'Real Peak Memory Usage', 'CPU'])
-            ->setRows([
-                [
-                    $stats['timestamp'],
-                    $stats['memory_usage'],
-                    $stats['real_memory_usage'],
-                    $stats['peak_memory_usage'],
-                    $stats['real_peak_memory_usage'],
-                    $stats['cpu'],
-                ],
+            ->addRow([
+                $stats['timestamp'],
+                $stats['memory_usage'],
+                $stats['real_memory_usage'],
+                $stats['peak_memory_usage'],
+                $stats['real_peak_memory_usage'],
+                $stats['cpu'],
             ]);
         $table->setVertical();
         $table->render();
@@ -159,21 +147,19 @@ final class ConsoleTableExporter implements Exporter
                 'Disk Size',
                 'Free Disk Space',
             ])
-            ->setRows([
-                [
-                    $environment->os,
-                    $environment->osFamily,
-                    $environment->hostname,
-                    $environment->machine,
-                    $environment->phpIntSize,
-                    $environment->phpArchitecture,
-                    $environment->sapi,
-                    $memoryLimit,
-                    $environment->rawMemoryLimit,
-                    $environment->cpuCores,
-                    MemoryUnit::format($environment->totalDisk, 1),
-                    MemoryUnit::format($environment->freeDisk, 1),
-                ],
+            ->addRow([
+                $environment->os,
+                $environment->osFamily,
+                $environment->hostname,
+                $environment->machine,
+                $environment->phpIntSize,
+                $environment->phpArchitecture,
+                $environment->sapi,
+                $memoryLimit,
+                $environment->rawMemoryLimit,
+                $environment->cpuCores,
+                MemoryUnit::format($environment->totalDisk, 1),
+                MemoryUnit::format($environment->freeDisk, 1),
             ]);
 
         $table->setVertical();

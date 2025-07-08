@@ -48,6 +48,8 @@ final class OpenTelemetryExporter implements Exporter
         $span->setAttribute('memory.usage.real', $metrics->realMemoryUsage);
         $span->setAttribute('memory.peak', $metrics->peakMemoryUsage);
         $span->setAttribute('memory.peak.real', $metrics->realPeakMemoryUsage);
+        $span->setAttribute('disk.read', $metrics->diskRead);
+        $span->setAttribute('disk.write', $metrics->diskWrite);
         $this->exportSnapshot($end);
         $span->end(DurationUnit::Millisecond->convertToNano((int) $end->timestamp->format('Uu')));
     }

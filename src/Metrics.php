@@ -10,6 +10,7 @@ use function array_keys;
 use function array_reduce;
 use function count;
 use function implode;
+use function number_format;
 
 /**
  * @phpstan-type MetricsStat array{
@@ -18,7 +19,9 @@ use function implode;
  *     memory_usage: float,
  *     real_memory_usage: float,
  *     peak_memory_usage: float,
- *     real_peak_memory_usage: float
+ *     real_peak_memory_usage: float,
+ *     disk_read: int,
+ *     disk_write: int,
  * }
  * @phpstan-type MetricsHumanReadable array{
  *      cpu_time: string,
@@ -26,7 +29,9 @@ use function implode;
  *      memory_usage: string,
  *      real_memory_usage: string,
  *      peak_memory_usage: string,
- *     real_peak_memory_usage: string
+ *      real_peak_memory_usage: string,
+ *      disk_read: string,
+ *      disk_write: string,
  * }
  */
 final class Metrics implements JsonSerializable
@@ -46,6 +51,8 @@ final class Metrics implements JsonSerializable
         public readonly float $peakMemoryUsage,
         public readonly float $realMemoryUsage,
         public readonly float $realPeakMemoryUsage,
+        public readonly int $diskRead,
+        public readonly int $diskWrite,
     ) {
     }
 
@@ -58,6 +65,8 @@ final class Metrics implements JsonSerializable
             peakMemoryUsage: 0,
             realMemoryUsage: 0,
             realPeakMemoryUsage: 0,
+            diskRead: 0,
+            diskWrite: 0,
         );
     }
 
@@ -72,6 +81,8 @@ final class Metrics implements JsonSerializable
             peakMemoryUsage: $end->peakMemoryUsage - $start->peakMemoryUsage,
             realMemoryUsage: $end->realMemoryUsage - $start->realMemoryUsage,
             realPeakMemoryUsage: $end->realPeakMemoryUsage - $start->realPeakMemoryUsage,
+            diskRead: $end->cpu['ru_inblock'] - $start->cpu['ru_inblock'],
+            diskWrite: $end->cpu['ru_oublock'] - $start->cpu['ru_oublock'],
         );
     }
 
@@ -115,6 +126,8 @@ final class Metrics implements JsonSerializable
             peakMemoryUsage: $sum->peakMemoryUsage / $count,
             realMemoryUsage: $sum->realMemoryUsage / $count,
             realPeakMemoryUsage: $sum->realPeakMemoryUsage / $count,
+            diskRead: $sum->diskRead / $count,
+            diskWrite: $sum->diskWrite / $count,
         );
     }
 
@@ -158,6 +171,8 @@ final class Metrics implements JsonSerializable
             'real_memory_usage' => $this->realMemoryUsage,
             'peak_memory_usage' => $this->peakMemoryUsage,
             'real_peak_memory_usage' => $this->realPeakMemoryUsage,
+            'disk_read' => $this->diskRead,
+            'disk_write' => $this->diskWrite,
         ];
     }
 
@@ -175,6 +190,8 @@ final class Metrics implements JsonSerializable
             'real_memory_usage' => MemoryUnit::format($this->realMemoryUsage, 1),
             'peak_memory_usage' => MemoryUnit::format($this->peakMemoryUsage, 1),
             'real_peak_memory_usage' => MemoryUnit::format($this->realPeakMemoryUsage, 1),
+            'disk_read' => number_format($this->diskRead).' read'.(2 > $this->diskRead ? '' : 's'),
+            'disk_write' => number_format($this->diskWrite).' write'.(2 > $this->diskWrite ? '' : 's'),
         ];
 
         if (null === $property) {
@@ -193,6 +210,8 @@ final class Metrics implements JsonSerializable
             peakMemoryUsage: $this->peakMemoryUsage + $metric->peakMemoryUsage,
             realMemoryUsage: $this->realMemoryUsage + $metric->realMemoryUsage,
             realPeakMemoryUsage: $this->realPeakMemoryUsage + $metric->realPeakMemoryUsage,
+            diskRead: $this->diskRead + $metric->diskRead,
+            diskWrite: $this->diskWrite + $metric->diskWrite,
         );
     }
 }
