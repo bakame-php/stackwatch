@@ -9,16 +9,12 @@ use Countable;
 use IteratorAggregate;
 use JsonSerializable;
 use Psr\Log\LoggerInterface;
-use Random\RandomException;
 use Throwable;
 use Traversable;
 
 use function array_filter;
 use function array_key_last;
-use function bin2hex;
 use function count;
-use function gc_collect_cycles;
-use function random_bytes;
 
 /**
  * @implements  IteratorAggregate<int, ProfilingData>
@@ -52,21 +48,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public static function execute(callable $callback, ?LoggerInterface $logger = null): ProfilingResult
     {
-        return self::profile(self::randomLabel(), $callback, $logger);
-    }
-
-    /**
-     * @throws InvalidArgument
-     *
-     * @return non-empty-string
-     */
-    public static function randomLabel(): string
-    {
-        try {
-            return bin2hex(random_bytes(6));
-        } catch (RandomException $exception) {
-            throw new InvalidArgument('Unable to generate a random label.', previous: $exception);
-        }
+        return self::profile(Label::random(), $callback, $logger);
     }
 
     /**
@@ -189,7 +171,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function __invoke(mixed ...$args): mixed
     {
-        return $this->runWithLabel(self::randomLabel(), ...$args);
+        return $this->runWithLabel(Label::random(), ...$args);
     }
 
     /**
@@ -232,7 +214,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         return [] === $this->profilingDataList;
     }
 
-    public function last(): ?ProfilingData
+    public function latest(): ?ProfilingData
     {
         return $this->nth(-1);
     }

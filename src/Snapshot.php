@@ -7,13 +7,18 @@ namespace Bakame\Aide\Profiler;
 use DateTimeImmutable;
 use JsonSerializable;
 
+use function array_keys;
 use function getrusage;
 use function hrtime;
+use function implode;
+use function json_encode;
 use function memory_get_peak_usage;
 use function memory_get_usage;
 
+use const JSON_PRETTY_PRINT;
+
 /**
- * @phpstan-type CpuStat array{'ru_utime.tv_sec': int, 'ru_utime.tv_usec': int, 'ru_stime.tv_sec': int, 'ru_stime.tv_usec': int}
+ * @phpstan-type CpuStat array{'ru_utime.tv_sec': int, 'ru_utime.tv_usec': int, 'ru_stime.tv_sec': int, 'ru_stime.tv_usec': int, 'ru_inblock': int, 'ru_inblock': int}
  * @phpstan-type SnapshotStat array{
  *     timestamp: string,
  *     metrics: array{
@@ -25,6 +30,15 @@ use function memory_get_usage;
  *         real_peak_memory_usage: int
  *     }
  * }
+ * @phpstan-type SnapshotHumanReadable array{
+ *      timestamp: string,
+ *      memory_usage: string,
+ *      real_memory_usage: string,
+ *      peak_memory_usage: string,
+ *      real_peak_memory_usage: string,
+ *      cpu:string
+ * }
+ *
  */
 final class Snapshot implements JsonSerializable
 {
@@ -49,7 +63,18 @@ final class Snapshot implements JsonSerializable
     {
         /** @var CpuStat|false $cpu */
         $cpu = getrusage();
-        false !== $cpu || throw new UnableToProfile('Unable to get the current resource usage.');
+        if (false === $cpu) {
+            ! Environment::current()->isUnixLike() || throw new UnableToProfile('Unable to get the current resource usage.');
+
+            $cpu = [
+                'ru_utime.tv_sec' => 0,
+                'ru_utime.tv_usec' => 0,
+                'ru_stime.tv_sec' => 0,
+                'ru_stime.tv_usec' => 0,
+                'ru_inblock' => 0,
+                'ru_oublock' => 0,
+            ];
+        }
 
         return new self(
             new DateTimeImmutable(),
@@ -98,5 +123,28 @@ final class Snapshot implements JsonSerializable
             && $this->realMemoryUsage === $other->realMemoryUsage
             && $this->realPeakMemoryUsage === $other->realPeakMemoryUsage
             && $this->timestamp->format('U.u') === $other->timestamp->format('U.u');
+    }
+
+    /**
+     * @throws InvalidArgument if the specified property is not supported
+     *
+     * @return SnapshotHumanReadable|string
+     */
+    public function forHuman(?string $property = null): array|string
+    {
+        $humans = [
+            'timestamp' => $this->timestamp->format('Y-m-d\TH:i:s.uP'),
+            'memory_usage' => MemoryUnit::format($this->memoryUsage, 3),
+            'real_memory_usage' => MemoryUnit::format($this->realMemoryUsage, 3),
+            'peak_memory_usage' => MemoryUnit::format($this->peakMemoryUsage, 3),
+            'real_peak_memory_usage' => MemoryUnit::format($this->realPeakMemoryUsage, 3),
+            'cpu' => (string) json_encode($this->cpu, JSON_PRETTY_PRINT),
+        ];
+
+        if (null === $property) {
+            return $humans;
+        }
+
+        return $humans[$property] ?? throw new InvalidArgument('Unknown snapshot name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
     }
 }

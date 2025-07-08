@@ -156,7 +156,7 @@ $profiler = new Profiler($service->calculateHeavyStuff(...));
 //$result is the result of executing the calculateHeavyStuff method
 $result = $profiler(new DateTimeImmutable('2024-12-24'));
 
-$profilingData = $profiler->last(); // returns the ProfilingData from the last call
+$profilingData = $profiler->latest(); // returns the ProfilingData from the last call
 // the $profilingData->metrics property returns a Metrics instance
 $metrics = $profilingData->metrics;
 
@@ -176,14 +176,14 @@ $result2 = $profiler(new DateTimeImmutable('2025-03-02'));
 $result3 = $profiler(new DateTimeImmutable('2024-05-11'));
 
 count($profiler);     // the number of ProfilingData already recorded
-$profiler->last();    // returns the ProfilingData from the last call
+$profiler->latest();  // returns the ProfilingData from the last call
 $profiler->nth(-1);   // returns the same ProfilingData as Profile::last
 $profiler->first();   // returns the first ProfilingData ever generated
 $profiler->isEmpty(); // returns false because the profiler already contains recorded ProfilingData
 $profiler->average(); // returns a Metrics instance representing the average metrics of all the calls performed by the profiler instance
 ```
 
-You can access any `ProfilingData` by index using the `nth` method, or use the `first` and `last` methods
+You can access any `ProfilingData` by index using the `nth` method, or use the `first` and `latest` methods
 to quickly retrieve the first and last recorded `ProfilingData`. The `nth` method also accepts negative
 integers to simplify access from the end of the list.
 
@@ -203,7 +203,7 @@ $callback = function (int ...$args): int|float => {
 
 $profiler = new Profiler($callback);
 $profiler(1, 2, 3); // returns 6
-$profilingData = $profiler->last();              // returns the last ProfilingData object from the last call
+$profilingData = $profiler->latest();              // returns the last ProfilingData object from the last call
 $profiler->runWithLabel('my_test', 7, 8, 9);     // returns 24
 $namedProfilingData = $profiler->get('my_test'); // returns the associated ProfilingData
 

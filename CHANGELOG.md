@@ -7,11 +7,15 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 ### Added
 
 - Added `Metrics::forHuman` to ease getting human-readable metrics representations.
+- Added `Snapshot::forHuman` to ease getting human-readable metrics representations.
 - Added `Environment` OS Platform related methods.
+- Added `Timeline` to provide an alternative way to profile your code.
+- Added `Label` to decouple label generation from both `Timeline` and `Profiler`.
+- Added `Exporter::exportTimeline` method to the interface.
 
 ### Fixed
 
-- None
+- **BC BREAK:** `Profiler::last` is renamed `Profiler::latest` to be consistent with `Timeline::latest`
 
 ### Deprecated
 

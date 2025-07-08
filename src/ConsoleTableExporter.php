@@ -5,16 +5,14 @@ declare(strict_types=1);
 namespace Bakame\Aide\Profiler;
 
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Helper\TableCell;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use function json_encode;
-
-use const JSON_PRETTY_PRINT;
-
 /**
  * @phpstan-import-type MetricsHumanReadable from Metrics
+ * @phpstan-import-type SnapshotHumanReadable from Snapshot
  */
 final class ConsoleTableExporter implements Exporter
 {
@@ -45,6 +43,36 @@ final class ConsoleTableExporter implements Exporter
         $metrics = $profiler->average($label)->forHuman();
         $row = [
             '<fg=green>Average</>',
+            $metrics['cpu_time'],
+            $metrics['execution_time'],
+            $metrics['memory_usage'],
+            $metrics['real_memory_usage'],
+            $metrics['peak_memory_usage'],
+            $metrics['real_peak_memory_usage'],
+        ];
+        $table->addRow($row);
+        $table->render();
+    }
+
+    public function exportTimeline(Timeline $timeline): void
+    {
+        $table = $this->createTable();
+        if (! $timeline->hasIntervals()) {
+            $row = [new TableCell('<fg=yellow>No timeline</>', ['colspan' => 7])];
+            $table->addRow($row);
+            $table->render();
+            return;
+        }
+        foreach ($timeline->reports() as $profilingData) {
+            $table->addRow($this->profilingDataToRow($profilingData));
+        }
+        $table->addRow(new TableSeparator());
+        /** @var ProfilingData $summary */
+        $summary = $timeline->summary();
+        /** @var MetricsHumanReadable $metrics */
+        $metrics = $summary->metrics->forHuman();
+        $row = [
+            '<fg=green>Summary</>',
             $metrics['cpu_time'],
             $metrics['execution_time'],
             $metrics['memory_usage'],
@@ -91,17 +119,21 @@ final class ConsoleTableExporter implements Exporter
 
     public function exportSnapshot(Snapshot $snapshot): void
     {
+        /** @var SnapshotHumanReadable $stats */
+        $stats = $snapshot->forHuman();
         $table = (new Table($this->output))
-            ->setHeaders(['Metric', 'Value'])
+            ->setHeaders(['Timestamp', 'Memory Usage', 'Real Memory Usage', 'Peak Memory Usage', 'Real Peak Memory Usage', 'CPU'])
             ->setRows([
-                ['Timestamp', $snapshot->timestamp->format('Y-m-d\TH:i:s.uP')],
-                ['Memory Usage', MemoryUnit::format($snapshot->memoryUsage, 3)],
-                ['Real Memory Usage', MemoryUnit::format($snapshot->realMemoryUsage, 3)],
-                ['Peak Memory Usage', MemoryUnit::format($snapshot->peakMemoryUsage, 3)],
-                ['Real Peak Memory Usage', MemoryUnit::format($snapshot->realPeakMemoryUsage, 3)],
-                ['CPU', (string) json_encode($snapshot->cpu, JSON_PRETTY_PRINT)],
+                [
+                    $stats['timestamp'],
+                    $stats['memory_usage'],
+                    $stats['real_memory_usage'],
+                    $stats['peak_memory_usage'],
+                    $stats['real_peak_memory_usage'],
+                    $stats['cpu'],
+                ],
             ]);
-
+        $table->setVertical();
         $table->render();
     }
 
@@ -113,22 +145,38 @@ final class ConsoleTableExporter implements Exporter
         }
 
         $table = (new Table($this->output))
-            ->setHeaders(['Property', 'Value'])
+            ->setHeaders([
+                'Operating System',
+                'OS Family',
+                'Hostname',
+                'Architecture',
+                'PHP Integer Size',
+                'PHP Architecture',
+                'SAPI',
+                'Memory Limit',
+                'Raw Memory Limit',
+                'CPU Cores',
+                'Disk Size',
+                'Free Disk Space',
+            ])
             ->setRows([
-                ['Operating System', $environment->os],
-                ['OS Family', $environment->osFamily],
-                ['Hostname', $environment->hostname],
-                ['Architecture', $environment->machine],
-                ['PHP Integer Size', $environment->phpIntSize],
-                ['PHP Architecture', $environment->phpArchitecture],
-                ['SAPI', $environment->sapi],
-                ['Memory Limit', $memoryLimit],
-                ['Raw Memory Limit', $environment->rawMemoryLimit],
-                ['CPU Cores', $environment->cpuCores],
-                ['Disk Size', MemoryUnit::format($environment->totalDisk, 1)],
-                ['Free Disk Space', MemoryUnit::format($environment->freeDisk, 1)],
+                [
+                    $environment->os,
+                    $environment->osFamily,
+                    $environment->hostname,
+                    $environment->machine,
+                    $environment->phpIntSize,
+                    $environment->phpArchitecture,
+                    $environment->sapi,
+                    $memoryLimit,
+                    $environment->rawMemoryLimit,
+                    $environment->cpuCores,
+                    MemoryUnit::format($environment->totalDisk, 1),
+                    MemoryUnit::format($environment->freeDisk, 1),
+                ],
             ]);
 
+        $table->setVertical();
         $table->render();
     }
 }
