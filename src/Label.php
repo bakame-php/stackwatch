@@ -9,9 +9,19 @@ use Random\RandomException;
 use function bin2hex;
 use function preg_match;
 use function random_bytes;
+use function strtolower;
+use function trim;
 
 final class Label
 {
+    private const REGEXP_LABEL = '/^
+        (?!.*[._]{2})             # disallow conscutive dots or underscore anywhere
+        (?!.*[._]$)               # disallow ending with a dot or underscore
+        (?!^[._])                 # disallow starting with a dot or underscore
+        [a-z0-9]                  # first character must be a letter or a digit
+        (?:[a-z0-9._]*[a-z0-9])?  # middle optional, ending with letter or digit
+    $/x';
+
     /**
      * @throws InvalidArgument
      *
@@ -35,7 +45,9 @@ final class Label
      */
     public static function fromString(string $value): string
     {
-        ('' !== $value && 1 === preg_match('/^[a-z0-9][a-z0-9_]*$/', $value)) || throw new InvalidArgument('The label must start with a lowercased letter or a digit and only contain lowercased letters, digits, or underscores.');
+        $value = strtolower(trim($value));
+
+        ('' !== $value && 1 === preg_match(self::REGEXP_LABEL, $value)) || throw new InvalidArgument('The label must start with a lowercased letter or a digit and only contain lowercased letters, digits, point or underscores.');
 
         return $value;
     }

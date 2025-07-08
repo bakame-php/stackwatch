@@ -85,4 +85,38 @@ final class ConsoleTableExporterTest extends TestCase
         self::assertStringContainsString('CPU', $content);
         self::assertStringContainsString('Raw Memory Limit', $content);
     }
+
+    #[Test]
+    public function it_can_export_an_empty_timeline(): void
+    {
+        $output = new BufferedOutput();
+        $renderer = new ConsoleTableExporter($output);
+
+        $renderer->exportTimeline(new Timeline());
+        $content = $output->fetch();
+
+        self::assertStringContainsString('Not enough snapshot to generate an export', $content);
+    }
+
+    #[Test]
+    public function it_can_export_a_finished_timeline(): void
+    {
+        $output = new BufferedOutput();
+        $renderer = new ConsoleTableExporter($output);
+
+        $timeline = Timeline::start();
+        usleep(1_000);
+        $timeline->finish();
+
+        $renderer->exportTimeline($timeline);
+        $content = $output->fetch();
+
+        self::assertStringNotContainsString('Not enough snapshot to generate an export', $content);
+        self::assertStringContainsString('Label', $content);
+        self::assertStringContainsString('CPU Time', $content);
+        self::assertStringContainsString('Exec Time', $content);
+
+        self::assertMatchesRegularExpression('/[a-z0-9][a-z0-9_]*/', $content); //random label
+        self::assertMatchesRegularExpression('/\d+\.\d{3}/', $content); // cpu or exec time
+    }
 }

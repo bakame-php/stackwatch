@@ -61,7 +61,7 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
             throw new InvalidArgument('"'.$from.'" must come before "'.$label.'".');
         }
 
-        $this->logger?->info('Profiling for label: '.$label.'.', ['snapshot' => $newSnapshot->toArray()]);
+        $this->logger?->info('snapshot for label: '.$label.'.', ['snapshot' => $newSnapshot->toArray()]);
         $this->snapshots[$label] = $newSnapshot;
         $this->labels[$label] = 1;
     }
@@ -227,7 +227,6 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
      *
      * @param non-empty-string $label
      * @param ?non-empty-string $summaryLabel
-     *
      */
     public function finish(string $label = 'end', ?string $summaryLabel = null): ProfilingData
     {
@@ -237,21 +236,8 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
         /** @var ProfilingData $profiling */
         $profiling = $this->summary($summaryLabel);
 
-        $this->logger?->info('Timeline finished', ['summary' => $profiling->toArray()]);
+        $this->logger?->info('timeline summary', ['label' => $profiling->label, 'metrics' => $profiling->metrics->toArray()]);
 
         return $profiling;
-    }
-
-    /**
-     * @param ?non-empty-string $label
-     */
-    public static function profile(callable $callback, ?string $label, ?LoggerInterface $logger = null, mixed ...$args): ProfilingResult
-    {
-        $prefix = $label ?? Label::random();
-        $timeline = self::start('start_'.$prefix, $logger);
-        $result = $callback(...$args);
-        $profilingData = $timeline->finish('end_'.$prefix, $label);
-
-        return new ProfilingResult($result, $profilingData);
     }
 }

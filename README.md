@@ -20,9 +20,7 @@ composer require bakame/aide-profiler
 
 You need **PHP >= 8.1** but the latest stable version of PHP is recommended
 
-## Usage
-
-Traditionally, you will use `microtime` to quickly profile your snippet.
+Traditionally, you use `microtime` to quickly profile your snippet.
 
 ```php
 $start = microtime(true);
@@ -32,7 +30,9 @@ echo microtime(true) - $start; // the execution time of your code
 
 The `Bakame\Aide\Profiler` package is a utility that simplifies profiling by eliminating the need to manually calculate and configure your code.
 
-### Basic usage
+## Usage
+
+### Profiler
 
 Let's adapt the first example using the `Profiler` class.
 
@@ -105,7 +105,7 @@ $metrics->forHuman();
 $metrics->forHuman('memory_usage'); //returns "2.5 KB"
 ```
 
-### Iterations
+#### Iterations
 
 If you need to access the average usage for a specific metric, you can use the second argument.
 When executing a callback more than once, the average value for that specific metric across all iterations
@@ -122,7 +122,7 @@ $cpuTime = Profiler::cpuTime(
 ````
 The `$iterations` argument is available for all metrics.
 
-### Returning the result
+#### Returning the result
 
 Last but not least, it is possible to access the result from executing a call as well as its associated profile
 using the static method `Profiler::execute`. The method returns a `ProfilingResult`
@@ -141,7 +141,7 @@ $profiling->profilingData->end;     // returns a Snapshot instance
 $profiling->profilingData->label;   // returns an identifier as a string
 ````
 
-### Metrics recording
+#### Metrics recording
 
 Apart from these static methods the `Profiler` can record each of the calls you made. For that, you
 will need to instantiate a new `Profiler` instance with the call you want to profile.
@@ -187,7 +187,7 @@ You can access any `ProfilingData` by index using the `nth` method, or use the `
 to quickly retrieve the first and last recorded `ProfilingData`. The `nth` method also accepts negative
 integers to simplify access from the end of the list.
 
-### Using labels
+#### Using labels
 
 To add a custom label to each run, use `Profiler::runWithLabel`. This method works like the `__invoke`
 method but allows you to assign a custom label to the returned `ProfilingData` object via its first argument.
@@ -220,7 +220,7 @@ is invalid or has never been used, an empty `array` will be returned. To check w
 a label has been used, you can call `Profiler::has()`, which returns `true`
 if the label exists, or `false` otherwise.
 
-### Resetting the Profiler
+#### Resetting the Profiler
 
 At any given time you can reset the `Profiler` by clearing all the `ProfilingData` already recorded.
 
@@ -250,10 +250,118 @@ $profiler->isEmpty(); // return true
 > [!NOTE]  
 > PHP provides a `reset_peak_memory_usage` that will globally reset all peak memory usage data.
 
+
+### Timeline
+
+In situation where you can't work with callbacks you can alternatively use the `Timeline` class.
+
+The `Timeline` class profiles across labeled checkpoints ("snapshots") in your
+code. You can start a new timeline using the static method:
+
+```php
+use App\Profiler\Timeline;
+
+$timeline = Timeline::start('boot');
+```
+
+#### Taking Snapshots
+
+Use `take()` to mark significant points in your code:
+
+```php
+$timeline->take('init');
+// some code
+$timeline->take('load');
+// some code
+$timeline->take('render');
+```
+
+Each label must be unique. Labels are automatically normalized (e.g., trimmed, validated).
+
+#### Getting profiling results`
+
+To get a high-level profile between the **first and last** snapshot use the `summarize` method.
+
+```php
+$summary = $timeline->summary();       // Returns a ProfilingData instance
+echo $summary->metrics->executionTime; // Access execution time, CPU time, memory, etc.
+```
+You can provide a custom label for the summary:
+
+```php
+$summary = $timeline->summary('full_request'); // Returns a ProfilingData instance
+```
+
+If needed, you can measure the profiling data between two specific labels:
+
+```php
+$delta = $timeline->delta('init', 'render');                // Returns ProfilingData
+$duration = $timeline->delta('init', 'render', 'cpu_time'); // Returns the CPU Time as a float (nanoseconds)
+```
+Or you can iterate over each successive pair of snapshots:
+
+```php
+foreach ($timeline->reports() as $report) {
+    echo $report->label . ': ' . $report->metrics->forHuman('execution_time') . PHP_EOL;
+}
+```
+
+#### Finalizing the timeline
+
+To end profiling and automatically take the last snapshot and return the summary:
+
+```php
+$summary = $timeline->finish('done'); // takes a final 'done' snapshot and returns ProfilingData
+```
+
+Just like with the `summary` method you can provide an optional custom label for the summary report:
+
+```php
+$summary = $timeline->finish(label: 'done', summaryLabel: 'total');
+```
+
+> [!WARNING]  
+> Even though the `finish` calls returns a summary, it does not **close** the instance.
+> You can still call the `take` method and add more snapshots after a call to `finish`
+
+The `Timeline` instance also gives you access to other utility methods:
+
+```php
+$timeline->labels();       // returns all the snapshot labels (in order)
+$timeline->has($label);    // tells whether the label is used
+$timeline->first();        // returns the first snapshot taken
+$timeline->latest();       // returns the most recent snapshot
+$timeline->isEmpty();      // return true when no snapshot has been taken
+$timeline->hasStarted();   // return true when if at least on snapshot has been taken
+$timeline->hasIntervals(); // returns true if the timeline can safely generate a report/summary
+$timeline->toArray();      // returns all snapshots as structured arrays
+$timeline->reset();        // to clear all recorded snapshots
+```
+
+As an example, you can do the following:
+
+```php
+$timeline = Timeline::start('request');
+
+doSomething();
+$timeline->take('step1');
+
+sleep(1);
+$timeline->take('step2');
+
+$result = $timeline->finish('response');
+
+// Printing full report
+foreach ($timeline->reports() as $report) {
+    echo "{$report->label}: {$report->metrics->forHuman('execution_time')}";
+}
+```
+
 ### Logging
 
-The `Profiler` can optionally take a `Psr\LoggerInterface` implementing object to log the profiling process.
-First you need to install and configure a `PSR-3` compliant package as shown below:
+The `Profiler` can optionally take a `Psr\LoggerInterface` implementing object 
+to log the profiling process. First you need to install and configure a `PSR-3` compliant
+package as shown below:
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
@@ -265,7 +373,7 @@ $logger = new Logger('profiler');
 $logger->pushHandler(new StreamHandler(STDOUT, Level::Debug));
 
 $profiler = new Profiler(function () {
-    usleep(1000);
+    usleep(1_000);
 
     return 'end';
 }, $logger);
@@ -273,7 +381,6 @@ $profiler = new Profiler(function () {
 $profiler->runWithLabel('toto');
 $profiler->runWithLabel('tata');
 ```
-
 You will see in your terminal the following output since we used Monolog `StreamHandler`.
 
 ```bash 
@@ -282,6 +389,17 @@ You will see in your terminal the following output since we used Monolog `Stream
 [2025-06-26T16:26:54.937570+00:00] profiler.INFO: Starting profiling for label: tata [] []
 [2025-06-26T16:26:54.938688+00:00] profiler.INFO: Finished profiling for label: tata {"cpu_time":1.3000000000000001e-5,"memory_usage":2536.0,"real_memory_usage":0.0,"peak_memory_usage":0.0,"real_peak_memory
 ```
+
+The same is true for the `Timeline` class which accepts a `LoggerInterface` object.
+
+```php
+use Bakame\Aide\Profiler\Timeline;
+
+$timeline = Timeline::start('init', $logger);
+usleep(1_000);;
+$timeline->finish('render', 'server_cycle');
+```
+
 > [!TIP]  
 > Logging can be done also on the static methods, they all optionally accept a `LoggerInterface` argument.
 
@@ -299,11 +417,14 @@ associated to all the `ProfilingData` instances attached to the object.
 echo json_encode($profiler), PHP_EOL;
 ```
 
+For the `Timeline` class, the JSON string will return the collection of snapshots and their
+associated labels.
+
 #### CLI Exporter
 
 If you have the `symfony\console` package installed in your application, you can export
-the `Profiler` using a table showing all the profiles recorded by the profiler using
-the `CliTableRenderer` class.
+the `Profiler` or the `Timeline` using a table showing all the data recorded by 
+each instance using the `ConsoleTableExporter` class.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
@@ -339,7 +460,8 @@ the following table will be outputted in your terminal.
 
 #### Open Telemetry Exporter
 
-The `Profiler` results can be exported to a Open telemetry compatible server using the `open-telemetry/exporter-otlp` package.
+The `Profiler` and the `Timeline` results can be exported to an Open telemetry compatible
+server using the `open-telemetry/exporter-otlp` package.
 
 To do so, first install the package if it is not yet the case, then do the following:
 
@@ -444,8 +566,8 @@ array(13) {
 }
 ```
 
-Appart from returnong raw information about your system, the instance can be used to detect the PHP architecture
-used or if the memory is unlimited using boolean returning methods:
+Apart from returning raw information about your system, the instance can be used to detect
+the PHP architecture used or if the memory is unlimited using boolean returning methods:
 
 ```php
 use Bakame\Aide\Profiler\Environment;Environment;

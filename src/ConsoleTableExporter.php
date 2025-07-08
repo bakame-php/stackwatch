@@ -26,41 +26,39 @@ final class ConsoleTableExporter implements Exporter
             $profilingData = $profilingData->profilingData;
         }
 
-        $table = $this->createTable();
-        $table->addRow($this->profilingDataToRow($profilingData));
-        $table->render();
+        $this->createProfilingDataTable([$profilingData])->render();
     }
 
     public function exportProfiler(Profiler $profiler, ?string $label = null): void
     {
         $input = null === $label ? $profiler : $profiler->getAll($label);
-        $table = $this->createTable();
-        foreach ($input as $profilingData) {
-            $table->addRow($this->profilingDataToRow($profilingData));
-        }
-        $table->addRow(new TableSeparator());
-        $table->addRow($this->metricsToRow('<fg=green>Average</>', $profiler->average($label)));
-        $table->render();
+
+        $this
+            ->createProfilingDataTable($input)
+            ->addRow(new TableSeparator())
+            ->addRow($this->metricsToRow('<fg=green>Average</>', $profiler->average($label)))
+            ->render();
     }
 
     public function exportTimeline(Timeline $timeline): void
     {
-        $table = $this->createTable();
         if (! $timeline->hasIntervals()) {
-            $row = [new TableCell('<fg=yellow>No timeline</>', ['colspan' => 7])];
-            $table->addRow($row);
-            $table->render();
+            $this
+                ->createTable()
+                ->addRow([new TableCell('<fg=yellow>Not enough snapshot to generate an export</>', ['colspan' => 7])])
+                ->render();
+
             return;
         }
-        foreach ($timeline->reports() as $profilingData) {
-            $table->addRow($this->profilingDataToRow($profilingData));
-        }
-        $table->addRow(new TableSeparator());
+
         /** @var ProfilingData $summary */
         $summary = $timeline->summary();
 
-        $table->addRow($this->metricsToRow('<fg=green>Summary</>', $summary->metrics));
-        $table->render();
+        $this
+            ->createProfilingDataTable($timeline->reports())
+            ->addRow(new TableSeparator())
+            ->addRow($this->metricsToRow('<fg=green>Summary</>', $summary->metrics))
+            ->render();
     }
 
     private function createTable(): Table
@@ -78,11 +76,16 @@ final class ConsoleTableExporter implements Exporter
     }
 
     /**
-     * @return list<string>
+     * @param iterable<ProfilingData> $profilings
      */
-    private function profilingDataToRow(ProfilingData $profilingData): array
+    private function createProfilingDataTable(iterable $profilings): Table
     {
-        return $this->metricsToRow($profilingData->label, $profilingData->metrics);
+        $table = $this->createTable();
+        foreach ($profilings as $profilingData) {
+            $table->addRow($this->metricsToRow($profilingData->label, $profilingData->metrics));
+        }
+
+        return $table;
     }
 
     /**
@@ -108,8 +111,16 @@ final class ConsoleTableExporter implements Exporter
     {
         /** @var SnapshotHumanReadable $stats */
         $stats = $snapshot->forHuman();
-        $table = (new Table($this->output))
-            ->setHeaders(['Timestamp', 'Memory Usage', 'Real Memory Usage', 'Peak Memory Usage', 'Real Peak Memory Usage', 'CPU'])
+
+        (new Table($this->output))
+            ->setHeaders([
+                'Timestamp',
+                'Memory Usage',
+                'Real Memory Usage',
+                'Peak Memory Usage',
+                'Real Peak Memory Usage',
+                'CPU',
+            ])
             ->addRow([
                 $stats['timestamp'],
                 $stats['memory_usage'],
@@ -117,9 +128,9 @@ final class ConsoleTableExporter implements Exporter
                 $stats['peak_memory_usage'],
                 $stats['real_peak_memory_usage'],
                 $stats['cpu'],
-            ]);
-        $table->setVertical();
-        $table->render();
+            ])
+            ->setVertical()
+            ->render();
     }
 
     public function exportEnvironment(Environment $environment): void
@@ -129,7 +140,7 @@ final class ConsoleTableExporter implements Exporter
             $memoryLimit = MemoryUnit::format($memoryLimit);
         }
 
-        $table = (new Table($this->output))
+        (new Table($this->output))
             ->setHeaders([
                 'Operating System',
                 'OS Family',
@@ -157,9 +168,8 @@ final class ConsoleTableExporter implements Exporter
                 $environment->cpuCores,
                 MemoryUnit::format($environment->totalDisk, 1),
                 MemoryUnit::format($environment->freeDisk, 1),
-            ]);
-
-        $table->setVertical();
-        $table->render();
+            ])
+            ->setVertical()
+            ->render();
     }
 }

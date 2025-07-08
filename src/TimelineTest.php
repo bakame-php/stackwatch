@@ -172,28 +172,4 @@ final class TimelineTest extends TestCase
         $timeline = new Timeline();
         $timeline->finish('end');
     }
-
-    public function testProfileMethodReturnsResultAndProfilingData(): void
-    {
-        $callback = fn (int $a, int $b) => $a + $b;
-
-        $profiling = Timeline::profile($callback, 'sum_test', null, 3, 7);
-
-        self::assertEquals(10, $profiling->result);
-        $metrics = $profiling->profilingData->metrics->toArray();
-
-        self::assertArrayHasKey('execution_time', $metrics);
-        self::assertGreaterThan(0, $metrics['execution_time']);
-    }
-
-    public function testProfileMethodWithDelay(): void
-    {
-        $profiling = Timeline::profile(function () {
-            usleep(20_000); // 20ms
-            return 'done';
-        }, 'sleep_test');
-
-        self::assertSame('done', $profiling->result);
-        self::assertGreaterThan(0.0, $profiling->profilingData->metrics->toArray()['execution_time']);
-    }
 }
