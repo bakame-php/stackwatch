@@ -108,7 +108,7 @@ final class ProfilerTest extends TestCase
         /** @var array<ProfilingDataStat> $data */
         $data = json_decode($json, true); /** @phpstan-ignore-line */
         /** @var ProfilingDataStat $profilingStats */
-        $profilingStats = $data[0];  /* @phpstan-ignore-line */
+        $profilingStats = $data['profiling'][0];  /* @phpstan-ignore-line */
 
         self::assertIsArray($profilingStats);
         self::assertArrayHasKey('label', $profilingStats);
@@ -138,15 +138,15 @@ final class ProfilerTest extends TestCase
     public function testItLogsStartAndEnd(): void
     {
         $logger = new InMemoryLogger();
-        $profiler = new Profiler(fn () => usleep(10_000), $logger);
+        $profiler = new Profiler(fn () => usleep(10_000), logger: $logger);
         $profiler->profile('simple_test');
 
         self::assertCount(2, $logger->logs, 'Expected 2 log entries');
         self::assertSame('info', $logger->logs[0]['level']);
-        self::assertStringContainsString('Starting profiling for label: simple_test.', (string) $logger->logs[0]['message']);
+        self::assertStringContainsString('starting profiling for label: simple_test.', (string) $logger->logs[0]['message']);
 
         self::assertSame('info', $logger->logs[1]['level']);
-        self::assertStringContainsString('Finished profiling for label: simple_test.', (string) $logger->logs[1]['message']);
+        self::assertStringContainsString('ending profiling for label: simple_test.', (string) $logger->logs[1]['message']);
         self::assertArrayHasKey('metrics', $logger->logs[1]['context']);
     }
 
@@ -154,7 +154,7 @@ final class ProfilerTest extends TestCase
     public function it_can_log_failure(): void
     {
         $logger = new InMemoryLogger();
-        $profiler = new Profiler(fn () => throw new RuntimeException('Test crash'), $logger);
+        $profiler = new Profiler(fn () => throw new RuntimeException('Test crash'), logger: $logger);
 
         $this->expectException(RuntimeException::class);
 

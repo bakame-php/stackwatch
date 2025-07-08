@@ -322,8 +322,9 @@ $summary = $marker->finish(label: 'done', summaryLabel: 'total');
 ```
 
 > [!WARNING]  
-> Even though the `finish` calls returns a summary, it does not **close** the instance.
-> You can still call the `mark` method and add more snapshots after a call to `finish`
+> Even though the `finish` calls returns a summary, **it does not close** the instance.
+> You can still call the `mark` method and add more snapshots after a call to `finish`.
+> The `summary` is calculated at runtime and never stored in the `Marker` instance.
 
 The `Marker` instance also gives you access to other utility methods:
 
@@ -333,8 +334,8 @@ $marker->has($label);    // tells whether the label is used
 $marker->first();        // returns the first snapshot taken
 $marker->latest();       // returns the most recent snapshot
 $marker->isEmpty();      // return true when no snapshot has been taken
-$marker->hasStarted();   // return true when at least one snapshot has been taken
-$marker->hasIntervals(); // returns true if the marker can safely generate a report/summary
+$marker->hasSnapshots(); // return true when snapshots are available
+$marker->canSummarize(); // returns true if the marker can safely generate a report/summary
 $marker->toArray();      // returns all snapshots as structured arrays
 $marker->reset();        // to clear all recorded snapshots
 ```
@@ -357,6 +358,33 @@ foreach ($marker->reports() as $report) {
     echo "{$report->label}: {$report->metrics->forHuman('execution_time')}";
 }
 ```
+
+### Identifier
+
+Every `Marker` and `Profiler` instance has a unique identifier accessible via the `identifier` method.
+
+```php
+use Bakame\Aide\Profiler\Marker;
+use Bakame\Aide\Profiler\Profiler;
+
+$marker = Marker::start(label: 'start', identifier: 'user_import');
+// or 
+$marker = new Marker(identifier: 'user_import');
+$marker->mark(label: 'start');
+
+echo $marker->identifier(); // 'user_import'
+
+$profiler = new Profiler(function (): string {
+    usleep(1_000);
+    
+    return 'done';
+}, 'user_export');
+echo $profiler->identifier(); // 'user_export
+```
+
+If not provided, an internal label generator (e.g. `Label::random()`) will assign a unique name to the
+property. The identifier can be used for logging, debugging  or for correlation when multiple profilers
+and/or markers are running in parallel.
 
 ### Logging
 
@@ -382,14 +410,7 @@ $profiler = new Profiler(function () {
 $profiler->profile('toto');
 $profiler->profile('tata');
 ```
-You will see in your terminal the following output since we used Monolog `StreamHandler`.
-
-```bash 
-[2025-06-26T16:26:54.935597+00:00] profiler.INFO: Starting profiling for label: toto [] []
-[2025-06-26T16:26:54.937517+00:00] profiler.INFO: Finished profiling for label: toto {"cpu_time":2.1e-5,"memory_usage":2536.0,"real_memory_usage":0.0,"peak_memory_usage":0.0,"real_peak_memory_usage":0.0} []
-[2025-06-26T16:26:54.937570+00:00] profiler.INFO: Starting profiling for label: tata [] []
-[2025-06-26T16:26:54.938688+00:00] profiler.INFO: Finished profiling for label: tata {"cpu_time":1.3000000000000001e-5,"memory_usage":2536.0,"real_memory_usage":0.0,"peak_memory_usage":0.0,"real_peak_memory
-```
+You will log each snapshot taken as well as the profiling metrics at the end. 
 
 The same is true for the `Marker` class which accepts a `LoggerInterface` object.
 
@@ -403,23 +424,26 @@ $marker->finish('render', 'server_cycle');
 
 > [!TIP]  
 > Logging can be done also on the static methods, they all optionally accept a `LoggerInterface` argument.
+> When logging marker or profiler instance their respective identifier is added to the log to ease identifying
+> which instance is generating the logs or stats.
 
 ### Exporters
 
-The package can help with exporting its `ProfilingData` using different mechanisms.
+The package can help with exporting its metrics using different mechanisms.
 
 #### JSON Exporter
 
 You can export the `Profiler` as a JSON string using the `json_encode` method.
-The JSON representation will return the timestamp, the snapshots as well as the metrics
-associated to all the `ProfilingData` instances attached to the object.
+The JSON representation will return its identifier, the timestamp, the snapshots
+as well as the metrics associated to all the `ProfilingData` instances attached
+to the object.
 
 ```php
 echo json_encode($profiler), PHP_EOL;
 ```
 
-For the `Marker` class, the JSON string will return the collection of snapshots and their
-associated labels.
+For the `Marker` class, the JSON string will return its identifier as well as
+the collection of snapshots and their associated labels.
 
 #### CLI Exporter
 

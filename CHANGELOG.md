@@ -13,6 +13,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 - Added `Label` to decouple label generation from both `Marker` and `Profiler`.
 - Added `Exporter::exportMarker` method to the interface.
 - Added `Profiler::run` with `Profiler::__invoke` becoming its alias
+- Added `Marker::identifier` and `Profiler::identifier`to ease identify each instance uniquely
 
 ### Fixed
 

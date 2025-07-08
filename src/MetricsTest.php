@@ -60,7 +60,7 @@ final class MetricsTest extends TestCase
 
         $profiler = new Profiler(fn () => null);
         $reflection = new ReflectionClass($profiler);
-        $reflection->getProperty('profilingDataList')->setValue($profiler, [$profilingData1, $profilingData2]);
+        $reflection->getProperty('profilingDatas')->setValue($profiler, [$profilingData1, $profilingData2]);
         $reflection->getProperty('labels')->setValue($profiler, [$profilingData1->label => 1, $profilingData2->label => 1]);
 
         self::assertEquals(

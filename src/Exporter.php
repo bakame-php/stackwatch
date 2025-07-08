@@ -8,7 +8,7 @@ interface Exporter
 {
     public function exportSnapshot(Snapshot $snapshot): void;
 
-    public function exportProfilingData(ProfilingResult|ProfilingData $profilingData): void;
+    public function exportProfilingData(ProfilingResult|ProfilingData $profilingData, Profiler|Marker|null $parent = null): void;
 
     public function exportProfiler(Profiler $profiler, ?string $label = null): void;
 

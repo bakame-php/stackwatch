@@ -28,11 +28,18 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     /** @var array<non-empty-string, Snapshot> */
     private array $snapshots = [];
     private ?LoggerInterface $logger;
+    /** @var non-empty-string */
+    private readonly string $identifier;
 
-    public function __construct(?LoggerInterface $logger = null)
+    /**
+     * @param ?non-empty-string $identifier
+     */
+    public function __construct(?string $identifier = null, ?LoggerInterface $logger = null)
     {
-        gc_collect_cycles();
         $this->logger = $logger;
+        $this->identifier = $identifier ?? Label::random();
+
+        gc_collect_cycles();
     }
 
     public function reset(): void
@@ -46,18 +53,26 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
      */
     public function mark(string $label): void
     {
+        $newSnapshot = Snapshot::now();
         $label = Label::fromString($label);
         ! $this->has($label) || throw new InvalidArgument('The label "'.$label.'" already exists.');
 
         $from = array_key_last($this->snapshots);
         $lastSnapshot = $this->snapshots[$from] ?? null;
-        $newSnapshot = Snapshot::now();
-        if (null !== $lastSnapshot && $lastSnapshot->hrtime > $newSnapshot->hrtime) {
-            throw new InvalidArgument('"'.$from.'" must come before "'.$label.'".');
-        }
+        (null === $lastSnapshot || $lastSnapshot->hrtime <= $newSnapshot->hrtime) || throw new InvalidArgument('"'.$from.'" must come before "'.$label.'".');
 
-        $this->logger?->info('snapshot for label: '.$label.'.', ['snapshot' => $newSnapshot->toArray()]);
+        $this->logger?->info('Marker ['.$this->identifier.'] snapshot for label: '.$label.'.', [
+            'identifier' => $this->identifier,
+            'label' => $label,
+            'snapshot' => $newSnapshot->toArray(),
+        ]);
+
         $this->snapshots[$label] = $newSnapshot;
+    }
+
+    public function identifier(): string
+    {
+        return $this->identifier;
     }
 
     public function get(string $label): Snapshot
@@ -90,7 +105,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
         return [] === $this->snapshots;
     }
 
-    public function hasStarted(): bool
+    public function hasSnapshots(): bool
     {
         return ! $this->isEmpty();
     }
@@ -98,7 +113,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     /**
      * Tells whether a report or a summary can be generated.
      */
-    public function hasIntervals(): bool
+    public function canSummarize(): bool
     {
         return 2 <= count($this->snapshots);
     }
@@ -112,19 +127,31 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     }
 
     /**
-     * @return array<non-empty-string, SnapshotStat>
+     * @return array{
+     *     identifier: non-empty-string,
+     *     snapshots: array<non-empty-string, SnapshotStat>
+     * }
      */
     public function toArray(): array
     {
-        return array_map(fn (Snapshot $snapshot) => $snapshot->toArray(), $this->snapshots);
+        return [
+            'identifier' => $this->identifier,
+            'snapshots' => array_map(fn (Snapshot $snapshot) => $snapshot->toArray(), $this->snapshots),
+        ];
     }
 
     /**
-     * @return array<non-empty-string, Snapshot>
+     * @return array{
+     *     identifier: non-empty-string,
+     *     snapshots: array<non-empty-string, Snapshot>
+     * }
      */
     public function jsonSerialize(): array
     {
-        return $this->snapshots;
+        return [
+            'identifier' => $this->identifier,
+            'snapshots' => $this->snapshots,
+       ];
     }
 
     /**
@@ -189,7 +216,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
      */
     public function summary(?string $label = null): ?ProfilingData
     {
-        if (!$this->hasIntervals()) {
+        if (!$this->canSummarize()) {
             return null;
         }
 
@@ -201,10 +228,11 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
 
     /**
      * @param non-empty-string $label
+     * @param ?non-empty-string $identifier
      */
-    public static function start(string $label = 'start', ?LoggerInterface $logger = null): self
+    public static function start(string $label = 'start', ?string $identifier = null, ?LoggerInterface $logger = null): self
     {
-        $marker = new self($logger);
+        $marker = new self($identifier, $logger);
         $marker->mark($label);
 
         return $marker;
@@ -218,13 +246,17 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
      */
     public function finish(string $label = 'end', ?string $summaryLabel = null): ProfilingData
     {
-        $this->hasStarted() || throw new InvalidArgument('Marking can not be finished; no starting snapshot found.');
+        $this->hasSnapshots() || throw new InvalidArgument('Marking can not be finished; no starting snapshot found.');
 
         $this->mark($label);
         /** @var ProfilingData $profiling */
         $profiling = $this->summary($summaryLabel);
 
-        $this->logger?->info('marker summary', ['label' => $profiling->label, 'metrics' => $profiling->metrics->toArray()]);
+        $this->logger?->info('Marker ['.$this->identifier.'] summary', [
+            'identifier' => $this->identifier,
+            'label' => $profiling->label,
+            'metrics' => $profiling->metrics->toArray(),
+        ]);
 
         return $profiling;
     }

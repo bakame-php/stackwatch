@@ -90,6 +90,7 @@ class OpenTelemetryExporterTest extends TestCase
         self::assertArrayHasKey('memory.usage.real', $otlAttributes);
         self::assertArrayHasKey('memory.peak', $otlAttributes);
         self::assertArrayHasKey('memory.peak.real', $otlAttributes);
+        self::assertArrayNotHasKey('profiler.identifier', $otlAttributes);
     }
 
     /**
@@ -115,7 +116,7 @@ class OpenTelemetryExporterTest extends TestCase
 
         $profiler = new Profiler(fn () => null);
         $reflection = new ReflectionClass($profiler);
-        $reflection->getProperty('profilingDataList')->setValue($profiler, [$profilingData1, $profilingData2]);
+        $reflection->getProperty('profilingDatas')->setValue($profiler, [$profilingData1, $profilingData2]);
         $reflection->getProperty('labels')->setValue($profiler, [$profilingData1->label => 1, $profilingData2->label => 1]);
 
         $this->exporter->exportProfiler($profiler);
@@ -126,10 +127,12 @@ class OpenTelemetryExporterTest extends TestCase
         $span = $spans[0];
         $otlAttributes = $span->getAttributes()->toArray();
         self::assertSame($otlAttributes['profiler.label'], $profilingData1->label);
+        self::assertSame($otlAttributes['profiler.identifier'], $profiler->identifier());
 
         /** @var ImmutableSpan $span */
         $span = $spans[1];
         $otlAttributes = $span->getAttributes()->toArray();
         self::assertSame($otlAttributes['profiler.label'], $profilingData2->label);
+        self::assertSame($otlAttributes['profiler.identifier'], $profiler->identifier());
     }
 }

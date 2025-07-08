@@ -20,13 +20,13 @@ final class ConsoleTableExporter implements Exporter
     {
     }
 
-    public function exportProfilingData(ProfilingResult|ProfilingData $profilingData): void
+    public function exportProfilingData(ProfilingResult|ProfilingData $profilingData, Profiler|Marker|null $parent = null): void
     {
         if ($profilingData instanceof ProfilingResult) {
             $profilingData = $profilingData->profilingData;
         }
 
-        $this->createProfilingDataTable([$profilingData])->render();
+        $this->createProfilingDataTable([$profilingData], $parent)->render();
     }
 
     public function exportProfiler(Profiler $profiler, ?string $label = null): void
@@ -35,6 +35,7 @@ final class ConsoleTableExporter implements Exporter
 
         $this
             ->createProfilingDataTable($input)
+            ->setHeaderTitle(' '.$profiler->identifier().' ')
             ->addRow(new TableSeparator())
             ->addRow($this->metricsToRow('<fg=green>Average</>', $profiler->average($label)))
             ->render();
@@ -42,9 +43,10 @@ final class ConsoleTableExporter implements Exporter
 
     public function exportMarker(Marker $marker): void
     {
-        if (! $marker->hasIntervals()) {
+        if (! $marker->canSummarize()) {
             $this
                 ->createTable()
+                ->setHeaderTitle($marker->identifier())
                 ->addRow([new TableCell('<fg=yellow>Not enough snapshot to generate an export</>', ['colspan' => 7])])
                 ->render();
 
@@ -56,6 +58,7 @@ final class ConsoleTableExporter implements Exporter
 
         $this
             ->createProfilingDataTable($marker->reports())
+            ->setHeaderTitle(' '.$marker->identifier().' ')
             ->addRow(new TableSeparator())
             ->addRow($this->metricsToRow('<fg=green>Summary</>', $summary->metrics))
             ->render();
@@ -78,9 +81,13 @@ final class ConsoleTableExporter implements Exporter
     /**
      * @param iterable<ProfilingData> $profilings
      */
-    private function createProfilingDataTable(iterable $profilings): Table
+    private function createProfilingDataTable(iterable $profilings, Profiler|Marker|null $identifiable = null): Table
     {
         $table = $this->createTable();
+        if (null !== $identifiable) {
+            $table->setHeaderTitle(' '.$identifiable->identifier().' ');
+        }
+
         foreach ($profilings as $profilingData) {
             $table->addRow($this->metricsToRow($profilingData->label, $profilingData->metrics));
         }

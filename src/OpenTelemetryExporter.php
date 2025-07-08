@@ -11,6 +11,10 @@ use OpenTelemetry\API\Trace\TracerInterface;
 use OpenTelemetry\Context\Context;
 use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 
+use function basename;
+use function str_replace;
+use function strtolower;
+
 final class OpenTelemetryExporter implements Exporter
 {
     private readonly TracerProviderInterface $tracerProvider;
@@ -22,7 +26,7 @@ final class OpenTelemetryExporter implements Exporter
         $this->tracer = $this->tracerProvider->getTracer('profiler-exporter');
     }
 
-    public function exportProfilingData(ProfilingResult|ProfilingData $profilingData): void
+    public function exportProfilingData(ProfilingResult|ProfilingData $profilingData, Profiler|Marker|null $parent = null): void
     {
         if ($profilingData instanceof ProfilingResult) {
             $profilingData = $profilingData->profilingData;
@@ -39,6 +43,10 @@ final class OpenTelemetryExporter implements Exporter
 
         $this->exportSnapshot($start);
         $metrics = $profilingData->metrics;
+        if (null !== $parent) {
+            $span->setAttribute(self::shortName($parent).'.identifier', $parent->identifier());
+        }
+
         $span->setAttribute('export.status', 'success');
         $span->setAttribute('profiler.label', $profilingData->label);
         $span->setAttribute('profiler.status', 'ended');
@@ -52,17 +60,27 @@ final class OpenTelemetryExporter implements Exporter
         $span->end(DurationUnit::Millisecond->convertToNano((int) $end->timestamp->format('Uu')));
     }
 
+    private static function shortName(object $instance): string
+    {
+        return strtolower(basename(str_replace('\\', '/', $instance::class)));
+    }
+
     public function exportProfiler(Profiler $profiler, ?string $label = null): void
     {
-        $parent = $this->tracer->spanBuilder('profiler-run')->startSpan();
+        $parent = $this->tracer->spanBuilder('profiler-run')
+            ->setAttribute(self::shortName($profiler).'.identifier', $profiler->identifier())
+            ->startSpan();
         $scope = $parent->activate();
         $input = null === $label ? $profiler : $profiler->getAll($label);
-        foreach ($input as $profilingData) {
-            $this->exportProfilingData($profilingData);
-        }
 
-        $parent->end();
-        $scope->detach();
+        try {
+            foreach ($input as $profilingData) {
+                $this->exportProfilingData($profilingData, $profiler);
+            }
+        } finally {
+            $parent->end();
+            $scope->detach();
+        }
     }
 
     public function exportSnapshot(Snapshot $snapshot): void
@@ -92,17 +110,22 @@ final class OpenTelemetryExporter implements Exporter
 
     public function exportMarker(Marker $marker): void
     {
-        if (! $marker->hasIntervals()) {
+        if (! $marker->canSummarize()) {
             return;
         }
 
-        $parent = $this->tracer->spanBuilder('marker-run')->startSpan();
+        $parent = $this->tracer->spanBuilder('marker-run')
+            ->setAttribute(self::shortName($marker).'.identifier', $marker->identifier())
+            ->startSpan();
         $scope = $parent->activate();
-        foreach ($marker->reports() as $profilingData) {
-            $this->exportProfilingData($profilingData);
-        }
 
-        $parent->end();
-        $scope->detach();
+        try {
+            foreach ($marker->reports() as $profilingData) {
+                $this->exportProfilingData($profilingData, $marker);
+            }
+        } finally {
+            $parent->end();
+            $scope->detach();
+        }
     }
 }

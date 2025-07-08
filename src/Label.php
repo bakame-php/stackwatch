@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bakame\Aide\Profiler;
 
 use Random\RandomException;
+use Throwable;
 
 use function bin2hex;
 use function preg_match;
@@ -50,5 +51,23 @@ final class Label
         ('' !== $value && 1 === preg_match(self::REGEXP_LABEL, $value)) || throw new InvalidArgument('The label must start with a lowercased letter or a digit and only contain lowercased letters, digits, point or underscores.');
 
         return $value;
+    }
+
+    /**
+     * @param non-empty-string $value
+     *
+     * @return non-empty-string|null
+     */
+    public static function tryFromString(?string $value): ?string
+    {
+        if (null === $value) {
+            return null;
+        }
+
+        try {
+            return self::fromString($value);
+        } catch (Throwable) {
+            return null;
+        }
     }
 }
