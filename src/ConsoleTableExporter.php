@@ -40,9 +40,9 @@ final class ConsoleTableExporter implements Exporter
             ->render();
     }
 
-    public function exportTimeline(Timeline $timeline): void
+    public function exportMarker(Marker $marker): void
     {
-        if (! $timeline->hasIntervals()) {
+        if (! $marker->hasIntervals()) {
             $this
                 ->createTable()
                 ->addRow([new TableCell('<fg=yellow>Not enough snapshot to generate an export</>', ['colspan' => 7])])
@@ -52,10 +52,10 @@ final class ConsoleTableExporter implements Exporter
         }
 
         /** @var ProfilingData $summary */
-        $summary = $timeline->summary();
+        $summary = $marker->summary();
 
         $this
-            ->createProfilingDataTable($timeline->reports())
+            ->createProfilingDataTable($marker->reports())
             ->addRow(new TableSeparator())
             ->addRow($this->metricsToRow('<fg=green>Summary</>', $summary->metrics))
             ->render();

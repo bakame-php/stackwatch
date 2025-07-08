@@ -12,5 +12,5 @@ interface Exporter
 
     public function exportProfiler(Profiler $profiler, ?string $label = null): void;
 
-    public function exportTimeline(Timeline $timeline): void;
+    public function exportMarker(Marker $marker): void;
 }

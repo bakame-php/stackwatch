@@ -80,7 +80,7 @@ final class ProfilerTest extends TestCase
     public function it_can_use_labels(): void
     {
         $profiler = new Profiler(fn () => 42);
-        $profiler->runWithLabel('custom_label');
+        $profiler->profile('custom_label');
 
         $profilingData = $profiler->latest();
         self::assertInstanceOf(ProfilingData::class, $profilingData);
@@ -119,10 +119,10 @@ final class ProfilerTest extends TestCase
     public function it_can_store_and_retrieve_multiple_profiles(): void
     {
         $profiler = new Profiler(fn (int $x) => $x * 2);
-        $profiler->runWithLabel('custom_label', 4);
+        $profiler->profile('custom_label', 4);
         $profiler(2);
         $profiler(3);
-        $profiler->runWithLabel('custom_label', 5);
+        $profiler->profile('custom_label', 5);
 
         self::assertCount(4, $profiler);
         self::assertCount(2, $profiler->getAll('custom_label'));
@@ -139,7 +139,7 @@ final class ProfilerTest extends TestCase
     {
         $logger = new InMemoryLogger();
         $profiler = new Profiler(fn () => usleep(10_000), $logger);
-        $profiler->runWithLabel('simple_test');
+        $profiler->profile('simple_test');
 
         self::assertCount(2, $logger->logs, 'Expected 2 log entries');
         self::assertSame('info', $logger->logs[0]['level']);
@@ -159,7 +159,7 @@ final class ProfilerTest extends TestCase
         $this->expectException(RuntimeException::class);
 
         try {
-            $profiler->runWithLabel('fail_case');
+            $profiler->profile('fail_case');
         } finally {
             self::assertCount(2, $logger->logs);
             self::assertSame('info', $logger->logs[0]['level']);

@@ -25,7 +25,7 @@ final class ConsoleTableExporterTest extends TestCase
         $renderer = new ConsoleTableExporter($output);
 
         $profiler = new Profiler(fn () => usleep(1000));
-        $profiler->runWithLabel('cli_test');
+        $profiler->profile('cli_test');
         $renderer->exportProfiler($profiler);
         $content = $output->fetch();
 
@@ -87,28 +87,28 @@ final class ConsoleTableExporterTest extends TestCase
     }
 
     #[Test]
-    public function it_can_export_an_empty_timeline(): void
+    public function it_can_export_an_empty_marker(): void
     {
         $output = new BufferedOutput();
         $renderer = new ConsoleTableExporter($output);
 
-        $renderer->exportTimeline(new Timeline());
+        $renderer->exportMarker(new Marker());
         $content = $output->fetch();
 
         self::assertStringContainsString('Not enough snapshot to generate an export', $content);
     }
 
     #[Test]
-    public function it_can_export_a_finished_timeline(): void
+    public function it_can_export_a_finished_marker(): void
     {
         $output = new BufferedOutput();
         $renderer = new ConsoleTableExporter($output);
 
-        $timeline = Timeline::start();
+        $marker = Marker::start();
         usleep(1_000);
-        $timeline->finish();
+        $marker->finish();
 
-        $renderer->exportTimeline($timeline);
+        $renderer->exportMarker($marker);
         $content = $output->fetch();
 
         self::assertStringNotContainsString('Not enough snapshot to generate an export', $content);

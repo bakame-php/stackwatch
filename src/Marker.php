@@ -23,7 +23,7 @@ use function implode;
  * @implements IteratorAggregate<non-empty-string, Snapshot>
  * @phpstan-import-type SnapshotStat from Snapshot
  */
-final class Timeline implements Countable, IteratorAggregate, JsonSerializable
+final class Marker implements Countable, IteratorAggregate, JsonSerializable
 {
     /** @var array<non-empty-string, Snapshot> */
     private array $snapshots = [];
@@ -44,7 +44,7 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
     /**
      * @param non-empty-string $label
      */
-    public function take(string $label): void
+    public function mark(string $label): void
     {
         $label = Label::fromString($label);
         ! $this->has($label) || throw new InvalidArgument('The label "'.$label.'" already exists.');
@@ -204,10 +204,10 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
      */
     public static function start(string $label = 'start', ?LoggerInterface $logger = null): self
     {
-        $timeline = new self($logger);
-        $timeline->take($label);
+        $marker = new self($logger);
+        $marker->mark($label);
 
-        return $timeline;
+        return $marker;
     }
 
     /**
@@ -218,13 +218,13 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
      */
     public function finish(string $label = 'end', ?string $summaryLabel = null): ProfilingData
     {
-        $this->hasStarted() || throw new InvalidArgument('The timeline can not be finished; no starting snapshot found.');
+        $this->hasStarted() || throw new InvalidArgument('Marking can not be finished; no starting snapshot found.');
 
-        $this->take($label);
+        $this->mark($label);
         /** @var ProfilingData $profiling */
         $profiling = $this->summary($summaryLabel);
 
-        $this->logger?->info('timeline summary', ['label' => $profiling->label, 'metrics' => $profiling->metrics->toArray()]);
+        $this->logger?->info('marker summary', ['label' => $profiling->label, 'metrics' => $profiling->metrics->toArray()]);
 
         return $profiling;
     }

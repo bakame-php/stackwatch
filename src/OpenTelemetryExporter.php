@@ -90,15 +90,15 @@ final class OpenTelemetryExporter implements Exporter
         $activeSpan->addEvent('snapshot', $attributes, $timestampNs);
     }
 
-    public function exportTimeline(Timeline $timeline): void
+    public function exportMarker(Marker $marker): void
     {
-        if (! $timeline->hasIntervals()) {
+        if (! $marker->hasIntervals()) {
             return;
         }
 
-        $parent = $this->tracer->spanBuilder('timeline-run')->startSpan();
+        $parent = $this->tracer->spanBuilder('marker-run')->startSpan();
         $scope = $parent->activate();
-        foreach ($timeline->reports() as $profilingData) {
+        foreach ($marker->reports() as $profilingData) {
             $this->exportProfilingData($profilingData);
         }
 

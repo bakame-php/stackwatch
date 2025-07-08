@@ -48,7 +48,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public static function execute(callable $callback, ?LoggerInterface $logger = null): ProfilingResult
     {
-        return self::profile(Label::random(), $callback, $logger);
+        return self::profiling(Label::random(), $callback, $logger);
     }
 
     /**
@@ -56,7 +56,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @throws Throwable
      */
-    private static function profile(string $label, callable $callback, ?LoggerInterface $logger = null, mixed ...$args): ProfilingResult
+    private static function profiling(string $label, callable $callback, ?LoggerInterface $logger = null, mixed ...$args): ProfilingResult
     {
         gc_collect_cycles();
         try {
@@ -169,9 +169,17 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     /**
      * @throws InvalidArgument|Throwable
      */
+    public function run(mixed ...$args): mixed
+    {
+        return $this->profile(Label::random(), ...$args);
+    }
+
+    /**
+     * @throws InvalidArgument|Throwable
+     */
     public function __invoke(mixed ...$args): mixed
     {
-        return $this->runWithLabel(Label::random(), ...$args);
+        return $this->run(...$args);
     }
 
     /**
@@ -179,9 +187,9 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @throws InvalidArgument|Throwable
      */
-    public function runWithLabel(string $label, mixed ...$args): mixed
+    public function profile(string $label, mixed ...$args): mixed
     {
-        $result = self::profile($label, $this->callback, $this->logger, ...$args);
+        $result = self::profiling($label, $this->callback, $this->logger, ...$args);
         $this->profilingDataList[] = $result->profilingData;
         $this->labels[$result->profilingData->label] = 1;
 
