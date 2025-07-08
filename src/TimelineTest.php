@@ -7,6 +7,8 @@ namespace Bakame\Aide\Profiler;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
+use function json_encode;
+
 #[CoversClass(Timeline::class)]
 #[CoversClass(Label::class)]
 final class TimelineTest extends TestCase
@@ -148,6 +150,17 @@ final class TimelineTest extends TestCase
         foreach ($reports as $data) {
             self::assertInstanceOf(ProfilingData::class, $data);
         }
+
+        foreach ($this->timeline as $label => $snapshot) {
+            self::assertContains($label, $this->timeline->labels());
+        }
+
+        self::assertSame(json_encode($this->timeline->toArray()), json_encode($this->timeline));
+
+        $this->timeline->reset();
+        $reports = iterator_to_array($this->timeline->reports());
+        self::assertCount(0, $reports);
+        self::assertNull($this->timeline->nth(-2));
     }
 
     public function testFinishMethodReturnsValidProfilingData(): void

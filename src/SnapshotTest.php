@@ -64,4 +64,21 @@ final class SnapshotTest extends TestCase
     {
         self::assertFalse(Snapshot::now()->equals(new stdClass()));
     }
+
+    #[Test]
+    public function it_will_return_a_human_readable_value(): void
+    {
+        /** @var string $cpuForHuman */
+        $cpuForHuman = Snapshot::now()->forHuman('cpu');
+
+        self::assertStringContainsString('ru_utime.tv_sec', $cpuForHuman);
+    }
+
+    #[Test]
+    public function it_will_throw_if_the_property_does_not_exits(): void
+    {
+        $this->expectException(InvalidArgument::class);
+
+        Snapshot::now()->forHuman('foobar');
+    }
 }

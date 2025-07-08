@@ -128,11 +128,11 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
     }
 
     /**
-     * @return array<non-empty-string, SnapshotStat>
+     * @return array<non-empty-string, Snapshot>
      */
     public function jsonSerialize(): array
     {
-        return $this->toArray();
+        return $this->snapshots;
     }
 
     /**
