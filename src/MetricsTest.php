@@ -25,16 +25,12 @@ final class MetricsTest extends TestCase
             'ru_stime.tv_sec' => 1,
             'ru_utime.tv_usec' => 1,
             'ru_stime.tv_usec' => 1,
-            'ru_inblock' => 0,
-            'ru_oublock' => 0,
         ], 1000, 2000, 3000, 4000);
         $end = new Snapshot(new DateTimeImmutable(), hrtime(true) + 1, [
             'ru_utime.tv_sec' => 1,
             'ru_stime.tv_sec' => 1,
             'ru_utime.tv_usec' => 1,
             'ru_stime.tv_usec' => 1,
-            'ru_inblock' => 0,
-            'ru_oublock' => 0,
         ], 1100, 2100, 3100, 4100);
         return new ProfilingData($start, $end, $label);
     }
@@ -81,16 +77,12 @@ final class MetricsTest extends TestCase
             'ru_utime.tv_usec' => 500_000, // 1.5s user
             'ru_stime.tv_sec'  => 0,
             'ru_stime.tv_usec' => 250_000, // 0.25s system
-            'ru_inblock' => 0,
-            'ru_oublock' => 0,
         ], 1000, 2000, 3000, 4000);
         $end = new Snapshot(new DateTimeImmutable(), hrtime(true) + 1, [
             'ru_utime.tv_sec'  => 2,
             'ru_utime.tv_usec' => 0,       // 2.0s user
             'ru_stime.tv_sec'  => 0,
             'ru_stime.tv_usec' => 750_000, // 0.75s system
-            'ru_inblock' => 0,
-            'ru_oublock' => 0,
         ], 1100, 2100, 3100, 4100);
 
         // Expected:
@@ -109,16 +101,12 @@ final class MetricsTest extends TestCase
             'ru_utime.tv_usec' => 500_000, // 1.5s user
             'ru_stime.tv_sec'  => 0,
             'ru_stime.tv_usec' => 250_000, // 0.25s system
-            'ru_inblock' => 0,
-            'ru_oublock' => 0,
         ], 1000, 2000, 3000, 4000);
         $end = new Snapshot(new DateTimeImmutable(), hrtime(true) + 1, [
             'ru_utime.tv_sec'  => 2,
             'ru_utime.tv_usec' => 0,       // 2.0s user
             'ru_stime.tv_sec'  => 0,
             'ru_stime.tv_usec' => 750_000, // 0.75s system
-            'ru_inblock' => 0,
-            'ru_oublock' => 0,
         ], 1100, 2100, 3100, 4100);
         $metrics = Metrics::fromSnapshots($start, $end);
 

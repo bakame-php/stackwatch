@@ -12,7 +12,6 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 - Added `Timeline` to provide an alternative way to profile your code.
 - Added `Label` to decouple label generation from both `Timeline` and `Profiler`.
 - Added `Exporter::exportTimeline` method to the interface.
-- Added  Disk access in the metrics.
 
 ### Fixed
 

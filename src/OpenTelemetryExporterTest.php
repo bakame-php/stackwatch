@@ -36,8 +36,6 @@ class OpenTelemetryExporterTest extends TestCase
             'ru_stime.tv_sec' => 1,
             'ru_utime.tv_usec' => 1,
             'ru_stime.tv_usec' => 1,
-            'ru_inblock' => 0,
-            'ru_oublock' => 0,
         ], 1000, 2000, 3000, 4000);
         usleep(100);
         $end = new Snapshot(new DateTimeImmutable(), hrtime(true) + 1, [
@@ -45,8 +43,6 @@ class OpenTelemetryExporterTest extends TestCase
             'ru_stime.tv_sec' => 1,
             'ru_utime.tv_usec' => 1,
             'ru_stime.tv_usec' => 1,
-            'ru_inblock' => 0,
-            'ru_oublock' => 0,
         ], 1100, 2100, 3100, 4100);
         return new ProfilingData($start, $end, $label);
     }

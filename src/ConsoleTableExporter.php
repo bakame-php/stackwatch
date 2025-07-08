@@ -74,7 +74,6 @@ final class ConsoleTableExporter implements Exporter
             'Real Mem',
             'Peak Mem',
             'Real Peak',
-            new TableCell('<fg=green>Disk Access</>', ['colspan' => 2]),
         ]);
     }
 
@@ -102,8 +101,6 @@ final class ConsoleTableExporter implements Exporter
             $formattedMetrics['real_memory_usage'],
             $formattedMetrics['peak_memory_usage'],
             $formattedMetrics['real_peak_memory_usage'],
-            $formattedMetrics['disk_read'],
-            $formattedMetrics['disk_write'],
         ];
     }
 

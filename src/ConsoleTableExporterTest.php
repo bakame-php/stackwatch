@@ -67,7 +67,6 @@ final class ConsoleTableExporterTest extends TestCase
 
         self::assertStringContainsString('Timestamp', $content);
         self::assertStringContainsString('Real Peak Memory Usage', $content);
-        self::assertStringContainsString('"ru_oublock"', $content);
         self::assertStringContainsString('CPU', $content);
     }
 

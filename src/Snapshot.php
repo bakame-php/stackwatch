@@ -23,8 +23,6 @@ use const JSON_PRETTY_PRINT;
  *     'ru_utime.tv_usec': int,
  *     'ru_stime.tv_sec': int,
  *     'ru_stime.tv_usec': int,
- *     ru_inblock: int,
- *     ru_oublock: int,
  * }
  * @phpstan-type SnapshotStat array{
  *     timestamp: string,
@@ -78,8 +76,6 @@ final class Snapshot implements JsonSerializable
                 'ru_utime.tv_usec' => 0,
                 'ru_stime.tv_sec' => 0,
                 'ru_stime.tv_usec' => 0,
-                'ru_inblock' => 0,
-                'ru_oublock' => 0,
             ];
         }
 
