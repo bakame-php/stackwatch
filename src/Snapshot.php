@@ -7,6 +7,8 @@ namespace Bakame\Aide\Profiler;
 use DateTimeImmutable;
 use JsonSerializable;
 
+use function array_flip;
+use function array_intersect_key;
 use function array_keys;
 use function getrusage;
 use function hrtime;
@@ -15,6 +17,7 @@ use function json_encode;
 use function memory_get_peak_usage;
 use function memory_get_usage;
 
+use const ARRAY_FILTER_USE_KEY;
 use const JSON_PRETTY_PRINT;
 
 /**
@@ -66,28 +69,41 @@ final class Snapshot implements JsonSerializable
      */
     public static function now(): self
     {
-        /** @var CpuStat|false $cpu */
-        $cpu = getrusage();
-        if (false === $cpu) {
-            ! Environment::current()->isUnixLike() || throw new UnableToProfile('Unable to get the current resource usage.');
-
-            $cpu = [
-                'ru_utime.tv_sec' => 0,
-                'ru_utime.tv_usec' => 0,
-                'ru_stime.tv_sec' => 0,
-                'ru_stime.tv_usec' => 0,
-            ];
-        }
-
         return new self(
             new DateTimeImmutable(),
             hrtime(true),
-            $cpu,
+            self::getRawCpuData(),
             memory_get_usage(),
             memory_get_usage(true),
             memory_get_peak_usage(),
             memory_get_peak_usage(true),
         );
+    }
+
+    /**
+     * @throws UnableToProfile if the CPU data cannot be generated
+     *
+     * @return CpuStat
+     */
+    public static function getRawCpuData(): array
+    {
+        /** @var CpuStat $default */
+        static $default = [
+            'ru_utime.tv_sec' => 0,
+            'ru_utime.tv_usec' => 0,
+            'ru_stime.tv_sec' => 0,
+            'ru_stime.tv_usec' => 0,
+        ];
+
+        /** @var CpuStat|false $cpu */
+        $cpu = getrusage();
+        if (false === $cpu) {
+            !Environment::current()->isUnixLike() || throw new UnableToProfile('Unable to get the current resource usage.');
+
+            return $default;
+        }
+
+        return array_intersect_key($cpu, array_flip(array_keys($default)));
     }
 
     /**

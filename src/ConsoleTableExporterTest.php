@@ -16,6 +16,8 @@ use function usleep;
 #[CoversClass(MemoryUnit::class)]
 #[CoversClass(Environment::class)]
 #[CoversClass(Snapshot::class)]
+#[CoversClass(Marker::class)]
+#[CoversClass(Profiler::class)]
 final class ConsoleTableExporterTest extends TestCase
 {
     #[Test]

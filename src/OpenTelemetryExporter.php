@@ -11,10 +11,6 @@ use OpenTelemetry\API\Trace\TracerInterface;
 use OpenTelemetry\Context\Context;
 use OpenTelemetry\SDK\Trace\TracerProviderInterface;
 
-use function basename;
-use function str_replace;
-use function strtolower;
-
 final class OpenTelemetryExporter implements Exporter
 {
     private readonly TracerProviderInterface $tracerProvider;
@@ -44,7 +40,7 @@ final class OpenTelemetryExporter implements Exporter
         $this->exportSnapshot($start);
         $metrics = $profilingData->metrics;
         if (null !== $parent) {
-            $span->setAttribute(self::shortName($parent).'.identifier', $parent->identifier());
+            $span->setAttribute('profiler.identifier', $parent->identifier());
         }
 
         $span->setAttribute('export.status', 'success');
@@ -60,15 +56,10 @@ final class OpenTelemetryExporter implements Exporter
         $span->end(DurationUnit::Millisecond->convertToNano((int) $end->timestamp->format('Uu')));
     }
 
-    private static function shortName(object $instance): string
-    {
-        return strtolower(basename(str_replace('\\', '/', $instance::class)));
-    }
-
     public function exportProfiler(Profiler $profiler, ?string $label = null): void
     {
         $parent = $this->tracer->spanBuilder('profiler-run')
-            ->setAttribute(self::shortName($profiler).'.identifier', $profiler->identifier())
+            ->setAttribute('profiler.identifier', $profiler->identifier())
             ->startSpan();
         $scope = $parent->activate();
         $input = null === $label ? $profiler : $profiler->getAll($label);
@@ -115,12 +106,12 @@ final class OpenTelemetryExporter implements Exporter
         }
 
         $parent = $this->tracer->spanBuilder('marker-run')
-            ->setAttribute(self::shortName($marker).'.identifier', $marker->identifier())
+            ->setAttribute('profiler.identifier', $marker->identifier())
             ->startSpan();
         $scope = $parent->activate();
 
         try {
-            foreach ($marker->reports() as $profilingData) {
+            foreach ($marker->deltas() as $profilingData) {
                 $this->exportProfilingData($profilingData, $marker);
             }
         } finally {

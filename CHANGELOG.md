@@ -20,7 +20,6 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 - **BC BREAK:** `Profiler::last` is renamed `Profiler::latest` to be consistent with `Marker::latest`
 - **BC BREAK:** `Profiler::runWithLabel` is renamed `Profiler::profile`
 
-
 ### Deprecated
 
 - None

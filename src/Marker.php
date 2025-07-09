@@ -163,9 +163,12 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     }
 
     /**
+     *  Returns a sequence of ProfilingData instances computed from each successive
+     *  pair of snapshots (e.g., delta(label[0], label[1]), delta(label[1], label[2]), ...).
+     *
      * @return iterable<ProfilingData>
      */
-    public function reports(): iterable
+    public function deltas(): iterable
     {
         $labels = $this->labels();
         $count = count($this->snapshots);
@@ -187,6 +190,10 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
         return $this->nth(0);
     }
 
+    /**
+     * Returns the snapshot at the given position, or null if out of range.
+     * Negative offsets count from the end (e.g., -1 is latest).
+     */
     public function nth(int $offset): ?Snapshot
     {
         $labels = $this->labels();

@@ -299,10 +299,10 @@ If needed, you can measure the profiling data between two specific labels:
 $delta = $marker->delta('init', 'render');                // Returns ProfilingData
 $cpuTime = $marker->delta('init', 'render', 'cpu_time'); // Returns the CPU Time as a float (nanoseconds)
 ```
-Or you can iterate over each successive pair of snapshots:
+Or you can iterate over each successive pair of snapshots to return the consecutive deltas:
 
 ```php
-foreach ($marker->reports() as $report) {
+foreach ($marker->deltas() as $report) {
     echo $report->label . ': ' . $report->metrics->forHuman('execution_time') . PHP_EOL;
 }
 ```

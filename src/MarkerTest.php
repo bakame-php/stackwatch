@@ -145,7 +145,7 @@ final class MarkerTest extends TestCase
         usleep(1000);
         $this->marker->mark('c');
 
-        $reports = iterator_to_array($this->marker->reports());
+        $reports = iterator_to_array($this->marker->deltas());
         self::assertCount(2, $reports);
 
         foreach ($reports as $data) {
@@ -159,7 +159,7 @@ final class MarkerTest extends TestCase
         self::assertSame(json_encode($this->marker->toArray()), json_encode($this->marker));
 
         $this->marker->reset();
-        $reports = iterator_to_array($this->marker->reports());
+        $reports = iterator_to_array($this->marker->deltas());
 
         self::assertCount(0, $reports);
         self::assertNull($this->marker->nth(-2));

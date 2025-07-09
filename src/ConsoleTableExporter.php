@@ -57,7 +57,7 @@ final class ConsoleTableExporter implements Exporter
         $summary = $marker->summary();
 
         $this
-            ->createProfilingDataTable($marker->reports())
+            ->createProfilingDataTable($marker->deltas())
             ->setHeaderTitle(' '.$marker->identifier().' ')
             ->addRow(new TableSeparator())
             ->addRow($this->metricsToRow('<fg=green>Summary</>', $summary->metrics))

@@ -21,6 +21,8 @@ use function usleep;
 #[CoversClass(OpenTelemetryExporter::class)]
 #[CoversClass(DurationUnit::class)]
 #[CoversClass(MemoryUnit::class)]
+#[CoversClass(Marker::class)]
+#[CoversClass(Profiler::class)]
 class OpenTelemetryExporterTest extends TestCase
 {
     private OpenTelemetryExporter $exporter;
@@ -107,7 +109,6 @@ class OpenTelemetryExporterTest extends TestCase
         ];
     }
 
-
     #[Test]
     public function it_can_export_a_profiler(): void
     {
@@ -134,5 +135,60 @@ class OpenTelemetryExporterTest extends TestCase
         $otlAttributes = $span->getAttributes()->toArray();
         self::assertSame($otlAttributes['profiler.label'], $profilingData2->label);
         self::assertSame($otlAttributes['profiler.identifier'], $profiler->identifier());
+    }
+
+    #[Test]
+    public function it_can_export_nothing_if_the_marker_cannot_be_sumaarize(): void
+    {
+        $marker = Marker::start();
+
+        $this->exporter->exportMarker($marker);
+        $spans = $this->otlExporter->getSpans();
+        self::assertCount(0, $spans);
+    }
+
+    #[Test]
+    public function it_can_export_a_marker(): void
+    {
+        $marker = new Marker('test-marker');
+        $start = new Snapshot(new DateTimeImmutable(), hrtime(true), [
+            'ru_utime.tv_sec' => 1,
+            'ru_stime.tv_sec' => 1,
+            'ru_utime.tv_usec' => 1,
+            'ru_stime.tv_usec' => 1,
+        ], 1000, 2000, 3000, 4000);
+        usleep(100);
+        $middle = new Snapshot(new DateTimeImmutable(), hrtime(true), [
+            'ru_utime.tv_sec' => 1,
+            'ru_stime.tv_sec' => 1,
+            'ru_utime.tv_usec' => 1,
+            'ru_stime.tv_usec' => 1,
+        ], 1000, 2000, 3000, 4000);
+        usleep(100);
+        $end = new Snapshot(new DateTimeImmutable(), hrtime(true) + 1, [
+            'ru_utime.tv_sec' => 1,
+            'ru_stime.tv_sec' => 1,
+            'ru_utime.tv_usec' => 1,
+            'ru_stime.tv_usec' => 1,
+        ], 1100, 2100, 3100, 4100);
+
+        $reflection = new ReflectionClass($marker);
+        $reflection->getProperty('snapshots')->setValue($marker, ['start' => $start, 'middle' => $middle, 'end' => $end]);
+
+        $this->exporter->exportMarker($marker);
+        $spans = $this->otlExporter->getSpans();
+        self::assertCount(3, $spans);
+
+        /** @var ImmutableSpan $span */
+        $span = $spans[0];
+        $otlAttributes = $span->getAttributes()->toArray();
+        self::assertSame($otlAttributes['profiler.label'], 'start_middle');
+        self::assertSame($otlAttributes['profiler.identifier'], $marker->identifier());
+
+        /** @var ImmutableSpan $span */
+        $span = $spans[1];
+        $otlAttributes = $span->getAttributes()->toArray();
+        self::assertSame($otlAttributes['profiler.label'], 'middle_end');
+        self::assertSame($otlAttributes['profiler.identifier'], $marker->identifier());
     }
 }
