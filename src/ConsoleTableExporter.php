@@ -20,13 +20,13 @@ final class ConsoleTableExporter implements Exporter
     {
     }
 
-    public function exportProfilingData(ProfilingResult|ProfilingData $profilingData, Profiler|Marker|null $parent = null): void
+    public function exportSummary(ProfiledResult|Summary $summary, Profiler|Marker|null $parent = null): void
     {
-        if ($profilingData instanceof ProfilingResult) {
-            $profilingData = $profilingData->profilingData;
+        if ($summary instanceof ProfiledResult) {
+            $summary = $summary->summary;
         }
 
-        $this->createProfilingDataTable([$profilingData], $parent)->render();
+        $this->createSummaryTable([$summary], $parent)->render();
     }
 
     public function exportProfiler(Profiler $profiler, ?string $label = null): void
@@ -34,7 +34,7 @@ final class ConsoleTableExporter implements Exporter
         $input = null === $label ? $profiler : $profiler->getAll($label);
 
         $this
-            ->createProfilingDataTable($input)
+            ->createSummaryTable($input)
             ->setHeaderTitle(' '.$profiler->identifier().' ')
             ->addRow(new TableSeparator())
             ->addRow($this->metricsToRow('<fg=green>Average</>', $profiler->average($label)))
@@ -53,11 +53,11 @@ final class ConsoleTableExporter implements Exporter
             return;
         }
 
-        /** @var ProfilingData $summary */
+        /** @var Summary $summary */
         $summary = $marker->summary();
 
         $this
-            ->createProfilingDataTable($marker->deltas())
+            ->createSummaryTable($marker->deltas())
             ->setHeaderTitle(' '.$marker->identifier().' ')
             ->addRow(new TableSeparator())
             ->addRow($this->metricsToRow('<fg=green>Summary</>', $summary->metrics))
@@ -79,17 +79,17 @@ final class ConsoleTableExporter implements Exporter
     }
 
     /**
-     * @param iterable<ProfilingData> $profilings
+     * @param iterable<Summary> $summaries
      */
-    private function createProfilingDataTable(iterable $profilings, Profiler|Marker|null $identifiable = null): Table
+    private function createSummaryTable(iterable $summaries, Profiler|Marker|null $parent = null): Table
     {
         $table = $this->createTable();
-        if (null !== $identifiable) {
-            $table->setHeaderTitle(' '.$identifiable->identifier().' ');
+        if (null !== $parent) {
+            $table->setHeaderTitle(' '.$parent->identifier().' ');
         }
 
-        foreach ($profilings as $profilingData) {
-            $table->addRow($this->metricsToRow($profilingData->label, $profilingData->metrics));
+        foreach ($summaries as $summary) {
+            $table->addRow($this->metricsToRow($summary->label, $summary->metrics));
         }
 
         return $table;

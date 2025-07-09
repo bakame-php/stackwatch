@@ -22,29 +22,29 @@ final class OpenTelemetryExporter implements Exporter
         $this->tracer = $this->tracerProvider->getTracer('profiler-exporter');
     }
 
-    public function exportProfilingData(ProfilingResult|ProfilingData $profilingData, Profiler|Marker|null $parent = null): void
+    public function exportSummary(ProfiledResult|Summary $summary, Profiler|Marker|null $parent = null): void
     {
-        if ($profilingData instanceof ProfilingResult) {
-            $profilingData = $profilingData->profilingData;
+        if ($summary instanceof ProfiledResult) {
+            $summary = $summary->summary;
         }
 
-        $start = $profilingData->start;
-        $end = $profilingData->end;
+        $start = $summary->start;
+        $end = $summary->end;
 
         $span = $this->tracer
-            ->spanBuilder($profilingData->label)
+            ->spanBuilder($summary->label)
             ->setSpanKind(SpanKind::KIND_INTERNAL)
             ->setStartTimestamp(DurationUnit::Millisecond->convertToNano((int) $start->timestamp->format('Uu')))
             ->startSpan();
 
         $this->exportSnapshot($start);
-        $metrics = $profilingData->metrics;
+        $metrics = $summary->metrics;
         if (null !== $parent) {
             $span->setAttribute('profiler.identifier', $parent->identifier());
         }
 
         $span->setAttribute('export.status', 'success');
-        $span->setAttribute('profiler.label', $profilingData->label);
+        $span->setAttribute('profiler.label', $summary->label);
         $span->setAttribute('profiler.status', 'ended');
         $span->setAttribute('cpu.time', $metrics->cpuTime);
         $span->setAttribute('execution.time', $metrics->executionTime);
@@ -65,8 +65,8 @@ final class OpenTelemetryExporter implements Exporter
         $input = null === $label ? $profiler : $profiler->getAll($label);
 
         try {
-            foreach ($input as $profilingData) {
-                $this->exportProfilingData($profilingData, $profiler);
+            foreach ($input as $summary) {
+                $this->exportSummary($summary, $profiler);
             }
         } finally {
             $parent->end();
@@ -111,8 +111,8 @@ final class OpenTelemetryExporter implements Exporter
         $scope = $parent->activate();
 
         try {
-            foreach ($marker->deltas() as $profilingData) {
-                $this->exportProfilingData($profilingData, $marker);
+            foreach ($marker->deltas() as $summary) {
+                $this->exportSummary($summary, $marker);
             }
         } finally {
             $parent->end();

@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace Bakame\Aide\Profiler;
 
+use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use stdClass;
+
+use function hrtime;
 
 #[CoversClass(Snapshot::class)]
 final class SnapshotTest extends TestCase
@@ -26,10 +29,9 @@ final class SnapshotTest extends TestCase
         $data = Snapshot::now()->jsonSerialize();
 
         self::assertArrayHasKey('timestamp', $data);
-        self::assertArrayHasKey('metrics', $data);
-        self::assertArrayHasKey('execution_time', $data['metrics']);
-        self::assertArrayHasKey('cpu', $data['metrics']);
-        self::assertArrayHasKey('memory_usage', $data['metrics']);
+        self::assertArrayHasKey('hrtime', $data);
+        self::assertArrayHasKey('cpu', $data);
+        self::assertArrayHasKey('memory_usage', $data);
     }
 
     #[Test]
@@ -80,5 +82,21 @@ final class SnapshotTest extends TestCase
         $this->expectException(InvalidArgument::class);
 
         Snapshot::now()->forHuman('foobar');
+    }
+
+    #[Test]
+    public function it_will_thro_if_the_cpu_property_is_missing_keys(): void
+    {
+        $this->expectException(InvalidArgument::class);
+
+        new Snapshot(
+            timestamp: new DateTimeImmutable(),
+            hrtime: hrtime(true),
+            cpu: [],  /* @phpstan-ignore-line */
+            memoryUsage: 1,
+            realMemoryUsage: 1,
+            peakMemoryUsage: 1,
+            realPeakMemoryUsage: 1
+        );
     }
 }

@@ -80,16 +80,16 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
         return $this->snapshots[$label] ?? throw new InvalidArgument('The label "'.$label.'" does not exist.');
     }
 
-    public function delta(string $from, string $to, ?string $metric = null): ProfilingData|float
+    public function delta(string $from, string $to, ?string $metric = null): Summary|float
     {
         ($this->has($from) && $this->has($to)) || throw new InvalidArgument('The labels "'.$from.'" and/or "'.$to.'" do not exist.');
 
-        $profilingData = new ProfilingData($this->snapshots[$from], $this->snapshots[$to], $from.'_'.$to);
+        $summary = new Summary($this->snapshots[$from], $this->snapshots[$to], $from.'_'.$to);
         if (null === $metric) {
-            return $profilingData;
+            return $summary;
         }
 
-        $metrics = $profilingData->metrics->toArray();
+        $metrics = $summary->metrics->toArray();
 
         return $metrics[$metric] ?? throw new InvalidArgument('Unknown metrics name: "'.$metric.'"; expected one of "'.implode('", "', array_keys($metrics)).'"');
 
@@ -163,20 +163,20 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     }
 
     /**
-     *  Returns a sequence of ProfilingData instances computed from each successive
+     *  Returns a sequence of Summary instances computed from each successive
      *  pair of snapshots (e.g., delta(label[0], label[1]), delta(label[1], label[2]), ...).
      *
-     * @return iterable<ProfilingData>
+     * @return iterable<Summary>
      */
     public function deltas(): iterable
     {
         $labels = $this->labels();
         $count = count($this->snapshots);
         for ($i = 1; $i < $count; $i++) {
-            /** @var ProfilingData $profilingData */
-            $profilingData = $this->delta($labels[$i - 1], $labels[$i]);
+            /** @var Summary $summary */
+            $summary = $this->delta($labels[$i - 1], $labels[$i]);
 
-            yield $profilingData;
+            yield $summary;
         }
     }
 
@@ -221,7 +221,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     /**
      * @param non-empty-string|null $label
      */
-    public function summary(?string $label = null): ?ProfilingData
+    public function summary(?string $label = null): ?Summary
     {
         if (!$this->canSummarize()) {
             return null;
@@ -230,7 +230,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
         $from = array_key_first($this->snapshots);
         $to = array_key_last($this->snapshots);
 
-        return new ProfilingData($this->snapshots[$from], $this->snapshots[$to], Label::fromString($label ?? $from.'_'.$to));
+        return new Summary($this->snapshots[$from], $this->snapshots[$to], Label::fromString($label ?? $from.'_'.$to));
     }
 
     /**
@@ -251,12 +251,12 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
      * @param non-empty-string $label
      * @param ?non-empty-string $summaryLabel
      */
-    public function finish(string $label = 'end', ?string $summaryLabel = null): ProfilingData
+    public function finish(string $label = 'end', ?string $summaryLabel = null): Summary
     {
         $this->hasSnapshots() || throw new InvalidArgument('Marking can not be finished; no starting snapshot found.');
 
         $this->mark($label);
-        /** @var ProfilingData $profiling */
+        /** @var Summary $profiling */
         $profiling = $this->summary($summaryLabel);
 
         $this->logger?->info('Marker ['.$this->identifier.'] summary', [

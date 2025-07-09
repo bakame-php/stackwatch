@@ -74,4 +74,11 @@ final class LabelTest extends TestCase
         yield 'contains at least on double underscore' => ['input' => 'lab__el'];
         yield 'econtains at least on double dot' => ['input' => 'lab..el'];
     }
+
+    public function it_will_throw_an_exception_if_the_label_length_is_lower_than_1(): void
+    {
+        $this->expectException(InvalidArgument::class);
+
+        Label::random(0); /* @phpstan-ignore-line */
+    }
 }

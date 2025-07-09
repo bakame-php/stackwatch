@@ -45,8 +45,8 @@ final class ConsoleTableExporterTest extends TestCase
         $output = new BufferedOutput();
         $renderer = new ConsoleTableExporter($output);
 
-        $profilingData = Profiler::execute(fn () => usleep(1000));
-        $renderer->exportProfilingData($profilingData);
+        $summary = Profiler::execute(fn () => usleep(1000));
+        $renderer->exportSummary($summary);
         $content = $output->fetch();
 
         self::assertStringContainsString('Label', $content);
@@ -63,8 +63,8 @@ final class ConsoleTableExporterTest extends TestCase
         $output = new BufferedOutput();
         $renderer = new ConsoleTableExporter($output);
 
-        $profilingResult = Profiler::execute(fn () => usleep(1000));
-        $renderer->exportSnapshot($profilingResult->profilingData->start);
+        $profilled = Profiler::execute(fn () => usleep(1000));
+        $renderer->exportSnapshot($profilled->summary->start);
         $content = $output->fetch();
 
         self::assertStringContainsString('Timestamp', $content);

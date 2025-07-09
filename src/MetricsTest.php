@@ -18,7 +18,7 @@ final class MetricsTest extends TestCase
     /**
      * @param non-empty-string $label
      */
-    private function createProfilingData(string $label): ProfilingData
+    private function createSummary(string $label): Summary
     {
         $start = new Snapshot(new DateTimeImmutable(), hrtime(true), [
             'ru_utime.tv_sec' => 1,
@@ -32,7 +32,7 @@ final class MetricsTest extends TestCase
             'ru_utime.tv_usec' => 1,
             'ru_stime.tv_usec' => 1,
         ], 1100, 2100, 3100, 4100);
-        return new ProfilingData($start, $end, $label);
+        return new Summary($start, $end, $label);
     }
 
     #[Test]
@@ -47,25 +47,25 @@ final class MetricsTest extends TestCase
     #[Test]
     public function it_can_do_the_avegare_using_the_profiling_data(): void
     {
-        $profilingData = $this->createProfilingData('empty_label');
+        $summary = $this->createSummary('empty_label');
 
-        self::assertEquals($profilingData->metrics, Metrics::average($profilingData));
+        self::assertEquals($summary->metrics, Metrics::average($summary));
     }
 
     #[Test]
     public function it_can_calculate_the_average_using_the_profiler(): void
     {
-        $profilingData1 = $this->createProfilingData('profile1');
-        $profilingData2 = $this->createProfilingData('profile2');
+        $summary1 = $this->createSummary('profile1');
+        $summary2 = $this->createSummary('profile2');
 
         $profiler = new Profiler(fn () => null);
         $reflection = new ReflectionClass($profiler);
-        $reflection->getProperty('profilingDatas')->setValue($profiler, [$profilingData1, $profilingData2]);
-        $reflection->getProperty('labels')->setValue($profiler, [$profilingData1->label => 1, $profilingData2->label => 1]);
+        $reflection->getProperty('summaries')->setValue($profiler, [$summary1, $summary2]);
+        $reflection->getProperty('labels')->setValue($profiler, [$summary1->label => 1, $summary2->label => 1]);
 
         self::assertEquals(
             Metrics::average($profiler),
-            Metrics::average($profilingData1, $profilingData2),
+            Metrics::average($summary1, $summary2),
         );
     }
 

@@ -125,20 +125,20 @@ The `$iterations` argument is available for all metrics.
 #### Returning the result
 
 Last but not least, it is possible to access the result from executing a call as well as its associated profile
-using the static method `Profiler::execute`. The method returns a `ProfilingResult`
-instance where the `result` property represents the returned value of the callback execution while its `profilingData`
+using the static method `Profiler::execute`. The method returns a `ProfiledResult`
+instance where the `result` property represents the returned value of the callback execution while its `Summary`
 property contains all the data related to profiling the call.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
 
-$profiling = Profiler::execute($service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24')));
-$profiling->result; // the result of executing the `calculateHeavyStuff` method
-$profiling->profilingData; // the profiling data associated with the call.
-$profiling->profilingData->metrics; // returns a Metrics instance
-$profiling->profilingData->start;   // returns a Snapshot instance
-$profiling->profilingData->end;     // returns a Snapshot instance
-$profiling->profilingData->label;   // returns an identifier as a string
+$profiled = Profiler::execute($service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24')));
+$profiled->returnValue; // the result of executing the `calculateHeavyStuff` method
+$profiled->summary; // the profiling data associated with the call.
+$profiled->summary->metrics; // returns a Metrics instance
+$profiled->summary->start;   // returns a Snapshot instance
+$profiled->summary->end;     // returns a Snapshot instance
+$profiled->summary->label;   // returns an identifier as a string
 ````
 
 #### Metrics recording
@@ -157,9 +157,9 @@ $profiler = new Profiler($service->calculateHeavyStuff(...));
 $result = $profiler->run(new DateTimeImmutable('2024-12-24'));
 // you can use `__invoke` as a syntactic sugar method.
 
-$profilingData = $profiler->latest(); // returns the ProfilingData from the last call
-// the $profilingData->metrics property returns a Metrics instance
-$metrics = $profilingData->metrics;
+$summary = $profiler->latest(); // returns the Summary from the last call
+// the $Summary->metrics property returns a Metrics instance
+$metrics = $summary->metrics;
 
 $metrics->executionTime;
 $metrics->cpuTime; 
@@ -176,22 +176,22 @@ $result1 = $profiler(new DateTimeImmutable('2024-12-24'));
 $result2 = $profiler(new DateTimeImmutable('2025-03-02'));
 $result3 = $profiler(new DateTimeImmutable('2024-05-11'));
 
-count($profiler);     // the number of ProfilingData already recorded
-$profiler->latest();  // returns the ProfilingData from the last call
-$profiler->nth(-1);   // returns the same ProfilingData as Profile::last
-$profiler->first();   // returns the first ProfilingData ever generated
-$profiler->isEmpty(); // returns false because the profiler already contains recorded ProfilingData
+count($profiler);     // the number of Summary already recorded
+$profiler->latest();  // returns the Summary from the last call
+$profiler->nth(-1);   // returns the same Summary as Profile::last
+$profiler->first();   // returns the first Summary ever generated
+$profiler->isEmpty(); // returns false because the profiler already contains recorded Summary
 $profiler->average(); // returns a Metrics instance representing the average metrics of all the calls performed by the profiler instance
 ```
 
-You can access any `ProfilingData` by index using the `nth` method, or use the `first` and `latest` methods
-to quickly retrieve the first and last recorded `ProfilingData`. The `nth` method also accepts negative
+You can access any `Summary` by index using the `nth` method, or use the `first` and `latest` methods
+to quickly retrieve the first and last recorded `Summary`. The `nth` method also accepts negative
 integers to simplify access from the end of the list.
 
 #### Using labels
 
 To add a custom label to each run, use `Profiler::profile`. This method works like the `run` or `__invoeke`
-method but allows you to assign a custom label to the returned `ProfilingData` object via its first argument.
+method but allows you to assign a custom label to the returned `Summary` object via its first argument.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
@@ -204,13 +204,13 @@ $callback = function (int ...$args): int|float => {
 
 $profiler = new Profiler($callback);
 $profiler(1, 2, 3); // returns 6
-$profilingData = $profiler->latest();            // returns the last ProfilingData object from the last call
-$profiler->profile('my_test', 7, 8, 9);          // returns 24
-$namedProfilingData = $profiler->get('my_test'); // returns the associated ProfilingData
+$summary = $profiler->latest();            // returns the last Summary object from the last call
+$profiler->profile('my_test', 7, 8, 9);    // returns 24
+$namedSummary = $profiler->get('my_test'); // returns the associated Summary
 
-$profiler->get('foobar'); // returns null because the `foobar` label does not exist
-$profiler->has('foobar'); // returns false because the label does not exist
-$profiler->labels();      // returns all the labels attached to the Profiler
+$profiler->get('foobar');      // returns null because the `foobar` label does not exist
+$profiler->has('foobar');      // returns false because the label does not exist
+$profiler->labels();           // returns all the labels attached to the Profiler
 $profiler->average('my_test'); // returns the Metrics average for all the calls whose label is `my_test`
 ````
 
@@ -223,7 +223,7 @@ if the label exists, or `false` otherwise.
 
 #### Resetting the Profiler
 
-At any given time you can reset the `Profiler` by clearing all the `ProfilingData` already recorded.
+At any given time you can reset the `Profiler` by clearing all the `Summary` already recorded.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
@@ -284,19 +284,19 @@ Each label must be unique. Labels are automatically normalized (e.g., trimmed, v
 To get a high-level profile between the **first and last** snapshot use the `summarize` method.
 
 ```php
-$summary = $marker->summary();       // Returns a ProfilingData instance
+$summary = $marker->summary();       // Returns a Summary instance
 echo $summary->metrics->executionTime; // Access execution time, CPU time, memory, etc.
 ```
 You can provide a custom label for the summary:
 
 ```php
-$summary = $marker->summary('full_request'); // Returns a ProfilingData instance
+$summary = $marker->summary('full_request'); // Returns a Summary instance
 ```
 
 If needed, you can measure the profiling data between two specific labels:
 
 ```php
-$delta = $marker->delta('init', 'render');                // Returns ProfilingData
+$delta = $marker->delta('init', 'render');               // Returns Summary
 $cpuTime = $marker->delta('init', 'render', 'cpu_time'); // Returns the CPU Time as a float (nanoseconds)
 ```
 Or you can iterate over each successive pair of snapshots to return the consecutive deltas:
@@ -312,7 +312,7 @@ foreach ($marker->deltas() as $report) {
 To end profiling and automatically take the last snapshot and return the summary:
 
 ```php
-$summary = $marker->finish('done'); // takes a final 'done' snapshot and returns ProfilingData
+$summary = $marker->finish('done'); // takes a final 'done' snapshot and returns Summary
 ```
 
 Just like with the `summary` method you can provide an optional custom label for the summary report:
@@ -435,7 +435,7 @@ The package can help with exporting its metrics using different mechanisms.
 
 You can export the `Profiler` as a JSON string using the `json_encode` method.
 The JSON representation will return its identifier, the timestamp, the snapshots
-as well as the metrics associated to all the `ProfilingData` instances attached
+as well as the metrics associated to all the `Summary` instances attached
 to the object.
 
 ```php

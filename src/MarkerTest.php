@@ -55,7 +55,7 @@ final class MarkerTest extends TestCase
         $this->marker->mark('b');
 
         $delta = $this->marker->delta('a', 'b');
-        self::assertInstanceOf(ProfilingData::class, $delta);
+        self::assertInstanceOf(Summary::class, $delta);
         self::assertGreaterThan(0, $delta->metrics->toArray()['cpu_time'] ?? 0);
     }
 
@@ -120,7 +120,7 @@ final class MarkerTest extends TestCase
         $this->marker->mark('end');
 
         $summary = $this->marker->summary();
-        self::assertInstanceOf(ProfilingData::class, $summary);
+        self::assertInstanceOf(Summary::class, $summary);
     }
 
     #[Test]
@@ -149,7 +149,7 @@ final class MarkerTest extends TestCase
         self::assertCount(2, $reports);
 
         foreach ($reports as $data) {
-            self::assertInstanceOf(ProfilingData::class, $data);
+            self::assertInstanceOf(Summary::class, $data);
         }
 
         foreach ($this->marker as $label => $snapshot) {

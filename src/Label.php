@@ -7,9 +7,11 @@ namespace Bakame\Aide\Profiler;
 use Random\RandomException;
 
 use function bin2hex;
+use function intdiv;
 use function preg_match;
 use function random_bytes;
 use function strtolower;
+use function substr;
 use function trim;
 
 final class Label
@@ -23,14 +25,21 @@ final class Label
     $/x';
 
     /**
+     * @param positive-int $length
+     *
      * @throws InvalidArgument
      *
      * @return non-empty-string
      */
-    public static function random(): string
+    public static function random(int $length = 12): string
     {
+        1 <= $length || throw new InvalidArgument('Length must be a positive integer.');
+
         try {
-            return bin2hex(random_bytes(6));
+            /** @var positive-int $size */
+            $size = intdiv($length + 1, 2);
+
+            return substr(bin2hex(random_bytes($size)), 0, $length);
         } catch (RandomException $exception) {
             throw new InvalidArgument('Unable to generate a random label.', previous: $exception);
         }

@@ -17,10 +17,10 @@ use function usleep;
 
 #[CoversClass(Metrics::class)]
 #[CoversClass(Profiler::class)]
-#[CoversClass(ProfilingResult::class)]
+#[CoversClass(ProfiledResult::class)]
 #[CoversClass(Label::class)]
 /**
- * @phpstan-import-type ProfilingDataStat from ProfilingData
+ * @phpstan-import-type SummaryStat from Summary
  */
 final class ProfilerTest extends TestCase
 {
@@ -58,8 +58,8 @@ final class ProfilerTest extends TestCase
         self::assertSame('result', $result);
         self::assertCount(1, $profiler);
 
-        $profilingData = $profiler->latest();
-        self::assertInstanceOf(ProfilingData::class, $profilingData);
+        $summary = $profiler->latest();
+        self::assertInstanceOf(Summary::class, $summary);
         self::assertSame($profiler->latest(), $profiler->first());
     }
 
@@ -71,8 +71,8 @@ final class ProfilerTest extends TestCase
         $profiler(3);
 
         self::assertCount(2, $profiler);
-        foreach ($profiler as $profilingData) {
-            self::assertIsFloat($profilingData->metrics->executionTime);
+        foreach ($profiler as $summary) {
+            self::assertIsFloat($summary->metrics->executionTime);
         }
     }
 
@@ -82,9 +82,9 @@ final class ProfilerTest extends TestCase
         $profiler = new Profiler(fn () => 42);
         $profiler->profile('custom_label');
 
-        $profilingData = $profiler->latest();
-        self::assertInstanceOf(ProfilingData::class, $profilingData);
-        self::assertSame('custom_label', $profilingData->label);
+        $summary = $profiler->latest();
+        self::assertInstanceOf(Summary::class, $summary);
+        self::assertSame('custom_label', $summary->label);
     }
 
     #[Test]
@@ -105,14 +105,14 @@ final class ProfilerTest extends TestCase
         $profiler();
         /** @var non-empty-string $json */
         $json = json_encode($profiler);
-        /** @var array<ProfilingDataStat> $data */
+        /** @var array<SummaryStat> $data */
         $data = json_decode($json, true); /** @phpstan-ignore-line */
-        /** @var ProfilingDataStat $profilingStats */
-        $profilingStats = $data['profiling'][0];  /* @phpstan-ignore-line */
+        /** @var SummaryStat $summaryStats */
+        $summaryStats = $data['summaries'][0];  /* @phpstan-ignore-line */
 
-        self::assertIsArray($profilingStats);
-        self::assertArrayHasKey('label', $profilingStats);
-        self::assertArrayHasKey('metrics', $profilingStats);
+        self::assertIsArray($summaryStats);
+        self::assertArrayHasKey('label', $summaryStats);
+        self::assertArrayHasKey('metrics', $summaryStats);
     }
 
     #[Test]
@@ -126,7 +126,7 @@ final class ProfilerTest extends TestCase
 
         self::assertCount(4, $profiler);
         self::assertCount(2, $profiler->getAll('custom_label'));
-        self::assertInstanceOf(ProfilingData::class, $profiler->get('custom_label'));
+        self::assertInstanceOf(Summary::class, $profiler->get('custom_label'));
         self::assertNull($profiler->get('foo_bar'));
         self::assertCount(0, $profiler->getAll('foo_bar'));
         self::assertTrue($profiler->has('custom_label'));

@@ -13,11 +13,11 @@ use function usleep;
 /**
  * @phpstan-import-type SnapshotStat from Snapshot
  * @phpstan-import-type MetricsStat from Metrics
- * @phpstan-import-type ProfilingDataStat from ProfilingData
+ * @phpstan-import-type SummaryStat from Summary
  */
-#[CoversClass(ProfilingData::class)]
+#[CoversClass(Summary::class)]
 #[CoversClass(Metrics::class)]
-final class ProfilingDataTest extends TestCase
+final class SummaryTest extends TestCase
 {
     #[Test]
     public function it_has_a_specific_lifecycle(): void
@@ -26,15 +26,15 @@ final class ProfilingDataTest extends TestCase
         usleep(1000);
         $end = Snapshot::now();
 
-        $profilingData = new ProfilingData($start, $end, 'test');
+        $summary = new Summary($start, $end, 'test');
 
-        self::assertSame('test', $profilingData->label);
-        self::assertGreaterThan(0, $profilingData->metrics->executionTime);
-        self::assertGreaterThanOrEqual(0, $profilingData->metrics->cpuTime);
-        self::assertGreaterThanOrEqual(0, $profilingData->metrics->memoryUsage);
-        self::assertGreaterThanOrEqual(0, $profilingData->metrics->realMemoryUsage);
-        self::assertGreaterThanOrEqual(0, $profilingData->metrics->peakMemoryUsage);
-        self::assertGreaterThanOrEqual(0, $profilingData->metrics->realPeakMemoryUsage);
+        self::assertSame('test', $summary->label);
+        self::assertGreaterThan(0, $summary->metrics->executionTime);
+        self::assertGreaterThanOrEqual(0, $summary->metrics->cpuTime);
+        self::assertGreaterThanOrEqual(0, $summary->metrics->memoryUsage);
+        self::assertGreaterThanOrEqual(0, $summary->metrics->realMemoryUsage);
+        self::assertGreaterThanOrEqual(0, $summary->metrics->peakMemoryUsage);
+        self::assertGreaterThanOrEqual(0, $summary->metrics->realPeakMemoryUsage);
     }
 
     #[Test]
@@ -43,15 +43,14 @@ final class ProfilingDataTest extends TestCase
         $start = Snapshot::now();
         usleep(1000);
         $end = Snapshot::now();
-        $profilingData = new ProfilingData($start, $end, 'test');
-
-        $stats = $profilingData->toArray();
+        $summary = new Summary($start, $end, 'test');
+        $stats = $summary->toArray();
 
         self::assertArrayHasKey('label', $stats);
-        self::assertArrayHasKey('start', $stats);
-        self::assertArrayHasKey('end', $stats);
+        self::assertArrayHasKey('snapshots', $stats);
+        self::assertArrayHasKey('start', $stats['snapshots']);
+        self::assertArrayHasKey('end', $stats['snapshots']);
         self::assertArrayHasKey('metrics', $stats);
-
         self::assertIsArray($stats['metrics']);
         self::assertArrayHasKey('cpu_time', $stats['metrics']);
         self::assertArrayHasKey('memory_usage', $stats['metrics']);
@@ -63,13 +62,13 @@ final class ProfilingDataTest extends TestCase
         $start = Snapshot::now();
         usleep(1000);
         $end = Snapshot::now();
-        $profilingData = new ProfilingData($start, $end, 'test');
+        $summary = new Summary($start, $end, 'test');
 
         /** @var non-empty-string $json */
-        $json = json_encode($profilingData);
+        $json = json_encode($summary);
         self::assertJson($json);
 
-        /** @var ProfilingDataStat $decoded */
+        /** @var SummaryStat $decoded */
         $decoded = json_decode($json, true);
         self::assertArrayHasKey('label', $decoded);
     }
@@ -83,6 +82,6 @@ final class ProfilingDataTest extends TestCase
         usleep(1000);
         $end = Snapshot::now();
 
-        new ProfilingData($start, $end, '_123invalid');
+        new Summary($start, $end, '_123invalid');
     }
 }

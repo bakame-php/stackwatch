@@ -17,7 +17,6 @@ use function json_encode;
 use function memory_get_peak_usage;
 use function memory_get_usage;
 
-use const ARRAY_FILTER_USE_KEY;
 use const JSON_PRETTY_PRINT;
 
 /**
@@ -29,14 +28,12 @@ use const JSON_PRETTY_PRINT;
  * }
  * @phpstan-type SnapshotStat array{
  *     timestamp: string,
- *     metrics: array{
- *         execution_time: float,
- *         cpu: CpuStat,
- *         memory_usage: int,
- *         real_memory_usage: int,
- *         peak_memory_usage: int,
- *         real_peak_memory_usage: int
- *     }
+ *     hrtime: float,
+ *     cpu: CpuStat,
+ *     memory_usage: int,
+ *     real_memory_usage: int,
+ *     peak_memory_usage: int,
+ *     real_peak_memory_usage: int
  * }
  * @phpstan-type SnapshotHumanReadable array{
  *      timestamp: string,
@@ -50,6 +47,14 @@ use const JSON_PRETTY_PRINT;
  */
 final class Snapshot implements JsonSerializable
 {
+    /** @var CpuStat $default */
+    private const CPU_STAT = [
+        'ru_utime.tv_sec' => 0,
+        'ru_utime.tv_usec' => 0,
+        'ru_stime.tv_sec' => 0,
+        'ru_stime.tv_usec' => 0,
+    ];
+
     /**
      * @param CpuStat $cpu
      */
@@ -62,6 +67,10 @@ final class Snapshot implements JsonSerializable
         public readonly int $peakMemoryUsage,
         public readonly int $realPeakMemoryUsage,
     ) {
+        $missingKeys = array_diff_key(array_flip(array_keys(self::CPU_STAT)), $this->cpu);
+        if ([] !== $missingKeys) {
+            throw new InvalidArgument('The cpu data is missing the following keys: '.implode(', ', array_keys($missingKeys)));
+        }
     }
 
     /**
@@ -81,29 +90,17 @@ final class Snapshot implements JsonSerializable
     }
 
     /**
-     * @throws UnableToProfile if the CPU data cannot be generated
-     *
      * @return CpuStat
      */
     public static function getRawCpuData(): array
     {
-        /** @var CpuStat $default */
-        static $default = [
-            'ru_utime.tv_sec' => 0,
-            'ru_utime.tv_usec' => 0,
-            'ru_stime.tv_sec' => 0,
-            'ru_stime.tv_usec' => 0,
-        ];
-
         /** @var CpuStat|false $cpu */
         $cpu = getrusage();
-        if (false === $cpu) {
-            !Environment::current()->isUnixLike() || throw new UnableToProfile('Unable to get the current resource usage.');
-
-            return $default;
+        if (false !== $cpu) {
+            return array_intersect_key($cpu, array_flip(array_keys(self::CPU_STAT)));
         }
 
-        return array_intersect_key($cpu, array_flip(array_keys($default)));
+        return self::CPU_STAT;
     }
 
     /**
@@ -121,14 +118,12 @@ final class Snapshot implements JsonSerializable
     {
         return [
             'timestamp' => $this->timestamp->format("Y-m-d\TH:i:s.uP"),
-            'metrics' => [
-                'execution_time' => $this->hrtime,
-                'cpu' => $this->cpu,
-                'memory_usage' => $this->memoryUsage,
-                'real_memory_usage' => $this->realMemoryUsage,
-                'peak_memory_usage' => $this->peakMemoryUsage,
-                'real_peak_memory_usage' => $this->realPeakMemoryUsage,
-            ],
+            'hrtime' => $this->hrtime,
+            'cpu' => $this->cpu,
+            'memory_usage' => $this->memoryUsage,
+            'real_memory_usage' => $this->realMemoryUsage,
+            'peak_memory_usage' => $this->peakMemoryUsage,
+            'real_peak_memory_usage' => $this->realPeakMemoryUsage,
         ];
     }
 

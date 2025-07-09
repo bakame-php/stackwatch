@@ -31,7 +31,7 @@ class OpenTelemetryExporterTest extends TestCase
     /**
      * @param non-empty-string $label
      */
-    private static function createProfilingData(string $label): ProfilingData
+    private static function createSummary(string $label): Summary
     {
         $start = new Snapshot(new DateTimeImmutable(), hrtime(true), [
             'ru_utime.tv_sec' => 1,
@@ -46,7 +46,7 @@ class OpenTelemetryExporterTest extends TestCase
             'ru_utime.tv_usec' => 1,
             'ru_stime.tv_usec' => 1,
         ], 1100, 2100, 3100, 4100);
-        return new ProfilingData($start, $end, $label);
+        return new Summary($start, $end, $label);
     }
 
     protected function setUp(): void
@@ -66,19 +66,18 @@ class OpenTelemetryExporterTest extends TestCase
     }
 
     #[Test]
-    #[DataProvider('providesProfilingData')]
-    public function it_can_export_profiling_data(ProfilingData|ProfilingResult $profiling): void
+    #[DataProvider('providesSummaries')]
+    public function it_can_export_profiling_data(Summary|ProfiledResult $profiling): void
     {
-        $this->exporter->exportProfilingData($profiling);
+        $this->exporter->exportSummary($profiling);
 
-        $profilingData = $profiling instanceof ProfilingData ? $profiling : $profiling->profilingData;
-
+        $summary = $profiling instanceof Summary ? $profiling : $profiling->summary;
         $spans = $this->otlExporter->getSpans();
         self::assertCount(1, $spans);
         /** @var ImmutableSpan $span */
         $span = $spans[0];
 
-        self::assertSame($profilingData->label, $span->getName());
+        self::assertSame($summary->label, $span->getName());
 
         $otlAttributes = $span->getAttributes()->toArray();
 
@@ -96,29 +95,29 @@ class OpenTelemetryExporterTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{profiling: ProfilingResult|ProfilingData}>
+     * @return iterable<string, array{profiling: ProfiledResult|Summary}>
      */
-    public static function providesProfilingData(): iterable
+    public static function providesSummaries(): iterable
     {
-        yield 'the profiling data comes from a ProfilingData instance' => [
-            'profiling' => self::createProfilingData('test_export'),
+        yield 'the profiling data comes from a Summary instance' => [
+            'profiling' => self::createSummary('test_export'),
         ];
 
-        yield 'the profiling data comes from a ProfilingResult instance' => [
-            'profiling' => new ProfilingResult('result', self::createProfilingData('test_export')),
+        yield 'the profiling data comes from a ProfiledResult instance' => [
+            'profiling' => new ProfiledResult('result', self::createSummary('test_export')),
         ];
     }
 
     #[Test]
     public function it_can_export_a_profiler(): void
     {
-        $profilingData1 = self::createProfilingData('profile1');
-        $profilingData2 = self::createProfilingData('profile2');
+        $summary1 = self::createSummary('profile1');
+        $summary2 = self::createSummary('profile2');
 
         $profiler = new Profiler(fn () => null);
         $reflection = new ReflectionClass($profiler);
-        $reflection->getProperty('profilingDatas')->setValue($profiler, [$profilingData1, $profilingData2]);
-        $reflection->getProperty('labels')->setValue($profiler, [$profilingData1->label => 1, $profilingData2->label => 1]);
+        $reflection->getProperty('summaries')->setValue($profiler, [$summary1, $summary2]);
+        $reflection->getProperty('labels')->setValue($profiler, [$summary1->label => 1, $summary2->label => 1]);
 
         $this->exporter->exportProfiler($profiler);
         $spans = $this->otlExporter->getSpans();
@@ -127,13 +126,13 @@ class OpenTelemetryExporterTest extends TestCase
         /** @var ImmutableSpan $span */
         $span = $spans[0];
         $otlAttributes = $span->getAttributes()->toArray();
-        self::assertSame($otlAttributes['profiler.label'], $profilingData1->label);
+        self::assertSame($otlAttributes['profiler.label'], $summary1->label);
         self::assertSame($otlAttributes['profiler.identifier'], $profiler->identifier());
 
         /** @var ImmutableSpan $span */
         $span = $spans[1];
         $otlAttributes = $span->getAttributes()->toArray();
-        self::assertSame($otlAttributes['profiler.label'], $profilingData2->label);
+        self::assertSame($otlAttributes['profiler.label'], $summary2->label);
         self::assertSame($otlAttributes['profiler.identifier'], $profiler->identifier());
     }
 

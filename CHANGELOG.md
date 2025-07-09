@@ -2,6 +2,31 @@
 
 All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
+## [Next](https://github.com/bakame-php/aide-profiler/compare/0.9,0...main) - TBD
+
+### Added
+
+- `Label::random` accepts an optional `$length` parameter to adjust the label length.
+
+### Fixed
+
+- **BC BREAK:** `ProfilingResult::result` is renamed `ProfilingResult::returnValue`
+- **BC BREAK:** `ProfilingResult::ProfilingData` is renamed `ProfilingResult::summary`
+- **BC BREAK:** `ProfilingResult` is renamed `ProfiledResult`
+- **BC BREAK:** `ProfilingData` is renamed `Summary`
+- **BC BREAK:** `Exporter::exportProfilingData` is renamed `Exporter::exportSummary`
+- **BC BREAK:** `Snapshot::toArray` and `Snapshot::jsonSerialize` representation simplified
+- **BC BREAK:** `Summary::toArray` and `Summary::jsonSerialize` representation simplified
+- `Snapshot::cpu` keys presence is validated on instantiation
+
+### Deprecated
+
+- None
+
+### Removed
+
+- None
+
 ## [0.9.0 - Ibadan](https://github.com/bakame-php/aide-profiler/compare/0.8,0...0.9.0) - 2025-07-09
 
 ### Added

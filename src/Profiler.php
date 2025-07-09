@@ -17,8 +17,8 @@ use function array_key_last;
 use function count;
 
 /**
- * @implements IteratorAggregate<int, ProfilingData>
- * @phpstan-import-type ProfilingDataStat from ProfilingData
+ * @implements IteratorAggregate<int, Summary>
+ * @phpstan-import-type SummaryStat from Summary
  */
 final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 {
@@ -26,8 +26,8 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     private readonly string $identifier;
     private readonly Closure $callback;
     private readonly ?LoggerInterface $logger;
-    /** @var list<ProfilingData> */
-    private array $profilingDatas;
+    /** @var list<Summary> */
+    private array $summaries;
     /** @var array<string, 1> */
     private array $labels;
 
@@ -49,7 +49,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     public function reset(): void
     {
-        $this->profilingDatas = [];
+        $this->summaries = [];
         $this->labels = [];
     }
 
@@ -58,7 +58,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @throws InvalidArgument|Throwable
      */
-    public static function execute(callable $callback, ?LoggerInterface $logger = null): ProfilingResult
+    public static function execute(callable $callback, ?LoggerInterface $logger = null): ProfiledResult
     {
         return self::profiling(Label::random(), Label::random(), $callback, $logger);
     }
@@ -74,17 +74,17 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         callable $callback,
         ?LoggerInterface $logger = null,
         mixed ...$args
-    ): ProfilingResult {
+    ): ProfiledResult {
         gc_collect_cycles();
         try {
             $logger?->info('Profiler ['.$identifier.'] starting profiling for label: '.$label.'.', ['identifier' => $identifier, 'label' => $label]);
             $start = Snapshot::now();
-            $result = ($callback)(...$args);
+            $returnValue = ($callback)(...$args);
             $end = Snapshot::now();
-            $profilingData = new ProfilingData($start, $end, $label);
-            $logger?->info('Profiler ['.$identifier.'] ending profiling for label: '.$label.'.', [...['identifier' => $identifier], ...$profilingData->toArray()]);
+            $summary = new Summary($start, $end, $label);
+            $logger?->info('Profiler ['.$identifier.'] ending profiling for label: '.$label.'.', [...['identifier' => $identifier], ...$summary->toArray()]);
 
-            return new ProfilingResult($result, $profilingData);
+            return new ProfiledResult($returnValue, $summary);
         } catch (Throwable $exception) {
             $logger?->error('Profiling aborted for label: '.$label.' due to an error in the executed code.', ['identifier' => $identifier, 'label' => $label, 'exception' => $exception]);
 
@@ -206,76 +206,76 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function profile(string $label, mixed ...$args): mixed
     {
-        $result = self::profiling($this->identifier, $label, $this->callback, $this->logger, ...$args);
-        $this->profilingDatas[] = $result->profilingData;
-        $this->labels[$result->profilingData->label] = 1;
+        $profiled = self::profiling($this->identifier, $label, $this->callback, $this->logger, ...$args);
+        $this->summaries[] = $profiled->summary;
+        $this->labels[$profiled->summary->label] = 1;
 
-        return $result->result;
+        return $profiled->returnValue;
     }
 
     public function count(): int
     {
-        return count($this->profilingDatas);
+        return count($this->summaries);
     }
 
     /**
-     * @return Traversable<ProfilingData>
+     * @return Traversable<Summary>
      */
     public function getIterator(): Traversable
     {
-        yield from $this->profilingDatas;
+        yield from $this->summaries;
     }
 
     /**
      * @return array{
      *     identifier: non-empty-string,
-     *     profiling: list<ProfilingDataStat>
+     *     summaries: list<SummaryStat>
      * }
      */
     public function toArray(): array
     {
         return [
             'identifier' => $this->identifier,
-            'profiling' => array_map(fn (ProfilingData $profilingData): array => $profilingData->toArray(), $this->profilingDatas),
+            'summaries' => array_map(fn (Summary $summary): array => $summary->toArray(), $this->summaries),
         ];
     }
 
     /**
      * @return array{
      *     identifier: non-empty-string,
-     *     profiling: list<ProfilingData>
+     *     summaries: list<Summary>
      * }
      */
     public function jsonSerialize(): array
     {
         return [
             'identifier' => $this->identifier,
-            'profiling' => $this->profilingDatas,
+            'summaries' => $this->summaries,
         ];
     }
 
     public function isEmpty(): bool
     {
-        return [] === $this->profilingDatas;
+        return [] === $this->summaries;
     }
 
-    public function latest(): ?ProfilingData
+    public function latest(): ?Summary
     {
         return $this->nth(-1);
     }
 
-    public function first(): ?ProfilingData
+    public function first(): ?Summary
     {
         return $this->nth(0);
     }
 
-    public function nth(int $offset): ?ProfilingData
+    public function nth(int $offset): ?Summary
     {
         if ($offset < 0) {
-            $offset += count($this->profilingDatas);
+            $offset += count($this->summaries);
         }
 
-        return $this->profilingDatas[$offset] ?? null;
+        return $this->summaries[$offset] ?? null;
     }
 
     /**
@@ -289,7 +289,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     /**
      * Returns the last Profile with the provided label.
      */
-    public function get(string $label): ?ProfilingData
+    public function get(string $label): ?Summary
     {
         $res = $this->getAll($label);
 
@@ -299,14 +299,14 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     /**
      * Returns all the Profiles with the provided label.
      *
-     * @return list<ProfilingData>
+     * @return list<Summary>
      */
     public function getAll(string $label): array
     {
         return array_values(
             array_filter(
-                $this->profilingDatas,
-                fn (ProfilingData $profilingData): bool => $profilingData->label === $label
+                $this->summaries,
+                fn (Summary $summary): bool => $summary->label === $label
             )
         );
     }

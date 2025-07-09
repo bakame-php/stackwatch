@@ -1,0 +1,14 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Bakame\Aide\Profiler;
+
+final class ProfiledResult
+{
+    public function __construct(
+        public readonly mixed $returnValue,
+        public readonly Summary $summary
+    ) {
+    }
+}
