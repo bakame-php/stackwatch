@@ -334,19 +334,20 @@ $summary = $marker->finish(label: 'done', summaryLabel: 'total');
 
 #### Marker completion
 
+```php
+$marker->complete();
+```
+
 The `complete` method finalizes the profiling marker, marking it as complete and preventing any
 further snapshots or finishing operations that modify the state. 
 
 Before calling `complete`, the marker is **open** and can accept snapshots via `mark`
 and be finished via `finish`. Once `complete` is called:
 
-- The marker becomes **complete and closed for additions**.
+- The marker becomes **complete and is closed to further modifications.**
 - Further calls to `mark` or `finish` will throw an `UnableToProfile` exception.
-- Calling `complete` multiple times has no side effects (idempotent).
-- Calling `summary` remains unchanged after completion.
-
-**Calling `reset` on a completed marker reverts the complete state, allowing the marker
-to be reused and accept new snapshots.**
+- Calling `complete` multiple times has no effects - it is **idempotent**.
+- The result of `summary` remains unchanged after completion and can be safely called multiple times.
 
 At any given time you can check your `Marker` completion status using the `Marker::isComplete`
 method which returns `true` when it is complete; false otherwise.
@@ -367,6 +368,10 @@ $marker->toArray();      // returns all snapshots as structured arrays
 $marker->isComplete();   // tells whether the marker is complete
 $marker->reset();        // Reset the marker to its initial state open and with no snapshot
 ```
+
+> [!IMPORTANT]  
+> The `reset()` method reopens the marker and clears all recorded snapshots,
+> enabling it to be reused for a new profiling session.
 
 As an example, you can do the following:
 
@@ -417,11 +422,14 @@ and/or markers are running in parallel.
 
 ### Logging
 
-The `Profiler` can optionally take a `Psr\LoggerInterface` implementing object 
-to log the profiling process. First you need to install and configure a `PSR-3` compliant
-package as shown below:
+The `Profiler` and `Marker` classes can optionally log profiling activity using any logger that
+implements `Psr\Log\LoggerInterface`.
+
+To enable this feature, you must install and configure a `PSR-3`-compatible logger. Common
+implementations include `Monolog`, `Laminas\Log`, `Symfony’s or Laravel logger` component, and others.
 
 ```php
+use Bakame\Aide\Profiler\Marker;
 use Bakame\Aide\Profiler\Profiler;
 use Monolog\Level;
 use Monolog\Logger;
@@ -430,31 +438,28 @@ use Monolog\Handler\StreamHandler;
 $logger = new Logger('profiler');
 $logger->pushHandler(new StreamHandler(STDOUT, Level::Debug));
 
+//logging with the Profiler instance
+
 $profiler = new Profiler(function () {
     usleep(1_000);
 
     return 'end';
-}, $logger);
+}, logger: $logger);
 
 $profiler->profile('toto');
 $profiler->profile('tata');
-```
-You will log each snapshot taken as well as the profiling metrics at the end. 
 
-The same is true for the `Marker` class which accepts a `LoggerInterface` object.
+//logging the marker process 
 
-```php
-use Bakame\Aide\Profiler\Marker;
-
-$marker = Marker::start('init', $logger);
+$marker = Marker::start('init', logger: $logger);
 usleep(1_000);;
 $marker->finish('render', 'server_cycle');
 ```
 
 > [!TIP]  
-> Logging can be done also on the static methods, they all optionally accept a `LoggerInterface` argument.
+> Logging can be done also on the `Profiler` static methods, they all optionally accept a `LoggerInterface` argument.
 > When logging marker or profiler instance their respective identifier is added to the log to ease identifying
-> which instance is generating the logs or stats.
+> which instance is generating the log entries.
 
 ### Exporters
 
@@ -574,7 +579,7 @@ DurationUnit::tryParse('28 kb'); // returns null
 The package also includes an `Environment class that collects information about the current system for profiling purposes.
 
 ```php
-use Bakame\Aide\Profiler\Environment;Environment;
+use Bakame\Aide\Profiler\Environment;;
 
 $system = Environment::current();
 $system->os; // the Operating System
@@ -588,36 +593,6 @@ $system->memoryLimit; // Memory Limit
 $system->cpuCores; // CPU Cores
 $system->totalDisk; // the total available disk space in bytes
 $system->freeDisk; // the remaining free disk space in bytes
-
-var_dump($system->toArray()); // returns the values as an associative array
-array(13) {
-  ["os"]=>
-  string(5) "Linux"
-  ["osFamily"]=>
-  string(5) "Linux"
-  ["hostname"]=>
-  string(8) "example.org"
-  ["machine"]=>
-  string(6) "x86_64"
-  ["phpIntSize"]=>
-  int(8)
-  ["phpArchitecture"]=>
-  string(6) "64-bit"
-  ["phpVersion"]=>
-  string(6) "8.3.18"
-  ["sapi"]=>
-  string(3) "cli"
-  ["memoryLimit"]=> 
-  int(67108864)
-  ["rawMemoryLimit"]=>
-  string(3) "64M"
-  ["cpuCores"]=>
-  int(1)
-  ["totalDisk"]=>
-  float(0)
-  ["freeDisk"]=>
-  float(0)
-}
 ```
 
 Apart from returning raw information about your system, the instance can be used to detect
@@ -634,6 +609,35 @@ $system->isWindows();       // returns true if the OS is a Windows
 $system->isMac();           // returns true if the OS is a Mac
 $system->isUnixLike();      // returns true if the OS is a Unix like
 ````
+
+The `ConsoleTableExporter` also provides an exporter for the class:
+
+```php
+use Bakame\Aide\Profiler\ConsoleTableExporter;
+use Bakame\Aide\Profiler\Environment;;
+
+(new ConsoleTableExporter())->exportEnvironment($system);
+```
+
+Will return
+
+```bash
++--------------------------------+
+| Operating System: Linux        |
+|        OS Family: Linux        |
+|         Hostname: example.org  |
+|     Architecture: x86_64       |
+| PHP Integer Size: 8            |
+| PHP Architecture: 64-bit       |
+|             SAPI: cli          |
+|      PHP Version: 8.3.7        |
+|     Memory Limit: 64 MB        |
+| Raw Memory Limit: 64M          |
+|        CPU Cores: 1            |
+|        Disk Size: 0            |
+|  Free Disk Space: 0            |
++--------------------------------+
+```
 
 ## Testing
 

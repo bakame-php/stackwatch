@@ -25,12 +25,12 @@ use function implode;
  */
 final class Marker implements Countable, IteratorAggregate, JsonSerializable
 {
-    /** @var array<non-empty-string, Snapshot> */
-    private array $snapshots;
-    private ?LoggerInterface $logger;
     /** @var non-empty-string */
     private readonly string $identifier;
+    /** @var array<non-empty-string, Snapshot> */
+    private array $snapshots;
     private bool $isComplete;
+    private ?LoggerInterface $logger;
 
     /**
      * @param ?non-empty-string $identifier
