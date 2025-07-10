@@ -9,6 +9,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 use function json_encode;
+use function usleep;
 
 #[CoversClass(Marker::class)]
 #[CoversClass(Label::class)]
@@ -180,10 +181,42 @@ final class MarkerTest extends TestCase
     #[Test]
     public function it_throws_if_no_enough_snapshot_present_on_finish(): void
     {
-        $this->expectException(InvalidArgument::class);
+        $this->expectException(UnableToProfile::class);
         $this->expectExceptionMessage('Marking can not be finished; no starting snapshot found.');
 
         $marker = new Marker();
         $marker->finish();
+    }
+
+    #[Test]
+    public function it_can_be_complete(): void
+    {
+        $marker = Marker::start('boot');
+        usleep(100);
+        $marker->mark('shutdown');
+        self::assertFalse($marker->isComplete());
+        $summary = $marker->summary();
+        $marker->complete();
+        self::assertTrue($marker->isComplete());
+        self::assertEquals($summary, $marker->summary());
+
+        $this->expectException(UnableToProfile::class);
+        $marker->finish('boot', 'boot_shutdown');
+    }
+
+    #[Test]
+    public function it_can_be_complete_and_reverted_on_reset(): void
+    {
+        $marker = Marker::start('boot');
+        usleep(100);
+        $marker->mark('shutdown');
+        self::assertFalse($marker->isComplete());
+        $summary = $marker->summary();
+        $marker->complete();
+        self::assertTrue($marker->isComplete());
+        self::assertEquals($summary, $marker->summary());
+
+        $marker->reset();
+        self::assertFalse($marker->isComplete());
     }
 }

@@ -93,9 +93,11 @@ final class ProfilerTest extends TestCase
         $profiler = new Profiler(fn () => null);
         $profiler();
         self::assertFalse($profiler->isEmpty());
+        self::assertTrue($profiler->hasSummaries());
 
         $profiler->reset();
         self::assertTrue($profiler->isEmpty());
+        self::assertFalse($profiler->hasSummaries());
     }
 
     #[Test]

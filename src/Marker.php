@@ -26,10 +26,11 @@ use function implode;
 final class Marker implements Countable, IteratorAggregate, JsonSerializable
 {
     /** @var array<non-empty-string, Snapshot> */
-    private array $snapshots = [];
+    private array $snapshots;
     private ?LoggerInterface $logger;
     /** @var non-empty-string */
     private readonly string $identifier;
+    private bool $isComplete;
 
     /**
      * @param ?non-empty-string $identifier
@@ -38,21 +39,41 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     {
         $this->logger = $logger;
         $this->identifier = $identifier ?? Label::random();
-
-        gc_collect_cycles();
+        $this->reset();
     }
 
     public function reset(): void
     {
         gc_collect_cycles();
         $this->snapshots = [];
+        $this->isComplete = false;
+    }
+
+    public function identifier(): string
+    {
+        return $this->identifier;
+    }
+
+    public function complete(): void
+    {
+        $this->isComplete = true;
+    }
+
+    public function isComplete(): bool
+    {
+        return $this->isComplete;
     }
 
     /**
      * @param non-empty-string $label
+     *
+     * @throws UnableToProfile if the marker is in complete state
+     * @throws InvalidArgument if the label is invalid
      */
     public function mark(string $label): void
     {
+        !$this->isComplete || throw new UnableToProfile('The instance is complete no further snapshot can be taken.');
+
         $newSnapshot = Snapshot::now();
         $label = Label::fromString($label);
         ! $this->has($label) || throw new InvalidArgument('The label "'.$label.'" already exists.');
@@ -68,11 +89,6 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
         ]);
 
         $this->snapshots[$label] = $newSnapshot;
-    }
-
-    public function identifier(): string
-    {
-        return $this->identifier;
     }
 
     public function get(string $label): Snapshot
@@ -250,11 +266,13 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
      *
      * @param non-empty-string $label
      * @param ?non-empty-string $summaryLabel
+     *
+     * @throws UnableToProfile if the marker is in complete state
+     * @throws InvalidArgument if labels are invalid
      */
     public function finish(string $label = 'end', ?string $summaryLabel = null): Summary
     {
-        $this->hasSnapshots() || throw new InvalidArgument('Marking can not be finished; no starting snapshot found.');
-
+        $this->hasSnapshots() || throw new UnableToProfile('Marking can not be finished; no starting snapshot found.');
         $this->mark($label);
         /** @var Summary $profiling */
         $profiling = $this->summary($summaryLabel);

@@ -42,15 +42,15 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         $this->reset();
     }
 
-    public function identifier(): string
-    {
-        return $this->identifier;
-    }
-
     public function reset(): void
     {
         $this->summaries = [];
         $this->labels = [];
+    }
+
+    public function identifier(): string
+    {
+        return $this->identifier;
     }
 
     /**
@@ -257,6 +257,11 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     public function isEmpty(): bool
     {
         return [] === $this->summaries;
+    }
+
+    public function hasSummaries(): bool
+    {
+        return ! $this->isEmpty();
     }
 
     public function latest(): ?Summary

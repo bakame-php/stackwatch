@@ -20,7 +20,9 @@ composer require bakame/aide-profiler
 
 You need **PHP >= 8.1** but the latest stable version of PHP is recommended
 
-Traditionally, you use `microtime` to quickly profile your snippet.
+## Usage
+
+Traditionally, profiling a section of code quickly looks like this:
 
 ```php
 $start = microtime(true);
@@ -28,9 +30,9 @@ $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'));
 echo microtime(true) - $start; // the execution time of your code
 ```
 
-The `Bakame\Aide\Profiler` package is a utility that simplifies profiling by eliminating the need to manually calculate and configure your code.
-
-## Usage
+The `Bakame\Aide\Profiler` package streamlines this process by
+removing the need for manual timing and setup, making
+profiling more convenient and consistent.
 
 ### Profiler
 
@@ -44,7 +46,7 @@ $duration = Profiler::executionTime(
 );
 // $duration is the execution time in nanosecond using hrtime instead of microtime
 ````
-They are as many methods as they are metrics:
+They are as many static methods as they are metrics:
 
 - `Profiler::executionTime()`;
 - `Profiler::cpuTime()`;
@@ -75,8 +77,9 @@ $metrics->realMemoryUsage;
 $metrics->realPeakMemoryUsage;
 ````
 
-The `Metrics` instance provides access to its statistics in a human-readable format via the 
-`Metrics::forHuman()` method.
+All duration values are expressed in nanoseconds, while memory-related metrics are measured in bytes.
+
+You can retrieve the `Metrics` statistics in a human-readable format using the `Metrics::forHuman()` method.
 
 You can either:
 
@@ -107,9 +110,9 @@ $metrics->forHuman('memory_usage'); //returns "2.5 KB"
 
 #### Iterations
 
-If you need to access the average usage for a specific metric, you can use the second argument.
-When executing a callback more than once, the average value for that specific metric across all iterations
-will be returned:
+To calculate the average usage of a specific metric, specify the number of iterations as the second
+argument. The callback will be executed accordingly, and the method will return the average
+value over all iterations:
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
@@ -124,10 +127,10 @@ The `$iterations` argument is available for all metrics.
 
 #### Returning the result
 
-Last but not least, it is possible to access the result from executing a call as well as its associated profile
-using the static method `Profiler::execute`. The method returns a `ProfiledResult`
-instance where the `result` property represents the returned value of the callback execution while its `Summary`
-property contains all the data related to profiling the call.
+Finally, the static method `Profiler::execute` allows you to retrieve both the result of a callback
+execution and its profiling data. It returns a `ProfiledResult` instance, where the `result`
+property contains the callback’s return value, and the `summary` property holds the
+profiling metrics collected during the call.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
@@ -143,8 +146,8 @@ $profiled->summary->label;   // returns an identifier as a string
 
 #### Metrics recording
 
-Apart from these static methods the `Profiler` can record each of the calls you made. For that, you
-will need to instantiate a new `Profiler` instance with the call you want to profile.
+Beyond its static methods, the `Profiler` also supports recording multiple individual calls.
+To enable this, create a new `Profiler` instance by passing in the callback you wish to profile.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
@@ -152,13 +155,13 @@ use Bakame\Aide\Profiler\Profiler;
 // you create a new Profiler by passing the callback you want to profile
 $profiler = new Profiler($service->calculateHeavyStuff(...));
 
-//we invoke the __invoke method of the profile which will execute the callback
+//we invoke the `run` method of the Profiler which will execute the callback
 //$result is the result of executing the calculateHeavyStuff method
 $result = $profiler->run(new DateTimeImmutable('2024-12-24'));
 // you can use `__invoke` as a syntactic sugar method.
 
 $summary = $profiler->latest(); // returns the Summary from the last call
-// the $Summary->metrics property returns a Metrics instance
+// the $summary->metrics property returns a Metrics instance
 $metrics = $summary->metrics;
 
 $metrics->executionTime;
@@ -169,19 +172,21 @@ $metrics->realMemoryUsage;
 $metrics->realPeakMemoryUsage;
 ````
 
-You can execute the `Profiler` instance as many times as needed — it will record all execution metrics each time.
+You can execute the `Profiler` instance as many times as needed — it will record all
+execution metrics each time.
 
 ```php
 $result1 = $profiler(new DateTimeImmutable('2024-12-24'));
 $result2 = $profiler(new DateTimeImmutable('2025-03-02'));
 $result3 = $profiler(new DateTimeImmutable('2024-05-11'));
 
-count($profiler);     // the number of Summary already recorded
-$profiler->latest();  // returns the Summary from the last call
-$profiler->nth(-1);   // returns the same Summary as Profile::last
-$profiler->first();   // returns the first Summary ever generated
-$profiler->isEmpty(); // returns false because the profiler already contains recorded Summary
-$profiler->average(); // returns a Metrics instance representing the average metrics of all the calls performed by the profiler instance
+count($profiler);          // the number of summaries already recorded
+$profiler->latest();       // returns the Summary from the last call
+$profiler->nth(-1);        // returns the same Summary as Profile::last
+$profiler->first();        // returns the first Summary ever generated
+$profiler->isEmpty();      // returns true when the profiler contains no summary
+$profiler->hasSummaries(); // returns true when at least on Summary is present
+$profiler->average();      // returns the average Metrics of all the calls
 ```
 
 You can access any `Summary` by index using the `nth` method, or use the `first` and `latest` methods
@@ -190,8 +195,9 @@ integers to simplify access from the end of the list.
 
 #### Using labels
 
-To add a custom label to each run, use `Profiler::profile`. This method works like the `run` or `__invoeke`
-method but allows you to assign a custom label to the returned `Summary` object via its first argument.
+To add a custom label to each run, use `Profiler::profile`. This method works like the 
+`run` method but allows you to assign a custom label to the returned `Summary` object
+via its first argument.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
@@ -214,12 +220,13 @@ $profiler->labels();           // returns all the labels attached to the Profile
 $profiler->average('my_test'); // returns the Metrics average for all the calls whose label is `my_test`
 ````
 
-You can reuse the same label multiple times. Calling `Profiler::get()` returns the most recent
-entry associated with the given label. In contrast, `Profiler::getAll()` returns an `array` of
-all entries recorded under that label, ordered from the oldest to the newest. If the label
-is invalid or has never been used, an empty `array` will be returned. To check whether
-a label has been used, you can call `Profiler::has()`, which returns `true`
-if the label exists, or `false` otherwise.
+You can reuse the same label multiple times. The `Profiler::get()` method returns the most recent
+entry associated with the specified label. In contrast, `Profiler::getAll()` returns an `array`
+of all entries recorded under that label, ordered from oldest to newest.
+
+If the label is invalid or has never been used, `Profiler::getAll()` returns an empty `array`
+while `Profiler::get()` returns `null`. To determine whether a label exists, use `Profiler::has()`,
+which returns `true` if the label has been recorded, or `false` otherwise.
 
 #### Resetting the Profiler
 
@@ -237,7 +244,7 @@ $callback = function (int ...$args): int|float => {
 $profiler = new Profiler($callback);
 $profiler(1, 2, 3);
 $profiler->profile('my_test', 4, 5, 6);
-$profiler(7, 8, 9);
+$profiler->run(7, 8, 9);
 
 count($profiler); // returns 3
 $profiler->isEmpty(); // return false
@@ -250,7 +257,6 @@ $profiler->isEmpty(); // return true
 
 > [!NOTE]  
 > PHP provides a `reset_peak_memory_usage` that will globally reset all peak memory usage data.
-
 
 ### Marker
 
@@ -281,7 +287,7 @@ Each label must be unique. Labels are automatically normalized (e.g., trimmed, v
 
 #### Getting profiling results`
 
-To get a high-level profile between the **first and last** snapshot use the `summarize` method.
+To get a high-level profile between the **first and lastest** snapshot use the `summarize` method.
 
 ```php
 $summary = $marker->summary();       // Returns a Summary instance
@@ -302,8 +308,8 @@ $cpuTime = $marker->delta('init', 'render', 'cpu_time'); // Returns the CPU Time
 Or you can iterate over each successive pair of snapshots to return the consecutive deltas:
 
 ```php
-foreach ($marker->deltas() as $report) {
-    echo $report->label . ': ' . $report->metrics->forHuman('execution_time') . PHP_EOL;
+foreach ($marker->deltas() as $summary) {
+    echo $summary->label . ': ' . $summary->metrics->forHuman('execution_time') . PHP_EOL;
 }
 ```
 
@@ -326,6 +332,27 @@ $summary = $marker->finish(label: 'done', summaryLabel: 'total');
 > You can still call the `mark` method and add more snapshots after a call to `finish`.
 > The `summary` is calculated at runtime and never stored in the `Marker` instance.
 
+#### Marker completion
+
+The `complete` method finalizes the profiling marker, marking it as complete and preventing any
+further snapshots or finishing operations that modify the state. 
+
+Before calling `complete`, the marker is **open** and can accept snapshots via `mark`
+and be finished via `finish`. Once `complete` is called:
+
+- The marker becomes **complete and closed for additions**.
+- Further calls to `mark` or `finish` will throw an `UnableToProfile` exception.
+- Calling `complete` multiple times has no side effects (idempotent).
+- Calling `summary` remains unchanged after completion.
+
+**Calling `reset` on a completed marker reverts the complete state, allowing the marker
+to be reused and accept new snapshots.**
+
+At any given time you can check your `Marker` completion status using the `Marker::isComplete`
+method which returns `true` when it is complete; false otherwise.
+
+#### Marker utility methods
+
 The `Marker` instance also gives you access to other utility methods:
 
 ```php
@@ -337,7 +364,8 @@ $marker->isEmpty();      // return true when no snapshot has been taken
 $marker->hasSnapshots(); // return true when snapshots are available
 $marker->canSummarize(); // returns true if the marker can safely generate a report/summary
 $marker->toArray();      // returns all snapshots as structured arrays
-$marker->reset();        // to clear all recorded snapshots
+$marker->isComplete();   // tells whether the marker is complete
+$marker->reset();        // Reset the marker to its initial state open and with no snapshot
 ```
 
 As an example, you can do the following:
@@ -352,10 +380,11 @@ sleep(1);
 $marker->mark('step2');
 
 $result = $marker->finish('response');
+$marker->complete();
 
 // Printing full report
-foreach ($marker->reports() as $report) {
-    echo "{$report->label}: {$report->metrics->forHuman('execution_time')}";
+foreach ($marker->deltas() as $summary) {
+    echo "{$summary->label}: {$summary->metrics->forHuman('execution_time')}";
 }
 ```
 
@@ -383,7 +412,7 @@ echo $profiler->identifier(); // 'user_export
 ```
 
 If not provided, an internal label generator (e.g. `Label::random()`) will assign a unique name to the
-property. The identifier can be used for logging, debugging  or for correlation when multiple profilers
+property. The identifier can be used for logging, debugging or for correlation when multiple profilers
 and/or markers are running in parallel.
 
 ### Logging
