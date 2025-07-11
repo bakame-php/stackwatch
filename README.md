@@ -36,6 +36,8 @@ profiling more convenient and consistent.
 
 ### Profiler
 
+#### Metrics quick access
+
 Let's adapt the first example using the `Profiler` class.
 
 ```php
@@ -46,6 +48,7 @@ $duration = Profiler::executionTime(
 );
 // $duration is the execution time in nanosecond using hrtime instead of microtime
 ````
+
 They are as many static methods as they are metrics:
 
 - `Profiler::executionTime()`;
@@ -125,7 +128,7 @@ $cpuTime = Profiler::cpuTime(
 ````
 The `$iterations` argument is available for all metrics.
 
-#### Returning the result
+#### Accessing the result
 
 Finally, the static method `Profiler::execute` allows you to retrieve both the result of a callback
 execution and its profiling data. It returns a `ProfiledResult` instance, where the `result`
@@ -465,7 +468,7 @@ $marker->finish('render', 'server_cycle');
 
 The package can help with exporting its metrics using different mechanisms.
 
-#### JSON Exporter
+#### JSON
 
 Both the `Profiler` and `Marker` classes support JSON export via PHP's `json_encode` function.
 This allows you to serialize profiling data for inspection, storage, or transmission.
@@ -497,7 +500,7 @@ echo json_encode($marker), PHP_EOL;
 ```
 See a [sample marker JSON output](./examples/marker-sample.json) for a complete structure.
 
-#### CLI Exporter
+#### CLI
 
 If you have the `symfony\console` package installed in your application, you can export
 the `Profiler` or the `Marker` using a table showing all the data recorded by 
@@ -535,7 +538,7 @@ the following table will be outputted in your terminal.
 +--------------+-----------+-----------+--------+----------+----------+-----------+
 ```
 
-#### Open Telemetry Exporter
+#### Open Telemetry
 
 The `Profiler` and the `Marker` results can be exported to an Open telemetry compatible
 server using the `open-telemetry/exporter-otlp` package.
@@ -576,6 +579,8 @@ $exporter->exportProfilter($profiler);
 Remember to change the `$tracerProvider` to connect to your own environment and server.
 
 ### Helpers
+
+#### Environment
 
 The package includes an `Environment` class that collects information about the current system for profiling purposes.
 
@@ -639,6 +644,8 @@ Will return
 |  Free Disk Space: 0            |
 +--------------------------------+
 ```
+
+#### MemoryUnit and DurationUnit
 
 To correctly show the memory and duration unit, the package comes with 2 helper Enum:
 
