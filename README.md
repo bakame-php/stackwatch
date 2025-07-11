@@ -559,24 +559,7 @@ Remember to change the `$tracerProvider` to connect to your own environment and 
 
 ### Helpers
 
-To correctly show the memory and duration unit, the package comes with 2 helper Enum:
-
-- `MemoryUnit` to help formatting and converting to and from bytes.
-- `DurationUnit` to help formatting and converting to and from nanoseconds.
-
-```php
-use Bakame\Aide\Profiler\MemoryUnit;
-use Bakame\Aide\Profiler\DurationUnit;
-
-MemoryUnit::format(1_024 ** 2); // returns '1 MB'
-MemoryUnit::parse('1 kb'); // returns 1000 in bytes
-
-DurationUnit::Second->convertToNano(1); // returns 1_000_000_000
-DurationUnit::format('23_000'); // returns 23 µs
-DurationUnit::tryParse('28 kb'); // returns null
-```
-
-The package also includes an `Environment class that collects information about the current system for profiling purposes.
+The package includes an `Environment` class that collects information about the current system for profiling purposes.
 
 ```php
 use Bakame\Aide\Profiler\Environment;;
@@ -599,7 +582,7 @@ Apart from returning raw information about your system, the instance can be used
 the PHP architecture used or if the memory is unlimited using boolean returning methods:
 
 ```php
-use Bakame\Aide\Profiler\Environment;Environment;
+use Bakame\Aide\Profiler\Environment;
 
 $system = Environment::current();
 $system->is32Bit();         // returns true on a 32-bit architecture
@@ -637,6 +620,23 @@ Will return
 |        Disk Size: 0            |
 |  Free Disk Space: 0            |
 +--------------------------------+
+```
+
+To correctly show the memory and duration unit, the package comes with 2 helper Enum:
+
+- `MemoryUnit` to help formatting and converting to and from bytes.
+- `DurationUnit` to help formatting and converting to and from nanoseconds.
+
+```php
+use Bakame\Aide\Profiler\MemoryUnit;
+use Bakame\Aide\Profiler\DurationUnit;
+
+MemoryUnit::format(1_024 ** 2); // returns '1 MB'
+MemoryUnit::parse('1 kb'); // returns 1000 in bytes
+
+DurationUnit::Second->convertToNano(1); // returns 1_000_000_000
+DurationUnit::format('23_000'); // returns 23 µs
+DurationUnit::tryParse('28 kb'); // returns null
 ```
 
 ## Testing
