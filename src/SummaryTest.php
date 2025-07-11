@@ -22,9 +22,9 @@ final class SummaryTest extends TestCase
     #[Test]
     public function it_has_a_specific_lifecycle(): void
     {
-        $start = Snapshot::now('start');
+        $start = Snapshot::now();
         usleep(1000);
-        $end = Snapshot::now('end');
+        $end = Snapshot::now();
 
         $summary = new Summary('test', $start, $end);
 
@@ -40,9 +40,9 @@ final class SummaryTest extends TestCase
     #[Test]
     public function it_will_returns_metrics_in_an_associative_array(): void
     {
-        $start = Snapshot::now('start');
+        $start = Snapshot::now();
         usleep(1000);
-        $end = Snapshot::now('end');
+        $end = Snapshot::now();
         $summary = new Summary('test', $start, $end);
         $stats = $summary->toArray();
 
@@ -59,9 +59,9 @@ final class SummaryTest extends TestCase
     #[Test]
     public function it_can_be_json_encoded(): void
     {
-        $start = Snapshot::now('start');
+        $start = Snapshot::now();
         usleep(1000);
-        $end = Snapshot::now('end');
+        $end = Snapshot::now();
         $summary = new Summary('test', $start, $end);
 
         /** @var non-empty-string $json */
@@ -78,9 +78,9 @@ final class SummaryTest extends TestCase
     {
         $this->expectException(InvalidArgument::class);
 
-        $start = Snapshot::now('start');
+        $start = Snapshot::now();
         usleep(1000);
-        $end = Snapshot::now('test');
+        $end = Snapshot::now();
 
         new Summary('_123invalid', $start, $end);
     }

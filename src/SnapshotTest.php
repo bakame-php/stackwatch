@@ -18,15 +18,13 @@ final class SnapshotTest extends TestCase
     #[Test]
     public function it_can_create_a_valid_snapshot_with_the_now_named_constructor(): void
     {
-        $snapshot = Snapshot::now('test');
-
-        self::assertArrayHasKey('ru_utime.tv_sec', $snapshot->cpu);
+        self::assertArrayHasKey('ru_utime.tv_sec', Snapshot::now()->cpu);
     }
 
     #[Test]
     public function it_can_generate_a_valid_json_representation(): void
     {
-        $data = Snapshot::now('test')->jsonSerialize();
+        $data = Snapshot::now()->jsonSerialize();
 
         self::assertArrayHasKey('label', $data);
         self::assertArrayHasKey('timestamp', $data);
@@ -38,7 +36,7 @@ final class SnapshotTest extends TestCase
     #[Test]
     public function it_can_evaluate_if_two_instance_are_equals(): void
     {
-        $snapshot1 = Snapshot::now('test');
+        $snapshot1 = Snapshot::now();
 
         $snapshot2 = new Snapshot(
             $snapshot1->label,
@@ -57,10 +55,7 @@ final class SnapshotTest extends TestCase
     #[Test]
     public function it_will_detect_two_distinct_snapshots(): void
     {
-        $snapshot1 = Snapshot::now('test');
-        usleep(100);
-
-        self::assertFalse($snapshot1->equals(Snapshot::now('test')));
+        self::assertFalse(Snapshot::now('test')->equals(Snapshot::now('test')));
     }
 
     #[Test]
@@ -83,7 +78,7 @@ final class SnapshotTest extends TestCase
     {
         $this->expectException(InvalidArgument::class);
 
-        Snapshot::now('test')->forHuman('foobar');
+        Snapshot::now()->forHuman('foobar');
     }
 
     #[Test]
@@ -106,7 +101,7 @@ final class SnapshotTest extends TestCase
     #[Test]
     public function it_can_be_recreated_from_an_array(): void
     {
-        $snapshot = Snapshot::now('test');
+        $snapshot = Snapshot::now();
 
         self::assertEquals($snapshot, Snapshot::fromArray($snapshot->toArray()));
     }

@@ -117,14 +117,14 @@ final class Snapshot implements JsonSerializable
     }
 
     /**
-     * @param non-empty-string $label
+     * @param ?non-empty-string $label
      *
      * @throws UnableToProfile
      */
-    public static function now(string $label): self
+    public static function now(?string $label = null): self
     {
         return new self(
-            Label::fromString($label),
+            Label::fromString((string) $label),
             new DateTimeImmutable(),
             hrtime(true),
             self::getRawCpuData(),

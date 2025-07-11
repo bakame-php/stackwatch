@@ -46,8 +46,6 @@ final class Label
     }
 
     /**
-     * @param non-empty-string $value
-     *
      * @throws InvalidArgument
      *
      * @return non-empty-string
@@ -55,8 +53,11 @@ final class Label
     public static function fromString(string $value): string
     {
         $value = strtolower(trim($value));
+        if ('' === $value) {
+            return Label::random();
+        }
 
-        ('' !== $value && 1 === preg_match(self::REGEXP_LABEL, $value)) || throw new InvalidArgument('The label must start with a lowercased letter or a digit and only contain lowercased letters, digits, point or underscores.');
+        1 === preg_match(self::REGEXP_LABEL, $value) || throw new InvalidArgument('The label must start with a lowercased letter or a digit and only contain lowercased letters, digits, point or underscores.');
 
         return $value;
     }

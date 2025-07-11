@@ -6,6 +6,7 @@ namespace Bakame\Aide\Profiler;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 
 final class LabelTest extends TestCase
@@ -57,7 +58,7 @@ final class LabelTest extends TestCase
     {
         $this->expectException(InvalidArgument::class);
 
-        Label::fromString($input); /* @phpstan-ignore-line */
+        Label::fromString($input);
     }
 
     /**
@@ -65,14 +66,20 @@ final class LabelTest extends TestCase
      */
     public static function provideInvalidLabels(): iterable
     {
-        yield 'label is empty' => ['input' => ''];
-        yield 'label is a long empty string' => ['input' => '             '];
         yield 'starts with an underscore' => ['input' => '_label'];
         yield 'starts with an dot' => ['input' => '.label'];
         yield 'ends with an underscore' => ['input' => 'label_'];
         yield 'ends with an dot' => ['input' => 'label.'];
         yield 'contains at least on double underscore' => ['input' => 'lab__el'];
         yield 'econtains at least on double dot' => ['input' => 'lab..el'];
+    }
+
+    #[TestWith(['input' => ''])]
+    #[TestWith(['input' => '       '])]
+    #[Test]
+    public function it_handles_emoty_string_by_generating_an_random_string(string $input): void
+    {
+        self::assertIsString(Label::fromString($input));
     }
 
     public function it_will_throw_an_exception_if_the_label_length_is_lower_than_1(): void
