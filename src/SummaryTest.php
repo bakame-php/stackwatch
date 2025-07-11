@@ -26,7 +26,7 @@ final class SummaryTest extends TestCase
         usleep(1000);
         $end = Snapshot::now('end');
 
-        $summary = new Summary($start, $end, 'test');
+        $summary = new Summary('test', $start, $end);
 
         self::assertSame('test', $summary->label);
         self::assertGreaterThan(0, $summary->metrics->executionTime);
@@ -43,7 +43,7 @@ final class SummaryTest extends TestCase
         $start = Snapshot::now('start');
         usleep(1000);
         $end = Snapshot::now('end');
-        $summary = new Summary($start, $end, 'test');
+        $summary = new Summary('test', $start, $end);
         $stats = $summary->toArray();
 
         self::assertArrayHasKey('label', $stats);
@@ -62,7 +62,7 @@ final class SummaryTest extends TestCase
         $start = Snapshot::now('start');
         usleep(1000);
         $end = Snapshot::now('end');
-        $summary = new Summary($start, $end, 'test');
+        $summary = new Summary('test', $start, $end);
 
         /** @var non-empty-string $json */
         $json = json_encode($summary);
@@ -82,6 +82,6 @@ final class SummaryTest extends TestCase
         usleep(1000);
         $end = Snapshot::now('test');
 
-        new Summary($start, $end, '_123invalid');
+        new Summary('_123invalid', $start, $end);
     }
 }

@@ -6,7 +6,9 @@ namespace Bakame\Aide\Profiler;
 
 use DateTimeImmutable;
 use JsonSerializable;
+use Throwable;
 
+use function array_diff_key;
 use function array_flip;
 use function array_intersect_key;
 use function array_keys;
@@ -71,10 +73,46 @@ final class Snapshot implements JsonSerializable
         public readonly int $peakMemoryUsage,
         public readonly int $realPeakMemoryUsage,
     ) {
-        '' !== $label || throw new InvalidArgument('The label can not be empty.');
+        Label::fromString($this->label) === $this->label || throw new InvalidArgument('the label `'.$this->label.'` is invalid');
         $missingKeys = array_diff_key(array_flip(array_keys(self::CPU_STAT)), $this->cpu);
         if ([] !== $missingKeys) {
             throw new InvalidArgument('The cpu data is missing the following keys: '.implode(', ', array_keys($missingKeys)));
+        }
+    }
+
+    /**
+     * @param SnapshotStat $data
+     *
+     * @throws InvalidArgument
+     */
+    public static function fromArray(array $data): self
+    {
+        $missingKeys = array_diff_key([
+            'label' => 1,
+            'timestamp' => 1,
+            'hrtime' => 1,
+            'cpu' => 1,
+            'memory_usage' => 1,
+            'real_memory_usage' => 1,
+            'peak_memory_usage' => 1,
+            'real_peak_memory_usage' => 1,
+        ], $data);
+
+        [] === $missingKeys || throw new InvalidArgument('The payload is missing the following keys: '.implode(', ', array_keys($missingKeys)));
+
+        try {
+            return new self(
+                $data['label'],
+                DateTimeImmutable::createFromFormat("Y-m-d\TH:i:s.uP", $data['timestamp']), /* @phpstan-ignore-line */
+                $data['hrtime'],
+                $data['cpu'],
+                $data['memory_usage'],
+                $data['real_memory_usage'],
+                $data['peak_memory_usage'],
+                $data['real_peak_memory_usage'],
+            );
+        } catch (Throwable $exception) {
+            throw new InvalidArgument('Unable to create a snapshot from the payload', previous: $exception);
         }
     }
 

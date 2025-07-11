@@ -102,7 +102,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     {
         ($this->has($from) && $this->has($to)) || throw new InvalidArgument('The labels "'.$from.'" and/or "'.$to.'" do not exist.');
 
-        $summary = new Summary($this->snapshots[$from], $this->snapshots[$to], $from.'_'.$to);
+        $summary = new Summary($from.'_'.$to, $this->snapshots[$from], $this->snapshots[$to]);
         if (null === $metric) {
             return $summary;
         }
@@ -254,7 +254,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
         $from = array_key_first($this->snapshots);
         $to = array_key_last($this->snapshots);
 
-        return new Summary($this->snapshots[$from], $this->snapshots[$to], Label::fromString($label ?? $from.'_'.$to));
+        return new Summary(Label::fromString($label ?? $from.'_'.$to), $this->snapshots[$from], $this->snapshots[$to]);
     }
 
     /**

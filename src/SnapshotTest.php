@@ -102,4 +102,20 @@ final class SnapshotTest extends TestCase
             realPeakMemoryUsage: 1
         );
     }
+
+    #[Test]
+    public function it_can_be_recreated_from_an_array(): void
+    {
+        $snapshot = Snapshot::now('test');
+
+        self::assertEquals($snapshot, Snapshot::fromArray($snapshot->toArray()));
+    }
+
+    #[Test]
+    public function it_fails_to_create_a_new_instance_from_an_invalid_array(): void
+    {
+        $this->expectException(InvalidArgument::class);
+
+        Snapshot::fromArray([]); /* @phpstan-ignore-line */
+    }
 }

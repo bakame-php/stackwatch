@@ -32,7 +32,7 @@ final class MetricsTest extends TestCase
             'ru_utime.tv_usec' => 1,
             'ru_stime.tv_usec' => 1,
         ], 1100, 2100, 3100, 4100);
-        return new Summary($start, $end, $label);
+        return new Summary($label, $start, $end);
     }
 
     #[Test]
@@ -117,5 +117,21 @@ final class MetricsTest extends TestCase
 
         $this->expectException(InvalidArgument::class);
         $metrics->forHuman('foobar');
+    }
+
+    #[Test]
+    public function it_can_be_recreated_from_an_array(): void
+    {
+        $metrics = Metrics::none();
+
+        self::assertEquals($metrics, Metrics::fromArray($metrics->toArray()));
+    }
+
+    #[Test]
+    public function it_fails_to_create_a_new_instance_from_an_invalid_array(): void
+    {
+        $this->expectException(InvalidArgument::class);
+
+        Metrics::fromArray([]); /* @phpstan-ignore-line */
     }
 }

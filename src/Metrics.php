@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Bakame\Aide\Profiler;
 
 use JsonSerializable;
+use Throwable;
 
+use function array_diff_key;
 use function array_keys;
 use function array_reduce;
 use function count;
@@ -75,6 +77,38 @@ final class Metrics implements JsonSerializable
         );
     }
 
+    /**
+     * @param MetricsStat $data
+     *
+     * @throws InvalidArgument
+     */
+    public static function fromArray(array $data): self
+    {
+        $missingKeys = array_diff_key([
+            'cpu_time' => 1,
+            'execution_time' => 1,
+            'memory_usage' => 1,
+            'real_memory_usage' => 1,
+            'peak_memory_usage' => 1,
+            'real_peak_memory_usage' => 1,
+        ], $data);
+
+        [] === $missingKeys || throw new InvalidArgument('The payload is missing the following keys: '.implode(', ', array_keys($missingKeys)));
+
+        try {
+            return new self(
+                $data['cpu_time'],
+                $data['execution_time'],
+                $data['memory_usage'],
+                $data['real_memory_usage'],
+                $data['peak_memory_usage'],
+                $data['real_peak_memory_usage']
+            );
+        } catch (Throwable $exception) {
+            throw new InvalidArgument('Unable to create a metrics from the payload', previous: $exception);
+        }
+    }
+
     public static function average(Profiler|ProfiledResult|Summary|Metrics ...$metrics): self
     {
         /** @var array<Metrics> $metricList */
@@ -83,7 +117,6 @@ final class Metrics implements JsonSerializable
                 $carry[] = $metric;
 
                 return $carry;
-
             }
 
             if ($metric instanceof Summary) {

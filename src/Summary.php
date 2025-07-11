@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace Bakame\Aide\Profiler;
 
 use JsonSerializable;
+use Throwable;
+
+use function array_diff_key;
+use function array_keys;
+use function implode;
 
 /**
  * @phpstan-import-type MetricsStat from Metrics
@@ -28,7 +33,7 @@ final class Summary implements JsonSerializable
      *
      * @throws InvalidArgument
      */
-    public function __construct(Snapshot $start, Snapshot $end, string $label)
+    public function __construct(string $label, Snapshot $start, Snapshot $end)
     {
         $this->metrics = Metrics::fromSnapshots($start, $end);
         $this->start = $start;
@@ -49,6 +54,25 @@ final class Summary implements JsonSerializable
             ],
             'metrics' => $this->metrics->toArray(),
         ];
+    }
+
+    /**
+     * @param SummaryStat $data
+     */
+    public static function fromArray(array $data): self
+    {
+        $missingKeys = array_diff_key(['label' => 1, 'snapshots' => 1], $data);
+        [] === $missingKeys || throw new InvalidArgument('The payload is missing the following keys: '.implode(', ', array_keys($missingKeys)));
+
+        try {
+            return new self(
+                $data['label'],
+                Snapshot::fromArray($data['snapshots'][0]),
+                Snapshot::fromArray($data['snapshots'][1]),
+            );
+        } catch (Throwable $exception) {
+            throw new InvalidArgument('Unable to create a summary from the payload', previous: $exception);
+        }
     }
 
     /**

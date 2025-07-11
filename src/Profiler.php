@@ -83,7 +83,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
             $start = Snapshot::now('start');
             $returnValue = ($callback)(...$args);
             $end = Snapshot::now('end');
-            $summary = new Summary($start, $end, $label);
+            $summary = new Summary($label, $start, $end);
             $logger?->info('Profiler ['.$identifier.'] ending profiling for label: '.$label.'.', [...['identifier' => $identifier], ...$summary->toArray()]);
 
             return new ProfiledResult($returnValue, $summary);

@@ -46,7 +46,7 @@ class OpenTelemetryExporterTest extends TestCase
             'ru_utime.tv_usec' => 1,
             'ru_stime.tv_usec' => 1,
         ], 1100, 2100, 3100, 4100);
-        return new Summary($start, $end, $label);
+        return new Summary($label, $start, $end);
     }
 
     protected function setUp(): void
