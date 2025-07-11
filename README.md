@@ -467,17 +467,35 @@ The package can help with exporting its metrics using different mechanisms.
 
 #### JSON Exporter
 
-You can export the `Profiler` as a JSON string using the `json_encode` method.
-The JSON representation will return its identifier, the timestamp, the snapshots
-as well as the metrics associated to all the `Summary` instances attached
-to the object.
+Both the `Profiler` and `Marker` classes support JSON export via PHP's `json_encode` function.
+This allows you to serialize profiling data for inspection, storage, or transmission.
+
+Calling `json_encode($profiler)` will produce a JSON object containing:
+
+- `identifier`: the profiler's unique identifier 
+- `summaries`: an array of summary entries, **ordered from oldest to latest**
+
+Each summary entry includes:
+
+ - `label`: the associated label or name of the profiling block
+ - `snapshots`: an array of two snapshots (start and end), ordered chronologically
+ - `metrics`: computed performance metrics between the two snapshots
 
 ```php
 echo json_encode($profiler), PHP_EOL;
 ```
 
-For the `Marker` class, the JSON string will return its identifier as well as
-the collection of snapshots and their associated labels.
+See a [sample profiler JSON output](./examples/profiler-sample.json) for a complete structure.
+
+Calling `json_encode($marker)` will produce a JSON object containing:
+
+- `identifier`: the marker's unique identifier
+- `snapshots`: an array of snapshot entries, **ordered from oldest to latest**
+
+```php
+echo json_encode($marker), PHP_EOL;
+```
+See a [sample marker JSON output](./examples/marker-sample.json) for a complete structure.
 
 #### CLI Exporter
 

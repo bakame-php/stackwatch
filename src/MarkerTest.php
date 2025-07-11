@@ -153,8 +153,8 @@ final class MarkerTest extends TestCase
             self::assertInstanceOf(Summary::class, $data);
         }
 
-        foreach ($this->marker as $label => $snapshot) {
-            self::assertContains($label, $this->marker->labels());
+        foreach ($this->marker as $snapshot) {
+            self::assertContains($snapshot->label, $this->marker->labels());
         }
 
         self::assertSame(json_encode($this->marker->toArray()), json_encode($this->marker));

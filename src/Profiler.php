@@ -12,8 +12,13 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 use Traversable;
 
+use function array_column;
 use function array_filter;
+use function array_flip;
+use function array_key_exists;
 use function array_key_last;
+use function array_unique;
+use function array_values;
 use function count;
 
 /**
@@ -28,24 +33,21 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     private readonly ?LoggerInterface $logger;
     /** @var list<Summary> */
     private array $summaries;
-    /** @var array<string, 1> */
-    private array $labels;
 
     /**
      * @param ?non-empty-string $identifier
      */
     public function __construct(callable $callback, ?string $identifier = null, ?LoggerInterface $logger = null)
     {
+        $this->identifier = $identifier ?? Label::random();
         $this->callback = $callback instanceof Closure ? $callback : $callback(...);
         $this->logger = $logger;
-        $this->identifier = $identifier ?? Label::random();
         $this->reset();
     }
 
     public function reset(): void
     {
         $this->summaries = [];
-        $this->labels = [];
     }
 
     public function identifier(): string
@@ -78,9 +80,9 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         gc_collect_cycles();
         try {
             $logger?->info('Profiler ['.$identifier.'] starting profiling for label: '.$label.'.', ['identifier' => $identifier, 'label' => $label]);
-            $start = Snapshot::now();
+            $start = Snapshot::now('start');
             $returnValue = ($callback)(...$args);
-            $end = Snapshot::now();
+            $end = Snapshot::now('end');
             $summary = new Summary($start, $end, $label);
             $logger?->info('Profiler ['.$identifier.'] ending profiling for label: '.$label.'.', [...['identifier' => $identifier], ...$summary->toArray()]);
 
@@ -208,7 +210,6 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     {
         $profiled = self::profiling($this->identifier, $label, $this->callback, $this->logger, ...$args);
         $this->summaries[] = $profiled->summary;
-        $this->labels[$profiled->summary->label] = 1;
 
         return $profiled->returnValue;
     }
@@ -288,7 +289,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function has(string $label): bool
     {
-        return array_key_exists($label, $this->labels);
+        return array_key_exists($label, array_flip($this->labels()));
     }
 
     /**
@@ -335,6 +336,10 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function labels(): array
     {
-        return array_keys($this->labels);
+        return array_values(
+            array_unique(
+                array_column($this->summaries, 'label')
+            )
+        );
     }
 }

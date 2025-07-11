@@ -18,7 +18,7 @@ final class SnapshotTest extends TestCase
     #[Test]
     public function it_can_create_a_valid_snapshot_with_the_now_named_constructor(): void
     {
-        $snapshot = Snapshot::now();
+        $snapshot = Snapshot::now('test');
 
         self::assertArrayHasKey('ru_utime.tv_sec', $snapshot->cpu);
     }
@@ -26,8 +26,9 @@ final class SnapshotTest extends TestCase
     #[Test]
     public function it_can_generate_a_valid_json_representation(): void
     {
-        $data = Snapshot::now()->jsonSerialize();
+        $data = Snapshot::now('test')->jsonSerialize();
 
+        self::assertArrayHasKey('label', $data);
         self::assertArrayHasKey('timestamp', $data);
         self::assertArrayHasKey('hrtime', $data);
         self::assertArrayHasKey('cpu', $data);
@@ -37,9 +38,10 @@ final class SnapshotTest extends TestCase
     #[Test]
     public function it_can_evaluate_if_two_instance_are_equals(): void
     {
-        $snapshot1 = Snapshot::now();
+        $snapshot1 = Snapshot::now('test');
 
         $snapshot2 = new Snapshot(
+            $snapshot1->label,
             $snapshot1->timestamp,
             $snapshot1->hrtime,
             $snapshot1->cpu,
@@ -55,23 +57,23 @@ final class SnapshotTest extends TestCase
     #[Test]
     public function it_will_detect_two_distinct_snapshots(): void
     {
-        $snapshot1 = Snapshot::now();
+        $snapshot1 = Snapshot::now('test');
         usleep(100);
 
-        self::assertFalse($snapshot1->equals(Snapshot::now()));
+        self::assertFalse($snapshot1->equals(Snapshot::now('test')));
     }
 
     #[Test]
     public function it_will_return_false_on_other_type(): void
     {
-        self::assertFalse(Snapshot::now()->equals(new stdClass()));
+        self::assertFalse(Snapshot::now('test')->equals(new stdClass()));
     }
 
     #[Test]
     public function it_will_return_a_human_readable_value(): void
     {
         /** @var string $cpuForHuman */
-        $cpuForHuman = Snapshot::now()->forHuman('cpu');
+        $cpuForHuman = Snapshot::now('test')->forHuman('cpu');
 
         self::assertStringContainsString('ru_utime.tv_sec', $cpuForHuman);
     }
@@ -81,7 +83,7 @@ final class SnapshotTest extends TestCase
     {
         $this->expectException(InvalidArgument::class);
 
-        Snapshot::now()->forHuman('foobar');
+        Snapshot::now('test')->forHuman('foobar');
     }
 
     #[Test]
@@ -90,6 +92,7 @@ final class SnapshotTest extends TestCase
         $this->expectException(InvalidArgument::class);
 
         new Snapshot(
+            label: 'test',
             timestamp: new DateTimeImmutable(),
             hrtime: hrtime(true),
             cpu: [],  /* @phpstan-ignore-line */

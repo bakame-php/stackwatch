@@ -20,13 +20,13 @@ final class MetricsTest extends TestCase
      */
     private function createSummary(string $label): Summary
     {
-        $start = new Snapshot(new DateTimeImmutable(), hrtime(true), [
+        $start = new Snapshot('start', new DateTimeImmutable(), hrtime(true), [
             'ru_utime.tv_sec' => 1,
             'ru_stime.tv_sec' => 1,
             'ru_utime.tv_usec' => 1,
             'ru_stime.tv_usec' => 1,
         ], 1000, 2000, 3000, 4000);
-        $end = new Snapshot(new DateTimeImmutable(), hrtime(true) + 1, [
+        $end = new Snapshot('end', new DateTimeImmutable(), hrtime(true) + 1, [
             'ru_utime.tv_sec' => 1,
             'ru_stime.tv_sec' => 1,
             'ru_utime.tv_usec' => 1,
@@ -61,7 +61,6 @@ final class MetricsTest extends TestCase
         $profiler = new Profiler(fn () => null);
         $reflection = new ReflectionClass($profiler);
         $reflection->getProperty('summaries')->setValue($profiler, [$summary1, $summary2]);
-        $reflection->getProperty('labels')->setValue($profiler, [$summary1->label => 1, $summary2->label => 1]);
 
         self::assertEquals(
             Metrics::average($profiler),
@@ -72,13 +71,13 @@ final class MetricsTest extends TestCase
     #[Test]
     public function it_correctly_returns_the_cpu_time_in_nanoseconds(): void
     {
-        $start = new Snapshot(new DateTimeImmutable(), hrtime(true), [
+        $start = new Snapshot('start', new DateTimeImmutable(), hrtime(true), [
             'ru_utime.tv_sec'  => 1,
             'ru_utime.tv_usec' => 500_000, // 1.5s user
             'ru_stime.tv_sec'  => 0,
             'ru_stime.tv_usec' => 250_000, // 0.25s system
         ], 1000, 2000, 3000, 4000);
-        $end = new Snapshot(new DateTimeImmutable(), hrtime(true) + 1, [
+        $end = new Snapshot('end', new DateTimeImmutable(), hrtime(true) + 1, [
             'ru_utime.tv_sec'  => 2,
             'ru_utime.tv_usec' => 0,       // 2.0s user
             'ru_stime.tv_sec'  => 0,
@@ -96,13 +95,13 @@ final class MetricsTest extends TestCase
     #[Test]
     public function it_can_returns_the_metrics_in_a_human_readable_format(): void
     {
-        $start = new Snapshot(new DateTimeImmutable(), hrtime(true), [
+        $start = new Snapshot('start', new DateTimeImmutable(), hrtime(true), [
             'ru_utime.tv_sec'  => 1,
             'ru_utime.tv_usec' => 500_000, // 1.5s user
             'ru_stime.tv_sec'  => 0,
             'ru_stime.tv_usec' => 250_000, // 0.25s system
         ], 1000, 2000, 3000, 4000);
-        $end = new Snapshot(new DateTimeImmutable(), hrtime(true) + 1, [
+        $end = new Snapshot('end', new DateTimeImmutable(), hrtime(true) + 1, [
             'ru_utime.tv_sec'  => 2,
             'ru_utime.tv_usec' => 0,       // 2.0s user
             'ru_stime.tv_sec'  => 0,

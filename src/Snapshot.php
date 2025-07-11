@@ -27,6 +27,7 @@ use const JSON_PRETTY_PRINT;
  *     'ru_stime.tv_usec': int,
  * }
  * @phpstan-type SnapshotStat array{
+ *     label: non-empty-string,
  *     timestamp: string,
  *     hrtime: float,
  *     cpu: CpuStat,
@@ -36,12 +37,13 @@ use const JSON_PRETTY_PRINT;
  *     real_peak_memory_usage: int
  * }
  * @phpstan-type SnapshotHumanReadable array{
- *      timestamp: string,
- *      memory_usage: string,
- *      real_memory_usage: string,
- *      peak_memory_usage: string,
- *      real_peak_memory_usage: string,
- *      cpu:string
+ *     label: non-empty-string,
+ *     timestamp: string,
+ *     memory_usage: string,
+ *     real_memory_usage: string,
+ *     peak_memory_usage: string,
+ *     real_peak_memory_usage: string,
+ *     cpu:string
  * }
  *
  */
@@ -56,9 +58,11 @@ final class Snapshot implements JsonSerializable
     ];
 
     /**
+     * @param non-empty-string $label
      * @param CpuStat $cpu
      */
     public function __construct(
+        public readonly string $label,
         public readonly DateTimeImmutable $timestamp,
         public readonly float $hrtime,
         public readonly array $cpu,
@@ -67,6 +71,7 @@ final class Snapshot implements JsonSerializable
         public readonly int $peakMemoryUsage,
         public readonly int $realPeakMemoryUsage,
     ) {
+        '' !== $label || throw new InvalidArgument('The label can not be empty.');
         $missingKeys = array_diff_key(array_flip(array_keys(self::CPU_STAT)), $this->cpu);
         if ([] !== $missingKeys) {
             throw new InvalidArgument('The cpu data is missing the following keys: '.implode(', ', array_keys($missingKeys)));
@@ -74,11 +79,14 @@ final class Snapshot implements JsonSerializable
     }
 
     /**
+     * @param non-empty-string $label
+     *
      * @throws UnableToProfile
      */
-    public static function now(): self
+    public static function now(string $label): self
     {
         return new self(
+            Label::fromString($label),
             new DateTimeImmutable(),
             hrtime(true),
             self::getRawCpuData(),
@@ -117,6 +125,7 @@ final class Snapshot implements JsonSerializable
     public function toArray(): array
     {
         return [
+            'label' => $this->label,
             'timestamp' => $this->timestamp->format("Y-m-d\TH:i:s.uP"),
             'hrtime' => $this->hrtime,
             'cpu' => $this->cpu,
@@ -130,6 +139,7 @@ final class Snapshot implements JsonSerializable
     public function equals(mixed $other): bool
     {
         return $other instanceof self
+            && $other->label === $this->label
             && $this->hrtime === $other->hrtime
             && $this->cpu === $other->cpu
             && $this->memoryUsage === $other->memoryUsage
@@ -147,6 +157,7 @@ final class Snapshot implements JsonSerializable
     public function forHuman(?string $property = null): array|string
     {
         $humans = [
+            'label' => $this->label,
             'timestamp' => $this->timestamp->format('Y-m-d\TH:i:s.uP'),
             'memory_usage' => MemoryUnit::format($this->memoryUsage, 3),
             'real_memory_usage' => MemoryUnit::format($this->realMemoryUsage, 3),

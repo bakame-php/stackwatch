@@ -22,9 +22,9 @@ final class SummaryTest extends TestCase
     #[Test]
     public function it_has_a_specific_lifecycle(): void
     {
-        $start = Snapshot::now();
+        $start = Snapshot::now('start');
         usleep(1000);
-        $end = Snapshot::now();
+        $end = Snapshot::now('end');
 
         $summary = new Summary($start, $end, 'test');
 
@@ -40,16 +40,16 @@ final class SummaryTest extends TestCase
     #[Test]
     public function it_will_returns_metrics_in_an_associative_array(): void
     {
-        $start = Snapshot::now();
+        $start = Snapshot::now('start');
         usleep(1000);
-        $end = Snapshot::now();
+        $end = Snapshot::now('end');
         $summary = new Summary($start, $end, 'test');
         $stats = $summary->toArray();
 
         self::assertArrayHasKey('label', $stats);
         self::assertArrayHasKey('snapshots', $stats);
-        self::assertArrayHasKey('start', $stats['snapshots']);
-        self::assertArrayHasKey('end', $stats['snapshots']);
+        self::assertArrayHasKey('label', $stats['snapshots'][0]);
+        self::assertArrayHasKey('label', $stats['snapshots'][1]);
         self::assertArrayHasKey('metrics', $stats);
         self::assertIsArray($stats['metrics']);
         self::assertArrayHasKey('cpu_time', $stats['metrics']);
@@ -59,9 +59,9 @@ final class SummaryTest extends TestCase
     #[Test]
     public function it_can_be_json_encoded(): void
     {
-        $start = Snapshot::now();
+        $start = Snapshot::now('start');
         usleep(1000);
-        $end = Snapshot::now();
+        $end = Snapshot::now('end');
         $summary = new Summary($start, $end, 'test');
 
         /** @var non-empty-string $json */
@@ -78,9 +78,9 @@ final class SummaryTest extends TestCase
     {
         $this->expectException(InvalidArgument::class);
 
-        $start = Snapshot::now();
+        $start = Snapshot::now('start');
         usleep(1000);
-        $end = Snapshot::now();
+        $end = Snapshot::now('test');
 
         new Summary($start, $end, '_123invalid');
     }

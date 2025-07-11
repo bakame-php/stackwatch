@@ -19,6 +19,8 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 - **BC BREAK:** `Exporter::exportProfilingData` is renamed `Exporter::exportSummary`
 - **BC BREAK:** `Snapshot::toArray` and `Snapshot::jsonSerialize` representation simplified
 - **BC BREAK:** `Summary::toArray` and `Summary::jsonSerialize` representation simplified
+- **BC BREAK:** `Profiler::toArray` and `Profiler::jsonSerialize` representation simplified
+- **BC BREAK:** `Marker::toArray` and `Marker::jsonSerialize` representation simplified
 - **BC BREAK:** `Marker::finish` throws an `UnableToProfile` exception previously was an `InvalidArgument` exception when it cannot complete its task.
 - `Snapshot::cpu` keys presence is validated on instantiation
 

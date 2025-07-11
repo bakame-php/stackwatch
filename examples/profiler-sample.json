@@ -1,0 +1,134 @@
+{
+    "identifier": "test",
+    "summaries": [
+        {
+            "label": "toto",
+            "snapshots": [
+                {
+                    "label": "start",
+                    "timestamp": "2025-07-11T11:24:32.665701+00:00",
+                    "hrtime": 2000443688348833,
+                    "cpu": {
+                        "ru_utime.tv_usec": 36008,
+                        "ru_utime.tv_sec": 0,
+                        "ru_stime.tv_usec": 9396,
+                        "ru_stime.tv_sec": 0
+                    },
+                    "memory_usage": 2284656,
+                    "real_memory_usage": 4194304,
+                    "peak_memory_usage": 2771296,
+                    "real_peak_memory_usage": 4194304
+                },
+                {
+                    "label": "end",
+                    "timestamp": "2025-07-11T11:24:32.666966+00:00",
+                    "hrtime": 2000443689613166,
+                    "cpu": {
+                        "ru_utime.tv_usec": 36018,
+                        "ru_utime.tv_sec": 0,
+                        "ru_stime.tv_usec": 9401,
+                        "ru_stime.tv_sec": 0
+                    },
+                    "memory_usage": 2285712,
+                    "real_memory_usage": 4194304,
+                    "peak_memory_usage": 2771296,
+                    "real_peak_memory_usage": 4194304
+                }
+            ],
+            "metrics": {
+                "cpu_time": 15000,
+                "execution_time": 1264333,
+                "memory_usage": 1056,
+                "real_memory_usage": 0,
+                "peak_memory_usage": 0,
+                "real_peak_memory_usage": 0
+            }
+        },
+        {
+            "label": "toto",
+            "snapshots": [
+                {
+                    "label": "start",
+                    "timestamp": "2025-07-11T11:24:32.667018+00:00",
+                    "hrtime": 2000443689665750,
+                    "cpu": {
+                        "ru_utime.tv_usec": 36044,
+                        "ru_utime.tv_sec": 0,
+                        "ru_stime.tv_usec": 9428,
+                        "ru_stime.tv_sec": 0
+                    },
+                    "memory_usage": 2288600,
+                    "real_memory_usage": 4194304,
+                    "peak_memory_usage": 2771296,
+                    "real_peak_memory_usage": 4194304
+                },
+                {
+                    "label": "end",
+                    "timestamp": "2025-07-11T11:24:32.668280+00:00",
+                    "hrtime": 2000443690927083,
+                    "cpu": {
+                        "ru_utime.tv_usec": 36052,
+                        "ru_utime.tv_sec": 0,
+                        "ru_stime.tv_usec": 9430,
+                        "ru_stime.tv_sec": 0
+                    },
+                    "memory_usage": 2289656,
+                    "real_memory_usage": 4194304,
+                    "peak_memory_usage": 2771296,
+                    "real_peak_memory_usage": 4194304
+                }
+            ],
+            "metrics": {
+                "cpu_time": 10000,
+                "execution_time": 1261333,
+                "memory_usage": 1056,
+                "real_memory_usage": 0,
+                "peak_memory_usage": 0,
+                "real_peak_memory_usage": 0
+            }
+        },
+        {
+            "label": "tata",
+            "snapshots": [
+                {
+                    "label": "start",
+                    "timestamp": "2025-07-11T11:24:32.668290+00:00",
+                    "hrtime": 2000443690937083,
+                    "cpu": {
+                        "ru_utime.tv_usec": 36061,
+                        "ru_utime.tv_sec": 0,
+                        "ru_stime.tv_usec": 9431,
+                        "ru_stime.tv_sec": 0
+                    },
+                    "memory_usage": 2291112,
+                    "real_memory_usage": 4194304,
+                    "peak_memory_usage": 2771296,
+                    "real_peak_memory_usage": 4194304
+                },
+                {
+                    "label": "end",
+                    "timestamp": "2025-07-11T11:24:32.669549+00:00",
+                    "hrtime": 2000443692196541,
+                    "cpu": {
+                        "ru_utime.tv_usec": 36068,
+                        "ru_utime.tv_sec": 0,
+                        "ru_stime.tv_usec": 9433,
+                        "ru_stime.tv_sec": 0
+                    },
+                    "memory_usage": 2292168,
+                    "real_memory_usage": 4194304,
+                    "peak_memory_usage": 2771296,
+                    "real_peak_memory_usage": 4194304
+                }
+            ],
+            "metrics": {
+                "cpu_time": 9000,
+                "execution_time": 1259458,
+                "memory_usage": 1056,
+                "real_memory_usage": 0,
+                "peak_memory_usage": 0,
+                "real_peak_memory_usage": 0
+            }
+        }
+    ]
+}

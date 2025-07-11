@@ -11,10 +11,7 @@ use JsonSerializable;
  * @phpstan-import-type SnapshotStat from Snapshot
  * @phpstan-type SummaryStat array{
  *     label: non-empty-string,
- *     snapshots: array{
- *         start: SnapshotStat,
- *         end: SnapshotStat,
- *     },
+ *     snapshots: array{0: SnapshotStat, 1: SnapshotStat},
  *     metrics: MetricsStat
  * }
  */
@@ -47,8 +44,8 @@ final class Summary implements JsonSerializable
         return [
             'label' => $this->label,
             'snapshots' => [
-                'start' => $this->start->toArray(),
-                'end' => $this->end->toArray(),
+                $this->start->toArray(),
+                $this->end->toArray(),
             ],
             'metrics' => $this->metrics->toArray(),
         ];
@@ -57,10 +54,7 @@ final class Summary implements JsonSerializable
     /**
      * @return array{
      *     label: non-empty-string,
-     *     snapshots: array{
-     *         start: Snapshot,
-     *         end: Snapshot,
-     *     },
+     *     snapshots: array{0: Snapshot, 1: Snapshot},
      *     metrics: Metrics
      * }
      */
@@ -69,8 +63,8 @@ final class Summary implements JsonSerializable
         return [
             'label' => $this->label,
             'snapshots' => [
-                'start' => $this->start,
-                'end' => $this->end,
+                $this->start,
+                $this->end,
             ],
             'metrics' => $this->metrics,
         ];

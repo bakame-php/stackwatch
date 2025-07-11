@@ -1,0 +1,35 @@
+{
+    "identifier": "test",
+    "snapshots": [
+        {
+            "label": "start",
+            "timestamp": "2025-07-11T11:25:10.348768+00:00",
+            "hrtime": 2000481371705166,
+            "cpu": {
+                "ru_utime.tv_usec": 32339,
+                "ru_utime.tv_sec": 0,
+                "ru_stime.tv_usec": 8391,
+                "ru_stime.tv_sec": 0
+            },
+            "memory_usage": 2219040,
+            "real_memory_usage": 4194304,
+            "peak_memory_usage": 2769856,
+            "real_peak_memory_usage": 4194304
+        },
+        {
+            "label": "end",
+            "timestamp": "2025-07-11T11:25:10.350056+00:00",
+            "hrtime": 2000481372993125,
+            "cpu": {
+                "ru_utime.tv_usec": 32360,
+                "ru_utime.tv_sec": 0,
+                "ru_stime.tv_usec": 8408,
+                "ru_stime.tv_sec": 0
+            },
+            "memory_usage": 2220472,
+            "real_memory_usage": 4194304,
+            "peak_memory_usage": 2769856,
+            "real_peak_memory_usage": 4194304
+        }
+    ]
+}

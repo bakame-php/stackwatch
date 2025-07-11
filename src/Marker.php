@@ -11,10 +11,13 @@ use JsonSerializable;
 use Psr\Log\LoggerInterface;
 use Traversable;
 
+use function array_column;
 use function array_key_exists;
 use function array_key_first;
 use function array_key_last;
 use function array_keys;
+use function array_unique;
+use function array_values;
 use function count;
 use function gc_collect_cycles;
 use function implode;
@@ -74,9 +77,8 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     {
         !$this->isComplete || throw new UnableToProfile('The instance is complete no further snapshot can be taken.');
 
-        $newSnapshot = Snapshot::now();
-        $label = Label::fromString($label);
-        ! $this->has($label) || throw new InvalidArgument('The label "'.$label.'" already exists.');
+        $newSnapshot = Snapshot::now(Label::fromString($label));
+        ! $this->has($newSnapshot->label) || throw new InvalidArgument('The label "'.$label.'" already exists.');
 
         $from = array_key_last($this->snapshots);
         $lastSnapshot = $this->snapshots[$from] ?? null;
@@ -84,11 +86,11 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
 
         $this->logger?->info('Marker ['.$this->identifier.'] snapshot for label: '.$label.'.', [
             'identifier' => $this->identifier,
-            'label' => $label,
+            'label' => $newSnapshot->label,
             'snapshot' => $newSnapshot->toArray(),
         ]);
 
-        $this->snapshots[$label] = $newSnapshot;
+        $this->snapshots[$newSnapshot->label] = $newSnapshot;
     }
 
     public function get(string $label): Snapshot
@@ -135,38 +137,38 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     }
 
     /**
-     * @return Generator<non-empty-string,Snapshot>
+     * @return Generator<Snapshot>
      */
     public function getIterator(): Traversable
     {
-        yield from $this->snapshots;
+        yield from array_values($this->snapshots);
     }
 
     /**
      * @return array{
      *     identifier: non-empty-string,
-     *     snapshots: array<non-empty-string, SnapshotStat>
+     *     snapshots: list<SnapshotStat>
      * }
      */
     public function toArray(): array
     {
         return [
             'identifier' => $this->identifier,
-            'snapshots' => array_map(fn (Snapshot $snapshot) => $snapshot->toArray(), $this->snapshots),
+            'snapshots' => array_map(fn (Snapshot $snapshot) => $snapshot->toArray(), array_values($this->snapshots)),
         ];
     }
 
     /**
      * @return array{
      *     identifier: non-empty-string,
-     *     snapshots: array<non-empty-string, Snapshot>
+     *     snapshots: list<Snapshot>
      * }
      */
     public function jsonSerialize(): array
     {
         return [
             'identifier' => $this->identifier,
-            'snapshots' => $this->snapshots,
+            'snapshots' => array_values($this->snapshots),
        ];
     }
 
@@ -175,7 +177,11 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
      */
     public function labels(): array
     {
-        return array_keys($this->snapshots);
+        return array_values(
+            array_unique(
+                array_column($this->snapshots, 'label')
+            )
+        );
     }
 
     /**
@@ -212,18 +218,20 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
      */
     public function nth(int $offset): ?Snapshot
     {
-        $labels = $this->labels();
-        if ([] === $labels) {
+        if ([] === $this->snapshots) {
             return null;
         }
 
+        $labels = $this->labels();
         if ($offset < 0) {
             $offset += count($labels);
         }
 
-        $label = $labels[$offset] ?? null;
+        if (!array_key_exists($offset, $labels)) {
+            return null;
+        }
 
-        return null !== $label ? $this->snapshots[$label] : null;
+        return$this->snapshots[$labels[$offset]];
     }
 
     /**
