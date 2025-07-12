@@ -124,7 +124,7 @@ final class Snapshot implements JsonSerializable
     public static function now(?string $label = null): self
     {
         return new self(
-            Label::fromString((string) $label),
+            null === $label ? Label::random() : Label::fromString($label),
             new DateTimeImmutable(),
             hrtime(true),
             self::getRawCpuData(),
