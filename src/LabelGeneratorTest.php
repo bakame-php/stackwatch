@@ -79,6 +79,6 @@ final class LabelGeneratorTest extends TestCase
     {
         $this->expectException(InvalidArgument::class);
 
-        new LabelGenerator(0); /* @phpstan-ignore-line */
+        (new LabelGenerator())->withLength(0); /* @phpstan-ignore-line */
     }
 }
