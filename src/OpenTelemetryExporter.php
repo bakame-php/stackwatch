@@ -101,7 +101,7 @@ final class OpenTelemetryExporter implements Exporter
 
     public function exportMarker(Marker $marker): void
     {
-        if (! $marker->canSummarize()) {
+        if (! $marker->hasEnoughSnapshots()) {
             return;
         }
 

@@ -108,7 +108,7 @@ final class ConsoleTableExporterTest extends TestCase
 
         $marker = Marker::start();
         usleep(1_000);
-        $marker->finish();
+        $marker->take('end');
 
         $renderer->exportMarker($marker);
         $content = $output->fetch();

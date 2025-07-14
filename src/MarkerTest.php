@@ -13,6 +13,7 @@ use function usleep;
 
 #[CoversClass(Marker::class)]
 #[CoversClass(LabelGenerator::class)]
+#[CoversClass(UnableToComputeMetrics::class)]
 final class MarkerTest extends TestCase
 {
     private Marker $marker;
@@ -27,6 +28,7 @@ final class MarkerTest extends TestCase
     {
         self::assertTrue($this->marker->isEmpty());
         self::assertCount(0, $this->marker);
+        self::assertFalse($this->marker->hasSnapshots());
     }
 
     #[Test]
@@ -34,7 +36,7 @@ final class MarkerTest extends TestCase
     {
         $this->marker->mark('start');
 
-        self::assertTrue($this->marker->has('start'));
+        self::assertTrue($this->marker->hasLabel('start'));
         self::assertCount(1, $this->marker);
     }
 
@@ -56,7 +58,14 @@ final class MarkerTest extends TestCase
         $this->marker->mark('b');
 
         $delta = $this->marker->delta('a', 'b');
+        $metrics = $delta->metrics;
+
+        self::assertEquals($delta, $this->marker->delta('a'));
         self::assertGreaterThan(0, $delta->metrics->toArray()['cpu_time'] ?? 0);
+        self::assertSame($metrics->executionTime, $this->marker->executionTime('a', 'b'));
+        self::assertSame($metrics->cpuTime, $this->marker->cpuTime('a'));
+        self::assertSame($metrics->realPeakMemoryUsage, $this->marker->realPeakMemoryUsage('a'));
+        self::assertSame($metrics->realMemoryUsage, $this->marker->realMemoryUsage('a'));
     }
 
     #[Test]
@@ -83,9 +92,11 @@ final class MarkerTest extends TestCase
     #[Test]
     public function it_will_return_null_on_summary_call_if_there_are_not_enough_snapshots(): void
     {
-        self::assertNull($this->marker->summary());
+        $this->expectException(UnableToComputeMetrics::class);
         $this->marker->mark('only');
-        self::assertNull($this->marker->summary());
+
+
+        $this->marker->summary();
     }
 
     #[Test]
@@ -95,8 +106,7 @@ final class MarkerTest extends TestCase
         usleep(1000);
         $this->marker->mark('end');
 
-        $summary = $this->marker->summary();
-        self::assertInstanceOf(Summary::class, $summary);
+        self::assertCount(2, $this->marker);
     }
 
     #[Test]
@@ -109,7 +119,7 @@ final class MarkerTest extends TestCase
 
         self::assertTrue($this->marker->isEmpty());
         self::assertCount(0, $this->marker);
-        self::assertFalse($this->marker->has('foo'));
+        self::assertFalse($this->marker->hasLabel('foo'));
     }
 
     #[Test]
@@ -146,7 +156,7 @@ final class MarkerTest extends TestCase
     {
         $marker = Marker::start('boot');
         usleep(10_000); // 10ms
-        $profile = $marker->finish('shutdown', 'boot_shutdown');
+        $profile = $marker->take('shutdown', 'boot_shutdown');
 
         $metrics = $profile->metrics;
 
@@ -156,11 +166,11 @@ final class MarkerTest extends TestCase
     #[Test]
     public function it_throws_if_no_enough_snapshot_present_on_finish(): void
     {
-        $this->expectException(UnableToProfile::class);
-        $this->expectExceptionMessage('Marking can not be finished; no starting snapshot found.');
+        $this->expectException(UnableToComputeMetrics::class);
+        $this->expectExceptionMessage('There is not enough snapshots to produce a summary.');
 
         $marker = new Marker();
-        $marker->finish();
+        $marker->take('end');
     }
 
     #[Test]
@@ -176,7 +186,7 @@ final class MarkerTest extends TestCase
         self::assertEquals($summary, $marker->summary());
 
         $this->expectException(UnableToProfile::class);
-        $marker->finish('boot', 'boot_shutdown');
+        $marker->take('boot', 'boot_shutdown');
     }
 
     #[Test]

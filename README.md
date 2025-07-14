@@ -293,7 +293,7 @@ Each label must be unique. Labels are automatically normalized (e.g., trimmed, v
 To get a high-level profile between the **first and lastest** snapshot use the `summarize` method.
 
 ```php
-$summary = $marker->summary();       // Returns a Summary instance
+$summary = $marker->summary();         // Returns a Summary instance
 echo $summary->metrics->executionTime; // Access execution time, CPU time, memory, etc.
 ```
 You can provide a custom label for the summary:
@@ -306,8 +306,29 @@ If needed, you can measure the profiling data between two specific labels:
 
 ```php
 $delta = $marker->delta('init', 'render'); // Returns Summary
+$executionTime = $marker->executionTime('init', 'render'); // Returns a float in nanoseconds
 ```
-Or you can iterate over each successive pair of snapshots to return the consecutive deltas:
+There are as many methods as there are metrics:
+
+```php
+$marker->executionTime('init', 'render');
+$marker->cpuTime('init', 'render');
+$marker->memoryUsage('init', 'render');
+$marker->realMemoryUsage('init', 'render');
+$marker->peakMemoryUsage('init', 'render');
+$marker->realPeakMemoryUsage('init', 'render');
+$marker->metrics('init', 'render'); //returns a Metrics instance
+```
+If you do not specify the second label, the method will default to using the latest snapshot
+as the second argument.
+
+```php
+$marker->executionTime('init', 'render');
+//is equivalent to
+$marker->executionTime('init');
+```
+
+You can iterate over each successive pair of snapshots to return the consecutive deltas:
 
 ```php
 foreach ($marker->deltas() as $summary) {
@@ -315,39 +336,33 @@ foreach ($marker->deltas() as $summary) {
 }
 ```
 
-#### Finalizing the marker
-
-To end profiling and automatically take the last snapshot and return the summary:
+You can also take a snapshot and directly return the calculated summary between the `Marker`
+first snapshot and the one you just take using the `take` method
 
 ```php
-$summary = $marker->finish('done'); // takes a final 'done' snapshot and returns Summary
+$summary = $marker->take('done'); // takes a snapshot labeled 'done' and returns a Summary instance
 ```
 
 Just like with the `summary` method you can provide an optional custom label for the summary report:
 
 ```php
-$summary = $marker->finish(label: 'done', summaryLabel: 'total');
+$summary = $marker->take(label: 'done', summaryLabel: 'total');
 ```
 
-> [!WARNING]  
-> Even though the `finish` calls returns a summary, **it does not close** the instance.
-> You can still call the `mark` method and add more snapshots after a call to `finish`.
-> The `summary` is calculated at runtime and never stored in the `Marker` instance.
-
-#### Marker completion
+#### Finalizing the marker
 
 ```php
 $marker->complete();
 ```
 
 The `complete` method finalizes the profiling marker, marking it as complete and preventing any
-further snapshots or finishing operations that modify the state. 
+further snapshots or operations that modify the state. 
 
 Before calling `complete`, the marker is **open** and can accept snapshots via `mark`
-and be finished via `finish`. Once `complete` is called:
+or `take` methods. Once `complete` is called:
 
 - The marker becomes **complete and is closed to further modifications.**
-- Further calls to `mark` or `finish` will throw an `UnableToProfile` exception.
+- Further calls to `mark` or `take` will throw an `UnableToProfile` exception.
 - Calling `complete` multiple times has no effects - it is **idempotent**.
 - The result of `summary` remains unchanged after completion and can be safely called multiple times.
 
@@ -359,16 +374,16 @@ method which returns `true` when it is complete; false otherwise.
 The `Marker` instance also gives you access to other utility methods:
 
 ```php
-$marker->labels();       // returns all the snapshot labels (in order)
-$marker->has($label);    // tells whether the label is used
-$marker->first();        // returns the first snapshot taken
-$marker->latest();       // returns the most recent snapshot
-$marker->isEmpty();      // return true when no snapshot has been taken
-$marker->hasSnapshots(); // return true when snapshots are available
-$marker->canSummarize(); // returns true if the marker can safely generate a report/summary
-$marker->toArray();      // returns all snapshots as structured arrays
-$marker->isComplete();   // tells whether the marker is complete
-$marker->reset();        // Reset the marker to its initial state open and with no snapshot
+$marker->labels();             // returns all the snapshot labels (in order)
+$marker->hasLabel($label);     // tells whether the label is used
+$marker->first();              // returns the first snapshot taken
+$marker->latest();             // returns the most recent snapshot
+$marker->isEmpty();            // returns true when no snapshot has been taken
+$marker->hasSnapshots();       // returns true when snapshots are available
+$marker->hasEnoughSnapshots(); // returns true if the marker can safely generate a report/summary
+$marker->toArray();            // returns all snapshots as structured arrays
+$marker->isComplete();         // tells whether the marker is complete
+$marker->reset();              // Reset the marker to its initial state open and with no snapshot
 ```
 
 > [!IMPORTANT]  
@@ -386,7 +401,7 @@ $marker->mark('step1');
 sleep(1);
 $marker->mark('step2');
 
-$result = $marker->finish('response');
+$result = $marker->take('response');
 $marker->complete();
 
 // Printing full report
@@ -394,6 +409,18 @@ foreach ($marker->deltas() as $summary) {
     echo "{$summary->label}: {$summary->metrics->forHuman('execution_time')}";
 }
 ```
+
+And we can adapt the first example using the `Marker` class this time.
+
+```php
+use Bakame\Aide\Profiler\Marker;
+
+$marker = Marker::start('start');
+$service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'));
+$marker->mark('end');
+$duration = $marker->executionTime('start', 'end');
+// $duration is expressed in nanoseconds
+````
 
 ### Identifier
 
@@ -455,7 +482,7 @@ $profiler->profile('tata');
 
 $marker = Marker::start('init', logger: $logger);
 usleep(1_000);;
-$marker->finish('render', 'server_cycle');
+$marker->take('render', 'server_cycle');
 ```
 
 > [!TIP]  

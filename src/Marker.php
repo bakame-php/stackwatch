@@ -11,11 +11,11 @@ use JsonSerializable;
 use Psr\Log\LoggerInterface;
 use Traversable;
 
-use function array_column;
 use function array_key_exists;
 use function array_key_first;
 use function array_key_last;
-use function array_unique;
+use function array_keys;
+use function array_map;
 use function array_values;
 use function count;
 use function gc_collect_cycles;
@@ -41,7 +41,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     {
         $identifier ??= (new LabelGenerator())->generate();
         $identifier = trim($identifier);
-        '' !== $identifier || throw new InvalidArgument('The idenrifier must be a non-empty string.');
+        '' !== $identifier || throw new InvalidArgument('The identifier must be a non-empty string.');
 
         $this->logger = $logger;
         $this->identifier = $identifier;
@@ -70,44 +70,6 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
         return $this->isComplete;
     }
 
-    /**
-     * @param non-empty-string $label
-     *
-     * @throws UnableToProfile if the marker is in complete state
-     * @throws InvalidArgument if the label is invalid
-     */
-    public function mark(string $label): void
-    {
-        !$this->isComplete || throw new UnableToProfile('The instance is complete no further snapshot can be taken.');
-
-        $newSnapshot = Snapshot::now(LabelGenerator::sanitize($label));
-        ! $this->has($newSnapshot->label) || throw new InvalidArgument('The label "'.$label.'" already exists.');
-
-        $from = array_key_last($this->snapshots);
-        $lastSnapshot = $this->snapshots[$from] ?? null;
-        (null === $lastSnapshot || $lastSnapshot->hrtime <= $newSnapshot->hrtime) || throw new InvalidArgument('"'.$from.'" must come before "'.$label.'".');
-
-        $this->logger?->info('Marker ['.$this->identifier.'] snapshot for label: '.$label.'.', [
-            'identifier' => $this->identifier,
-            'label' => $newSnapshot->label,
-            'snapshot' => $newSnapshot->toArray(),
-        ]);
-
-        $this->snapshots[$newSnapshot->label] = $newSnapshot;
-    }
-
-    public function get(string $label): Snapshot
-    {
-        return $this->snapshots[$label] ?? throw new InvalidArgument('The label "'.$label.'" does not exist.');
-    }
-
-    public function delta(string $from, string $to): Summary
-    {
-        ($this->has($from) && $this->has($to)) || throw new InvalidArgument('The labels "'.$from.'" and/or "'.$to.'" do not exist.');
-
-        return new Summary($from.'_'.$to, $this->snapshots[$from], $this->snapshots[$to]);
-    }
-
     public function count(): int
     {
         return count($this->snapshots);
@@ -126,7 +88,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     /**
      * Tells whether a report or a summary can be generated.
      */
-    public function canSummarize(): bool
+    public function hasEnoughSnapshots(): bool
     {
         return 2 <= count($this->snapshots);
     }
@@ -164,7 +126,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
         return [
             'identifier' => $this->identifier,
             'snapshots' => array_values($this->snapshots),
-       ];
+        ];
     }
 
     /**
@@ -172,16 +134,96 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
      */
     public function labels(): array
     {
-        return array_values(
-            array_unique(
-                array_column($this->snapshots, 'label')
-            )
-        );
+        return array_keys($this->snapshots);
+    }
+
+    public function get(string $label): Snapshot
+    {
+        return $this->snapshots[$label] ?? throw new InvalidArgument('The label "'.$label.'" does not exist.');
     }
 
     /**
-     *  Returns a sequence of Summary instances computed from each successive
-     *  pair of snapshots (e.g., delta(label[0], label[1]), delta(label[1], label[2]), ...).
+     * @param non-empty-string $label
+     *
+     * @throws UnableToProfile if the marker is in complete state
+     * @throws InvalidArgument if the label is invalid
+     */
+    public function mark(string $label): void
+    {
+        !$this->isComplete || throw new UnableToProfile('The instance is complete no further snapshot can be taken.');
+
+        $newSnapshot = Snapshot::now(LabelGenerator::sanitize($label));
+        ! $this->hasLabel($newSnapshot->label) || throw new InvalidArgument('The label "'.$label.'" already exists.');
+
+        $from = array_key_last($this->snapshots);
+        $lastSnapshot = $this->snapshots[$from] ?? null;
+        (null === $lastSnapshot || $lastSnapshot->hrtime <= $newSnapshot->hrtime) || throw new InvalidArgument('"'.$from.'" must come before "'.$label.'".');
+
+        $this->log('snapshot for label: '.$label, [
+            'label' => $newSnapshot->label,
+            'snapshot' => $newSnapshot->toArray(),
+        ]);
+
+        $this->snapshots[$newSnapshot->label] = $newSnapshot;
+    }
+
+    /**
+     * Returns the summary between two snapshots.
+     * If the second snapshot is not defined, the latest snapshot will be used.
+     *
+     * @param string $from the first snapshot label
+     * @param ?string $to the last snapshot to compare from if missing the latest snapshot will be used
+     *
+     * @throws InvalidArgument If the labels could not be found
+     */
+    public function delta(string $from, ?string $to = null): Summary
+    {
+        if (null === $to) {
+            $to = array_key_last($this->snapshots);
+        }
+
+        ($this->hasLabel($from) && null !== $to && $this->hasLabel($to)) || throw new InvalidArgument('The labels "'.$from.'" and/or "'.$to.'" do not exist.');
+
+        return new Summary($from.'_'.$to, $this->snapshots[$from], $this->snapshots[$to]);
+    }
+
+    public function metrics(string $from, ?string $to = null): Metrics
+    {
+        return $this->delta($from, $to)->metrics;
+    }
+
+    public function executionTime(string $from, ?string $to = null): float
+    {
+        return $this->metrics($from, $to)->executionTime;
+    }
+
+    public function cpuTime(string $from, ?string $to = null): float
+    {
+        return $this->metrics($from, $to)->cpuTime;
+    }
+
+    public function memoryUsage(string $from, ?string $to = null): float
+    {
+        return $this->metrics($from, $to)->memoryUsage;
+    }
+
+    public function realMemoryUsage(string $from, ?string $to = null): float
+    {
+        return $this->metrics($from, $to)->realMemoryUsage;
+    }
+
+    public function peakMemoryUsage(string $from, ?string $to = null): float
+    {
+        return $this->metrics($from, $to)->peakMemoryUsage;
+    }
+
+    public function realPeakMemoryUsage(string $from, ?string $to = null): float
+    {
+        return $this->metrics($from, $to)->realPeakMemoryUsage;
+    }
+
+    /**
+     *  Returns a sequence of Summary instances computed from each successive pair of snapshots.
      *
      * @return iterable<Summary>
      */
@@ -190,18 +232,21 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
         $labels = $this->labels();
         $count = count($this->snapshots);
         for ($i = 1; $i < $count; $i++) {
-            /** @var Summary $summary */
-            $summary = $this->delta($labels[$i - 1], $labels[$i]);
-
-            yield $summary;
+            yield $this->delta($labels[$i - 1], $labels[$i]);
         }
     }
 
+    /**
+     * Returns the latest snapshot or null if there are none yet taken.
+     */
     public function latest(): ?Snapshot
     {
         return $this->nth(-1);
     }
 
+    /**
+     * Returns the first snapshot taken or null if there are none yet taken.
+     */
     public function first(): ?Snapshot
     {
         return $this->nth(0);
@@ -226,25 +271,27 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
             return null;
         }
 
-        return$this->snapshots[$labels[$offset]];
+        return $this->snapshots[$labels[$offset]];
     }
 
     /**
      * Tells whether the label is present in the current profiler cache.
      */
-    public function has(string $label): bool
+    public function hasLabel(string $label): bool
     {
         return array_key_exists($label, $this->snapshots);
     }
 
     /**
+     * Returns a summary between the first and last available snapshots.
+     *
+     *
      * @param non-empty-string|null $label
+     * @throws UnableToComputeMetrics If there are not enough snapshots
      */
-    public function summary(?string $label = null): ?Summary
+    public function summary(?string $label = null): Summary
     {
-        if (!$this->canSummarize()) {
-            return null;
-        }
+        $this->hasEnoughSnapshots() || throw new UnableToComputeMetrics('There is not enough snapshots to produce a summary.');
 
         $from = array_key_first($this->snapshots);
         $to = array_key_last($this->snapshots);
@@ -253,6 +300,8 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     }
 
     /**
+     * Creates a new instance and automatically take the first snapshot.
+     *
      * @param non-empty-string $label
      * @param ?non-empty-string $identifier
      */
@@ -265,7 +314,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     }
 
     /**
-     * Takes a final snapshot (default: 'end') and returns the summary profiling data.
+     * Takes a snapshot and returns the summary profiling data from the start until the new label.
      *
      * @param non-empty-string $label
      * @param ?non-empty-string $summaryLabel
@@ -273,19 +322,21 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
      * @throws UnableToProfile if the marker is in complete state
      * @throws InvalidArgument if labels are invalid
      */
-    public function finish(string $label = 'end', ?string $summaryLabel = null): Summary
+    public function take(string $label, ?string $summaryLabel = null): Summary
     {
-        $this->hasSnapshots() || throw new UnableToProfile('Marking can not be finished; no starting snapshot found.');
         $this->mark($label);
-        /** @var Summary $profiling */
-        $profiling = $this->summary($summaryLabel);
 
-        $this->logger?->info('Marker ['.$this->identifier.'] summary', [
+        return $this->summary($summaryLabel);
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private function log(string $message, array $context = []): void
+    {
+        $this->logger?->info('Marker ['.$this->identifier.'] '.$message, [
             'identifier' => $this->identifier,
-            'label' => $profiling->label,
-            'metrics' => $profiling->metrics->toArray(),
+            ...$context,
         ]);
-
-        return $profiling;
     }
 }
