@@ -305,8 +305,7 @@ $summary = $marker->summary('full_request'); // Returns a Summary instance
 If needed, you can measure the profiling data between two specific labels:
 
 ```php
-$delta = $marker->delta('init', 'render');               // Returns Summary
-$cpuTime = $marker->delta('init', 'render', 'cpu_time'); // Returns the CPU Time as a float (nanoseconds)
+$delta = $marker->delta('init', 'render'); // Returns Summary
 ```
 Or you can iterate over each successive pair of snapshots to return the consecutive deltas:
 

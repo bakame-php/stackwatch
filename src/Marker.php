@@ -15,12 +15,10 @@ use function array_column;
 use function array_key_exists;
 use function array_key_first;
 use function array_key_last;
-use function array_keys;
 use function array_unique;
 use function array_values;
 use function count;
 use function gc_collect_cycles;
-use function implode;
 use function trim;
 
 /**
@@ -103,19 +101,11 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
         return $this->snapshots[$label] ?? throw new InvalidArgument('The label "'.$label.'" does not exist.');
     }
 
-    public function delta(string $from, string $to, ?string $metric = null): Summary|float
+    public function delta(string $from, string $to): Summary
     {
         ($this->has($from) && $this->has($to)) || throw new InvalidArgument('The labels "'.$from.'" and/or "'.$to.'" do not exist.');
 
-        $summary = new Summary($from.'_'.$to, $this->snapshots[$from], $this->snapshots[$to]);
-        if (null === $metric) {
-            return $summary;
-        }
-
-        $metrics = $summary->metrics->toArray();
-
-        return $metrics[$metric] ?? throw new InvalidArgument('Unknown metrics name: "'.$metric.'"; expected one of "'.implode('", "', array_keys($metrics)).'"');
-
+        return new Summary($from.'_'.$to, $this->snapshots[$from], $this->snapshots[$to]);
     }
 
     public function count(): int

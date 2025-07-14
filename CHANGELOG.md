@@ -27,6 +27,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 - **BC BREAK:** `Profiler::toArray` and `Profiler::jsonSerialize` representation simplified
 - **BC BREAK:** `Marker::toArray` and `Marker::jsonSerialize` representation simplified
 - **BC BREAK:** `Marker::finish` throws an `UnableToProfile` exception previously was an `InvalidArgument` exception when it cannot complete its task.
+- **BC BREAK:** `Marker::delta` removed the 3rd argument
 - `Snapshot::cpu` keys presence is validated on instantiation
 
 ### Deprecated

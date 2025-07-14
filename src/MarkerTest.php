@@ -56,20 +56,7 @@ final class MarkerTest extends TestCase
         $this->marker->mark('b');
 
         $delta = $this->marker->delta('a', 'b');
-        self::assertInstanceOf(Summary::class, $delta);
         self::assertGreaterThan(0, $delta->metrics->toArray()['cpu_time'] ?? 0);
-    }
-
-    #[Test]
-    public function it_can_return_a_single_metrics_on_delta_usage(): void
-    {
-        $this->marker->mark('x');
-        usleep(1000);
-        $this->marker->mark('y');
-        $time = $this->marker->delta('x', 'y', 'cpu_time');
-
-        self::assertIsFloat($time);
-        self::assertGreaterThan(0, $time);
     }
 
     #[Test]
@@ -78,18 +65,6 @@ final class MarkerTest extends TestCase
         $this->expectException(InvalidArgument::class);
 
         $this->marker->delta('foo', 'bar');
-    }
-
-    #[Test]
-    public function it_will_throw_on_unknown_metric(): void
-    {
-        $this->marker->mark('start');
-        usleep(500);
-        $this->marker->mark('end');
-
-        $this->expectException(InvalidArgument::class);
-
-        $this->marker->delta('start', 'end', 'unknown_metric');
     }
 
     #[Test]
