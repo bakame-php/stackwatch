@@ -20,6 +20,7 @@ use function array_key_last;
 use function array_unique;
 use function array_values;
 use function count;
+use function trim;
 
 /**
  * @implements IteratorAggregate<int, Summary>
@@ -39,7 +40,11 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function __construct(callable $callback, ?string $identifier = null, ?LoggerInterface $logger = null)
     {
-        $this->identifier = $identifier ?? (new LabelGenerator())->generate();
+        $identifier ??= (new LabelGenerator())->generate();
+        $identifier = trim($identifier);
+        '' !== $identifier || throw new InvalidArgument('The idenrifier must be a non-empty string.');
+
+        $this->identifier = $identifier;
         $this->callback = $callback instanceof Closure ? $callback : $callback(...);
         $this->logger = $logger;
         $this->reset();

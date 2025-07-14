@@ -21,6 +21,7 @@ use function array_values;
 use function count;
 use function gc_collect_cycles;
 use function implode;
+use function trim;
 
 /**
  * @implements IteratorAggregate<non-empty-string, Snapshot>
@@ -40,8 +41,12 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
      */
     public function __construct(?string $identifier = null, ?LoggerInterface $logger = null)
     {
+        $identifier ??= (new LabelGenerator())->generate();
+        $identifier = trim($identifier);
+        '' !== $identifier || throw new InvalidArgument('The idenrifier must be a non-empty string.');
+
         $this->logger = $logger;
-        $this->identifier = $identifier ?? (new LabelGenerator())->generate();
+        $this->identifier = $identifier;
         $this->reset();
     }
 
