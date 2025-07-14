@@ -73,7 +73,7 @@ final class Snapshot implements JsonSerializable
         public readonly int $peakMemoryUsage,
         public readonly int $realPeakMemoryUsage,
     ) {
-        Label::fromString($this->label) === $this->label || throw new InvalidArgument('the label `'.$this->label.'` is invalid');
+        LabelGenerator::sanitize($this->label) === $this->label || throw new InvalidArgument('the label `'.$this->label.'` is invalid');
         $missingKeys = array_diff_key(array_flip(array_keys(self::CPU_STAT)), $this->cpu);
         if ([] !== $missingKeys) {
             throw new InvalidArgument('The cpu data is missing the following keys: '.implode(', ', array_keys($missingKeys)));
@@ -124,7 +124,7 @@ final class Snapshot implements JsonSerializable
     public static function now(?string $label = null): self
     {
         return new self(
-            null === $label ? Label::random() : Label::fromString($label),
+            null === $label ? (new LabelGenerator())->generate() : LabelGenerator::sanitize($label),
             new DateTimeImmutable(),
             hrtime(true),
             self::getRawCpuData(),

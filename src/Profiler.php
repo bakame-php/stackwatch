@@ -39,7 +39,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function __construct(callable $callback, ?string $identifier = null, ?LoggerInterface $logger = null)
     {
-        $this->identifier = $identifier ?? Label::random();
+        $this->identifier = $identifier ?? (new LabelGenerator())->generate();
         $this->callback = $callback instanceof Closure ? $callback : $callback(...);
         $this->logger = $logger;
         $this->reset();
@@ -62,7 +62,9 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public static function execute(callable $callback, ?LoggerInterface $logger = null): ProfiledResult
     {
-        return self::profiling(Label::random(), Label::random(), $callback, $logger);
+        $labelGenerator = new LabelGenerator();
+
+        return self::profiling($labelGenerator->generate(), $labelGenerator->generate(), $callback, $logger);
     }
 
     /**
@@ -190,7 +192,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function run(mixed ...$args): mixed
     {
-        return $this->profile(Label::random(), ...$args);
+        return $this->profile((new LabelGenerator())->generate(), ...$args);
     }
 
     /**

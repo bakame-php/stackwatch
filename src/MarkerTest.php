@@ -12,7 +12,7 @@ use function json_encode;
 use function usleep;
 
 #[CoversClass(Marker::class)]
-#[CoversClass(Label::class)]
+#[CoversClass(LabelGenerator::class)]
 final class MarkerTest extends TestCase
 {
     private Marker $marker;

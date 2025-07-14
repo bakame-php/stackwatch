@@ -18,7 +18,7 @@ use function usleep;
 #[CoversClass(Metrics::class)]
 #[CoversClass(Profiler::class)]
 #[CoversClass(ProfiledResult::class)]
-#[CoversClass(Label::class)]
+#[CoversClass(LabelGenerator::class)]
 /**
  * @phpstan-import-type SummaryStat from Summary
  */

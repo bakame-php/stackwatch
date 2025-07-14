@@ -38,7 +38,7 @@ final class Summary implements JsonSerializable
         $this->metrics = Metrics::fromSnapshots($start, $end);
         $this->start = $start;
         $this->end = $end;
-        $this->label = Label::fromString($label);
+        $this->label = LabelGenerator::sanitize($label);
     }
 
     /**

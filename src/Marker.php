@@ -41,7 +41,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     public function __construct(?string $identifier = null, ?LoggerInterface $logger = null)
     {
         $this->logger = $logger;
-        $this->identifier = $identifier ?? Label::random();
+        $this->identifier = $identifier ?? (new LabelGenerator())->generate();
         $this->reset();
     }
 
@@ -77,7 +77,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     {
         !$this->isComplete || throw new UnableToProfile('The instance is complete no further snapshot can be taken.');
 
-        $newSnapshot = Snapshot::now(Label::fromString($label));
+        $newSnapshot = Snapshot::now(LabelGenerator::sanitize($label));
         ! $this->has($newSnapshot->label) || throw new InvalidArgument('The label "'.$label.'" already exists.');
 
         $from = array_key_last($this->snapshots);
@@ -254,7 +254,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
         $from = array_key_first($this->snapshots);
         $to = array_key_last($this->snapshots);
 
-        return new Summary(Label::fromString($label ?? $from.'_'.$to), $this->snapshots[$from], $this->snapshots[$to]);
+        return new Summary(LabelGenerator::sanitize($label ?? $from.'_'.$to), $this->snapshots[$from], $this->snapshots[$to]);
     }
 
     /**

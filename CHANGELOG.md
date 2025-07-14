@@ -6,12 +6,12 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 ### Added
 
-- `Label::random` accepts an optional `$length` parameter to adjust the label length.
 - `Marker::complete` and `Marker::isComplete`
 - `Profiler::hasSummaries`
 - `Snapshot::fromArray`
 - `Metrics::fromArray`
 - `Summary::fromArray`
+- `LabelGenerator::withLength` label length can be configured
 
 ### Fixed
 
@@ -19,6 +19,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 - **BC BREAK:** `ProfilingResult::ProfilingData` is renamed `ProfilingResult::summary`
 - **BC BREAK:** `ProfilingResult` is renamed `ProfiledResult`
 - **BC BREAK:** `ProfilingData` is renamed `Summary`
+- **BC BREAK:** `Label` is renamed `LabelGenerator`
 - **BC BREAK:** `Exporter::exportProfilingData` is renamed `Exporter::exportSummary`
 - **BC BREAK:** `Snapshot::toArray` and `Snapshot::jsonSerialize` representation simplified
 - **BC BREAK:** `Summary::toArray` and `Summary::jsonSerialize` representation simplified

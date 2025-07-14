@@ -8,16 +8,16 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-final class LabelTest extends TestCase
+final class LabelGeneratorTest extends TestCase
 {
     /**
      * @param non-empty-string $input
      */
     #[Test]
     #[DataProvider('provideValidLabels')]
-    public function it_will_create_a_label(string $input, string $expected): void
+    public function it_will_sanitize_a_label(string $input, string $expected): void
     {
-        self::assertSame($expected, Label::fromString($input));
+        self::assertSame($expected, LabelGenerator::sanitize($input));
     }
 
     /**
@@ -53,11 +53,11 @@ final class LabelTest extends TestCase
 
     #[Test]
     #[DataProvider('provideInvalidLabels')]
-    public function it_fails_to_validate_the_label(string $input): void
+    public function it_fails_to_sanitize_the_label(string $input): void
     {
         $this->expectException(InvalidArgument::class);
 
-        Label::fromString($input);
+        LabelGenerator::sanitize($input);
     }
 
     /**
@@ -79,6 +79,6 @@ final class LabelTest extends TestCase
     {
         $this->expectException(InvalidArgument::class);
 
-        Label::random(0); /* @phpstan-ignore-line */
+        new LabelGenerator(0); /* @phpstan-ignore-line */
     }
 }
