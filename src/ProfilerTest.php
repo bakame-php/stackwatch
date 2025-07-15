@@ -166,12 +166,11 @@ final class ProfilerTest extends TestCase
             self::assertCount(2, $logger->logs);
             self::assertSame('info', $logger->logs[0]['level']);
             self::assertSame('error', $logger->logs[1]['level']);
-            self::assertStringContainsString('Profiling aborted for label: fail_case due to an error in the executed code.', (string) $logger->logs[1]['message']);
+            self::assertStringContainsString('profiling aborted for label: fail_case due to an error in the executed code.', (string) $logger->logs[1]['message']);
             self::assertArrayHasKey('exception', $logger->logs[1]['context']);
         }
     }
 }
-
 
 class InMemoryLogger extends AbstractLogger
 {

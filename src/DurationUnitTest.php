@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bakame\Aide\Profiler;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ValueError;
@@ -56,5 +57,35 @@ final class DurationUnitTest extends TestCase
         $this->expectException(ValueError::class);
 
         DurationUnit::format(-1);
+    }
+
+    #[Test]
+    #[DataProvider('provideConversions')]
+    public function it_can_convert_to(float|int $value, DurationUnit $from, DurationUnit $to, float|int $expected): void
+    {
+        self::assertSame($expected, $from->convertTo($to, $value));
+    }
+
+    #[Test]
+    #[DataProvider('provideConversions')]
+    public function it_can_convert_from(float|int $value, DurationUnit $from, DurationUnit $to, float|int $expected): void
+    {
+        self::assertSame($expected, $to->convertFrom($from, $value));
+    }
+
+    /**
+     * @return iterable<array{value:float|int, from:DurationUnit, to:DurationUnit, expected:float|int}>
+     */
+    public static function provideConversions(): iterable
+    {
+        return [
+            ['value' => 1, 'from' => DurationUnit::Hour, 'to' => DurationUnit::Minute, 'expected' => 60],
+            ['value' => 90, 'from' => DurationUnit::Minute, 'to' => DurationUnit::Hour, 'expected' => 1.5],
+            ['value' => 2, 'from' => DurationUnit::Second, 'to' => DurationUnit::Millisecond, 'expected' => 2000],
+            ['value' => 500, 'from' => DurationUnit::Millisecond, 'to' => DurationUnit::Second, 'expected' => 0.5],
+            ['value' => 1_000_000, 'from' => DurationUnit::Nanosecond, 'to' => DurationUnit::Microsecond, 'expected' => 1000],
+            ['value' => 3.5, 'from' => DurationUnit::Hour, 'to' => DurationUnit::Minute, 'expected' => 210],
+            ['value' => 123, 'from' => DurationUnit::Microsecond, 'to' => DurationUnit::Nanosecond, 'expected' => 123_000],
+        ];
     }
 }

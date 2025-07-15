@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bakame\Aide\Profiler;
 
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ValueError;
@@ -54,5 +55,35 @@ final class MemoryUnitTest extends TestCase
         $this->expectException(ValueError::class);
 
         MemoryUnit::format(-1);
+    }
+
+    #[Test]
+    #[DataProvider('provideConversions')]
+    public function it_can_convert_to(float|int $value, MemoryUnit $from, MemoryUnit $to, float|int $expected): void
+    {
+        self::assertSame($expected, $from->convertTo($to, $value));
+    }
+
+    #[Test]
+    #[DataProvider('provideConversions')]
+    public function it_can_convert_from(float|int $value, MemoryUnit $from, MemoryUnit $to, float|int $expected): void
+    {
+        self::assertSame($expected, $to->convertFrom($from, $value));
+    }
+
+    /**
+     * @return iterable<array{value:float|int, from:MemoryUnit, to:MemoryUnit, expected:float|int}>
+     */
+    public static function provideConversions(): iterable
+    {
+        return [
+            ['value' => 1, 'from' => MemoryUnit::Megabyte, 'to' => MemoryUnit::Kilobyte, 'expected' => 1024],
+            ['value' => 1.5, 'from' => MemoryUnit::Gigabyte, 'to' => MemoryUnit::Megabyte, 'expected' => 1536],
+            ['value' => 2048, 'from' => MemoryUnit::Kilobyte, 'to' => MemoryUnit::Megabyte, 'expected' => 2],
+            ['value' => 1, 'from' => MemoryUnit::Terabyte, 'to' => MemoryUnit::Gigabyte, 'expected' => 1024],
+            ['value' => 3.5, 'from' => MemoryUnit::Kilobyte, 'to' => MemoryUnit::Byte, 'expected' => 3584],
+            ['value' => 512, 'from' => MemoryUnit::Byte, 'to' => MemoryUnit::Kilobyte, 'expected' => 0.5],
+            ['value' => 0, 'from' => MemoryUnit::Gigabyte, 'to' => MemoryUnit::Megabyte, 'expected' => 0],
+        ];
     }
 }

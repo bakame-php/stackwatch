@@ -78,6 +78,28 @@ enum DurationUnit: int
     }
 
     /**
+     * Converts a value in this unit to another unit.
+     *
+     * @param self $to The target unit to convert to.
+     * @param float|int $value The value expressed in this unit.
+     */
+    public function convertTo(self $to, float|int $value): float|int
+    {
+        return $to->convertFromNano($this->convertToNano($value));
+    }
+
+    /**
+     * Converts a value from another unit to this unit.
+     *
+     * @param self $from The source unit to convert from.
+     * @param float|int $value The value in the source unit.
+     */
+    public function convertFrom(self $from, float|int $value): float|int
+    {
+        return $this->convertFromNano($from->convertToNano($value));
+    }
+
+    /**
      * Tries to parse human-readable string into nanoseconds and returns null on failure.
      */
     public static function tryParse(string $value): ?int

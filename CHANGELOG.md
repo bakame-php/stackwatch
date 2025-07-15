@@ -12,6 +12,8 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 - `Metrics::fromArray`
 - `Summary::fromArray`
 - `LabelGenerator::withLength` label length can be configured
+- `MemoryUnit::convertFrom` and `MemoryUnit::convertTo`
+- `DurationUnit::convertFrom` and `DurationUnit::convertTo`
 
 ### Fixed
 
