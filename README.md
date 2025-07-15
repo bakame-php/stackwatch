@@ -445,9 +445,9 @@ $profiler = new Profiler(function (): string {
 echo $profiler->identifier(); // 'user_export
 ```
 
-If not provided, an internal label generator (e.g. `Label::random()`) will assign a unique name to the
-property. The identifier can be used for logging, debugging or for correlation when multiple profilers
-and/or markers are running in parallel.
+If not provided, an internal label generator will assign a unique name to the property.
+The identifier can be used for logging, debugging or for correlation when
+multiple profilers and/or markers are running in parallel.
 
 ### Logging
 

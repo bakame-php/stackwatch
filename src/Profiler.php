@@ -95,7 +95,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
             return new ProfiledResult($returnValue, $summary);
         } catch (Throwable $exception) {
-            $logger?->error('Profiling aborted for label: '.$label.' due to an error in the executed code.', ['identifier' => $identifier, 'label' => $label, 'exception' => $exception]);
+            $logger?->error('Profiler ['.$identifier.'] profiling aborted for label: '.$label.' due to an error in the executed code.', ['identifier' => $identifier, 'label' => $label, 'exception' => $exception]);
 
             throw $exception;
         }
