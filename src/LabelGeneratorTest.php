@@ -65,8 +65,8 @@ final class LabelGeneratorTest extends TestCase
      */
     public static function provideInvalidLabels(): iterable
     {
-        yield 'empty string' => ['input' => ''];
-        yield 'long empty string' => ['input' => '       '];
+        yield 'label is empty' => ['input' => ''];
+        yield 'label is a long empty string' => ['input' => '             '];
         yield 'starts with an underscore' => ['input' => '_label'];
         yield 'starts with an dot' => ['input' => '.label'];
         yield 'ends with an underscore' => ['input' => 'label_'];
@@ -75,6 +75,7 @@ final class LabelGeneratorTest extends TestCase
         yield 'econtains at least on double dot' => ['input' => 'lab..el'];
     }
 
+    #[Test]
     public function it_will_throw_an_exception_if_the_label_length_is_lower_than_1(): void
     {
         $this->expectException(InvalidArgument::class);
