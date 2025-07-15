@@ -14,8 +14,6 @@ use Traversable;
 
 use function array_column;
 use function array_filter;
-use function array_flip;
-use function array_key_exists;
 use function array_key_last;
 use function array_unique;
 use function array_values;
@@ -42,7 +40,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     {
         $identifier ??= (new LabelGenerator())->generate();
         $identifier = trim($identifier);
-        '' !== $identifier || throw new InvalidArgument('The idenrifier must be a non-empty string.');
+        '' !== $identifier || throw new InvalidArgument('The identifier must be a non-empty string.');
 
         $this->identifier = $identifier;
         $this->callback = $callback instanceof Closure ? $callback : $callback(...);
@@ -69,7 +67,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     {
         $labelGenerator = new LabelGenerator();
 
-        return self::profiling($labelGenerator->generate(), $labelGenerator->generate(), $callback, $logger);
+        return self::profileOnce($labelGenerator->generate(), $labelGenerator->generate(), $callback, $logger);
     }
 
     /**
@@ -77,7 +75,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @throws Throwable
      */
-    private static function profiling(
+    private static function profileOnce(
         string $identifier,
         string $label,
         callable $callback,
@@ -215,7 +213,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function profile(string $label, mixed ...$args): mixed
     {
-        $profiled = self::profiling($this->identifier, $label, $this->callback, $this->logger, ...$args);
+        $profiled = self::profileOnce($this->identifier, $label, $this->callback, $this->logger, ...$args);
         $this->summaries[] = $profiled->summary;
 
         return $profiled->returnValue;
@@ -296,7 +294,13 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function has(string $label): bool
     {
-        return array_key_exists($label, array_flip($this->labels()));
+        foreach ($this->summaries as $summary) {
+            if ($summary->label === $label) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -316,12 +320,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function getAll(string $label): array
     {
-        return array_values(
-            array_filter(
-                $this->summaries,
-                fn (Summary $summary): bool => $summary->label === $label
-            )
-        );
+        return $this->filter(fn (Summary $summary): bool => $summary->label === $label);
     }
 
     /**
@@ -334,6 +333,16 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         }
 
         return Metrics::average(...$this->getAll($label));
+    }
+
+    /**
+     * @param callable(Summary): bool $filter
+     *
+     * @return list<Summary>
+     */
+    public function filter(callable $filter): array
+    {
+        return array_values(array_filter($this->summaries, $filter));
     }
 
     /**

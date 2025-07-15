@@ -128,7 +128,7 @@ enum DurationUnit: int
      * using the largest fitting time unit (e.g., "1.5 min", "200 µs").
      *
      * @param float|int $nanoseconds Duration in nanoseconds.
-     * @param int|null $precision Optional number of decimal places to format.
+     * @param ?int $precision Optional number of decimal places to format.
      *
      * @throws ValueError If duration is negative.
      */

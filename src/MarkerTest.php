@@ -13,7 +13,6 @@ use function usleep;
 
 #[CoversClass(Marker::class)]
 #[CoversClass(LabelGenerator::class)]
-#[CoversClass(UnableToComputeMetrics::class)]
 final class MarkerTest extends TestCase
 {
     private Marker $marker;
@@ -92,11 +91,10 @@ final class MarkerTest extends TestCase
     #[Test]
     public function it_will_return_null_on_summary_call_if_there_are_not_enough_snapshots(): void
     {
-        $this->expectException(UnableToComputeMetrics::class);
         $this->marker->mark('only');
 
 
-        $this->marker->summary();
+        self::assertEquals(Metrics::none(), $this->marker->summary()->metrics);
     }
 
     #[Test]
@@ -166,11 +164,8 @@ final class MarkerTest extends TestCase
     #[Test]
     public function it_throws_if_no_enough_snapshot_present_on_finish(): void
     {
-        $this->expectException(UnableToComputeMetrics::class);
-        $this->expectExceptionMessage('There is not enough snapshots to produce a summary.');
-
         $marker = new Marker();
-        $marker->take('end');
+        self::assertEquals(Metrics::none(), $marker->take('end')->metrics);
     }
 
     #[Test]

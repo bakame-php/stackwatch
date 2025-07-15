@@ -18,7 +18,6 @@ use function array_keys;
 use function array_map;
 use function array_values;
 use function count;
-use function gc_collect_cycles;
 use function trim;
 
 /**
@@ -50,7 +49,6 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
 
     public function reset(): void
     {
-        gc_collect_cycles();
         $this->snapshots = [];
         $this->isComplete = false;
     }
@@ -285,14 +283,10 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     /**
      * Returns a summary between the first and last available snapshots.
      *
-     *
-     * @param non-empty-string|null $label
-     * @throws UnableToComputeMetrics If there are not enough snapshots
+     * @param ?non-empty-string $label
      */
     public function summary(?string $label = null): Summary
     {
-        $this->hasEnoughSnapshots() || throw new UnableToComputeMetrics('There is not enough snapshots to produce a summary.');
-
         $from = array_key_first($this->snapshots);
         $to = array_key_last($this->snapshots);
 

@@ -141,7 +141,7 @@ enum MemoryUnit: int
      * using the largest fitting memory unit (e.g., "1.5 GB", "200 KB").
      *
      * @param float|int $bytes Memory in bytes.
-     * @param int|null $precision Optional number of decimal places to format.
+     * @param ?int $precision Optional number of decimal places to format.
      *
      * @throws ValueError If duration is negative.
      */

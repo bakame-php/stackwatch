@@ -288,7 +288,7 @@ $marker->mark('render');
 
 Each label must be unique. Labels are automatically normalized (e.g., trimmed, validated).
 
-#### Getting profiling results`
+#### Getting profiling results
 
 To get a high-level profile between the **first and lastest** snapshot use the `summarize` method.
 
@@ -688,6 +688,7 @@ MemoryUnit::parse('1 kb'); // returns 1000 in bytes
 DurationUnit::Second->convertToNano(1); // returns 1_000_000_000
 DurationUnit::format('23_000'); // returns 23 µs
 DurationUnit::tryParse('28 kb'); // returns null
+DurationUnit::Second->convertTo(DurationUnit::Hour, 9_000) // returns 2.5 (the duration expressed in hour)
 ```
 
 ## Testing
