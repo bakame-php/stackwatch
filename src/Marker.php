@@ -38,12 +38,11 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
      */
     public function __construct(?string $identifier = null, ?LoggerInterface $logger = null)
     {
-        $identifier ??= (new LabelGenerator())->generate();
-        $identifier = trim($identifier);
+        $identifier = trim($identifier ?? (new LabelGenerator())->generate());
         '' !== $identifier || throw new InvalidArgument('The identifier must be a non-empty string.');
 
-        $this->logger = $logger;
         $this->identifier = $identifier;
+        $this->logger = $logger;
         $this->reset();
     }
 
@@ -153,14 +152,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
         $newSnapshot = Snapshot::now(LabelGenerator::sanitize($label));
         ! $this->hasLabel($newSnapshot->label) || throw new InvalidArgument('The label "'.$label.'" already exists.');
 
-        $from = array_key_last($this->snapshots);
-        $lastSnapshot = $this->snapshots[$from] ?? null;
-        (null === $lastSnapshot || $lastSnapshot->hrtime <= $newSnapshot->hrtime) || throw new InvalidArgument('"'.$from.'" must come before "'.$label.'".');
-
-        $this->log('snapshot for label: '.$label, [
-            'label' => $newSnapshot->label,
-            'snapshot' => $newSnapshot->toArray(),
-        ]);
+        $this->log('snapshot for label: '.$newSnapshot->label, $newSnapshot->toArray());
 
         $this->snapshots[$newSnapshot->label] = $newSnapshot;
     }
