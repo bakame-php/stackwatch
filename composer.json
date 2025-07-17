@@ -45,6 +45,12 @@
             "Bakame\\Aide\\Profiler\\": "src"
         }
     },
+    "autoload-dev": {
+        "files": [
+            "benchmark/Benchmark.php",
+            "benchmark/Statistics.php"
+        ]
+    },
     "scripts": {
         "phpcs": "php-cs-fixer fix -vvv --diff --dry-run --allow-risky=yes --ansi",
         "phpcs:fix": "php-cs-fixer fix -vvv --allow-risky=yes --ansi",
