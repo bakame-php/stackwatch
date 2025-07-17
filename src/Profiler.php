@@ -103,12 +103,20 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      * Returns the metrics associated with the callback.
      *
      * @param int<1, max> $iterations
+     * @param int<0, max> $warmup
      *
      * @throws InvalidArgument|Throwable
      */
-    public static function metrics(callable $callback, int $iterations = 1, ?LoggerInterface $logger = null): Metrics
+    public static function metrics(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): Metrics
     {
         1 <= $iterations || throw new InvalidArgument('The iterations argument must be a positive integer greater than or equal to 1.');
+        0 <= $warmup || throw new InvalidArgument('The warmup argument must be an integer greater than or equal to 0.');
+
+        if (0 < $warmup) {
+            for ($i = 0; $i < $warmup; ++$i) {
+                $callback();
+            }
+        }
 
         $new = [];
         for ($i = 0; $i < $iterations; ++$i) {
@@ -122,72 +130,78 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      * Returns the CPU time in nanoseconds.
      *
      * @param int<1, max> $iterations
+     * @param int<0, max> $warmup
      *
      * @throws InvalidArgument|Throwable
      */
-    public static function cpuTime(callable $callback, int $iterations = 1, ?LoggerInterface $logger = null): float
+    public static function cpuTime(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): float
     {
-        return self::metrics($callback, $iterations, $logger)->cpuTime;
+        return self::metrics($callback, $iterations, $warmup, $logger)->cpuTime;
     }
 
     /**
      * Returns the execution time in nanoseconds.
      *
      * @param int<1, max> $iterations
+     * @param int<0, max> $warmup
      *
      * @throws InvalidArgument|Throwable
      */
-    public static function executionTime(callable $callback, int $iterations = 1, ?LoggerInterface $logger = null): float
+    public static function executionTime(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): float
     {
-        return self::metrics($callback, $iterations, $logger)->executionTime;
+        return self::metrics($callback, $iterations, $warmup, $logger)->executionTime;
     }
 
     /**
      * Returns the memory usage in bytes.
      *
      * @param int<1, max> $iterations
+     * @param int<0, max> $warmup
      *
      * @throws InvalidArgument|Throwable
      */
-    public static function memoryUsage(callable $callback, int $iterations = 1, ?LoggerInterface $logger = null): float
+    public static function memoryUsage(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): float
     {
-        return self::metrics($callback, $iterations, $logger)->memoryUsage;
+        return self::metrics($callback, $iterations, $warmup, $logger)->memoryUsage;
     }
 
     /**
      * Returns the real memory usage in bytes.
      *
      * @param int<1, max> $iterations
+     * @param int<0, max> $warmup
      *
      * @throws InvalidArgument|Throwable
      */
-    public static function realMemoryUsage(callable $callback, int $iterations = 1, ?LoggerInterface $logger = null): float
+    public static function realMemoryUsage(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): float
     {
-        return self::metrics($callback, $iterations, $logger)->realMemoryUsage;
+        return self::metrics($callback, $iterations, $warmup, $logger)->realMemoryUsage;
     }
 
     /**
      * Returns the peak memory usage in bytes.
      *
      * @param int<1, max> $iterations
+     * @param int<0, max> $warmup
      *
      * @throws InvalidArgument|Throwable
      */
-    public static function peakMemoryUsage(callable $callback, int $iterations = 1, ?LoggerInterface $logger = null): float
+    public static function peakMemoryUsage(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): float
     {
-        return self::metrics($callback, $iterations, $logger)->peakMemoryUsage;
+        return self::metrics($callback, $iterations, $warmup, $logger)->peakMemoryUsage;
     }
 
     /**
      * Returns the real peak memory usage in bytes.
      *
      * @param int<1, max> $iterations
+     * @param int<0, max> $warmup
      *
      * @throws InvalidArgument|Throwable
      */
-    public static function realPeakMemoryUsage(callable $callback, int $iterations = 1, ?LoggerInterface $logger = null): float
+    public static function realPeakMemoryUsage(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): float
     {
-        return self::metrics($callback, $iterations, $logger)->realPeakMemoryUsage;
+        return self::metrics($callback, $iterations, $warmup, $logger)->realPeakMemoryUsage;
     }
 
     /**

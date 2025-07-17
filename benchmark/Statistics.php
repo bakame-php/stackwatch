@@ -41,20 +41,14 @@ final class Statistics implements JsonSerializable
         sort($values);
         $average = array_sum($values) / $count;
         $middle = (int) ($count / 2);
-
         $median = 0 === $count % 2 ? ($values[$middle - 1] + $values[$middle]) / 2 : $values[$middle];
-
-        $variance = array_sum(array_map(
-            fn ($x) => ($x - $average) ** 2,
-            $values
-        )) / $count;
-
+        $variance = array_sum(array_map(fn ($x) => ($x - $average) ** 2, $values)) / $count;
         $stddev = sqrt($variance);
 
         return new self(
             count: $count,
-            min: min($values),
-            max: max($values),
+            min: $values[0],
+            max: $values[$count - 1],
             average: $average,
             median: $median,
             variance: $variance,

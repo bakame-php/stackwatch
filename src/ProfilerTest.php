@@ -33,11 +33,11 @@ final class ProfilerTest extends TestCase
             return 'end';
         };
 
-        self::assertGreaterThanOrEqual(0, Profiler::executionTime($callback, 2));
-        self::assertGreaterThanOrEqual(0, Profiler::cpuTime($callback, 3));
+        self::assertGreaterThanOrEqual(0, Profiler::executionTime($callback, iterations: 2, warmup: 5));
+        self::assertGreaterThanOrEqual(0, Profiler::cpuTime($callback, iterations: 3));
         self::assertGreaterThanOrEqual(0, Profiler::memoryUsage($callback));
-        self::assertGreaterThanOrEqual(0, Profiler::realMemoryUsage($callback, 3));
-        self::assertGreaterThanOrEqual(0, Profiler::peakMemoryUsage($callback, 2));
+        self::assertGreaterThanOrEqual(0, Profiler::realMemoryUsage($callback, iterations: 3));
+        self::assertGreaterThanOrEqual(0, Profiler::peakMemoryUsage($callback, iterations: 2));
         self::assertGreaterThanOrEqual(0, Profiler::realPeakMemoryUsage($callback));
     }
 
