@@ -2,7 +2,7 @@
 
 All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
-## [Next](https://github.com/bakame-php/aide-profiler/compare/0.9,0...main) - TBD
+## [0.10.0 - Johannesburg](https://github.com/bakame-php/aide-profiler/compare/0.9,0...0.10.0) - 2025-07-17
 
 ### Added
 
