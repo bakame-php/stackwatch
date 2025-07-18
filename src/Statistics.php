@@ -1,0 +1,187 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Bakame\Aide\Profiler;
+
+use JsonSerializable;
+use ValueError;
+
+use function array_keys;
+use function array_sum;
+use function implode;
+use function number_format;
+
+/**
+ * @phpstan-type StatsMap array{
+ *     unit: string,
+ *     count:int,
+ *     min:float|int,
+ *     max:float|int,
+ *     range:float|int,
+ *     sum:float|int,
+ *     average:float,
+ *     median: float,
+ *     variance:float,
+ *     coef_var:float,
+ *     std_dev:float,
+ * }
+ *
+ * @phpstan-type StatsHumanReadable array{
+ *      count:string,
+ *      min:string,
+ *      max:string,
+ *      range:string,
+ *      sum:string,
+ *      average:string,
+ *      median: string,
+ *      variance:string,
+ *      coef_var:string,
+ *      std_dev:string,
+ * }
+ *
+ */
+final class Statistics implements JsonSerializable
+{
+    public function __construct(
+        public readonly Unit $unit,
+        public readonly int $count,
+        public readonly float|int $min,
+        public readonly float|int $max,
+        public readonly float|int $range,
+        public readonly float|int $sum,
+        public readonly float $average,
+        public readonly float $median,
+        public readonly float $variance,
+        public readonly float $stdDev,
+        public readonly float $coefVar,
+    ) {
+    }
+
+    /**
+     * @param list<float|int> $values
+     *
+     * @throws ValueError if the list of values is empty
+     */
+    public static function fromValues(Unit $unit, array $values): self
+    {
+        $count = count($values);
+        0 !== $count || throw new ValueError('Cannot compute statistics from an empty list of values.');
+
+        $sum = array_sum($values);
+        sort($values);
+        $average = $sum / $count;
+        $median = self::medianOf($values, $count);
+        $variance = self::varianceOf($values, $average, $count);
+        $stddev = sqrt($variance);
+        $min = $values[0];
+        $max = $values[$count - 1];
+
+        return new self(
+            unit: $unit,
+            count: $count,
+            min: $min,
+            max: $max,
+            range: $max - $min,
+            sum: $sum,
+            average: $average,
+            median: $median,
+            variance: $variance,
+            stdDev: $stddev,
+            coefVar: $average > 0.0 ? $stddev / $average : 0.0,
+        );
+    }
+
+    public static function fromOne(Unit $unit, float $value): self
+    {
+        return new self(
+            unit: $unit,
+            count: 1,
+            min: $value,
+            max: $value,
+            range: 0,
+            sum: $value,
+            average: $value,
+            median: $value,
+            variance: 0.0,
+            stdDev: 0.0,
+            coefVar: 0.0,
+        );
+    }
+
+    /**
+     * @param list<float|int> $values
+     */
+    private static function medianOf(array $values, int $count): float
+    {
+        $middle = (int)($count / 2);
+
+        return 0 === $count % 2
+            ? ($values[$middle - 1] + $values[$middle]) / 2
+            : $values[$middle];
+    }
+
+    /**
+     * @param list<float|int> $values
+     */
+    private static function varianceOf(array $values, float $average, int $count): float
+    {
+        return array_sum(array_map(
+            fn ($x) => ($x - $average) ** 2,
+            $values
+        )) / $count;
+    }
+
+    /**
+     * @return StatsMap
+     */
+    public function toArray(): array
+    {
+        return [
+            'unit' => $this->unit->value,
+            'count' => $this->count,
+            'min' => $this->min,
+            'max' => $this->max,
+            'range' => $this->range,
+            'sum' => $this->sum,
+            'average' => $this->average,
+            'median' => $this->median,
+            'variance' => $this->variance,
+            'std_dev' => $this->stdDev,
+            'coef_var' => $this->coefVar,
+        ];
+    }
+
+    /**
+     * @return StatsMap
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
+    }
+
+    /**
+     * @return StatsHumanReadable|string
+     */
+    public function forHuman(?string $property = null): array|string
+    {
+        $humans = [
+             'count' => (string) $this->count,
+             'min' => $this->unit->format($this->min, 3),
+             'max' => $this->unit->format($this->max, 3),
+             'range' => $this->unit->format($this->range, 3),
+             'sum' => $this->unit->format($this->sum, 3),
+             'average' => $this->unit->format($this->average, 3),
+             'median' => $this->unit->format($this->median, 3),
+             'variance' => $this->unit->formatSquared($this->variance, 3),
+             'std_dev' => $this->unit->format($this->stdDev, 3),
+             'coef_var' => number_format($this->coefVar * 100, 4).' %',
+        ];
+
+        if (null === $property) {
+            return $humans;
+        }
+
+        return $humans[$property] ?? throw new InvalidArgument('Unknown statistics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
+    }
+}

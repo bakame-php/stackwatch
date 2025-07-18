@@ -174,4 +174,25 @@ enum MemoryUnit: int
             self::Terabyte => 'TB',
         };
     }
+
+    public static function formatSquared(float|int $bytes2, ?int $precision = null): string
+    {
+        $units = [
+            'B²'  => 1,
+            'kB²' => 1_000 ** 2,       // 10^6
+            'MB²' => 1_000_000 ** 2,   // 10^12
+            'GB²' => 1_000_000_000 ** 2, // 10^18
+            'TB²' => 1_000_000_000_000 ** 2, // 10^24
+        ];
+
+        foreach (array_reverse($units, true) as $unit => $factor) {
+            if ($bytes2 >= $factor) {
+                $value = $bytes2 / $factor;
+                return number_format($value, $precision ?? 6) . " $unit";
+            }
+        }
+
+        // Default fallback
+        return number_format($bytes2, 6) . " B²";
+    }
 }

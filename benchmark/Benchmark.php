@@ -7,6 +7,8 @@ use Bakame\Aide\Profiler\DurationUnit;
 use Bakame\Aide\Profiler\Environment;
 use Bakame\Aide\Profiler\Marker;
 use Bakame\Aide\Profiler\Profiler;
+use Bakame\Aide\Profiler\Statistics;
+use Bakame\Aide\Profiler\Unit;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -35,7 +37,7 @@ final class Benchmark
             $times[] = microtime(true) - $start;
         }
 
-        return Statistics::fromValues(array_map(DurationUnit::Second->convertToNano(...), $times));
+        return Statistics::fromValues(Unit::Nanoseconds, array_map(DurationUnit::Second->convertToNano(...), $times));
     }
 
     /**
@@ -50,7 +52,7 @@ final class Benchmark
             $times[] = hrtime(true) - $start;
         }
 
-        return Statistics::fromValues($times);
+        return Statistics::fromValues(Unit::Nanoseconds, $times);
     }
 
     /**
@@ -67,7 +69,7 @@ final class Benchmark
             $marker->reset();
         }
 
-        return Statistics::fromValues($times);
+        return Statistics::fromValues(Unit::Nanoseconds, $times);
     }
 
     /**
@@ -80,7 +82,7 @@ final class Benchmark
             $times[] = Profiler::executionTime($callback);
         }
 
-        return Statistics::fromValues($times);
+        return Statistics::fromValues(Unit::Nanoseconds, $times);
     }
 
     /**
@@ -133,45 +135,45 @@ final class Benchmark
             ])
             ->addRow([
                 'Average',
-                DurationUnit::format($micro->average, 2),
-                DurationUnit::format($hrtime->average, 2),
-                DurationUnit::format($profiler->average, 2),
-                DurationUnit::format($marker->average, 2),
+                $micro->forHuman('average'),
+                $hrtime->forHuman('average'),
+                $profiler->forHuman('average'),
+                $marker->forHuman('average'),
             ])
             ->addRow([
                 'Min',
-                DurationUnit::format($micro->min, 2),
-                DurationUnit::format($hrtime->min, 2),
-                DurationUnit::format($profiler->min, 2),
-                DurationUnit::format($marker->min, 2),
+                $micro->forHuman('min'),
+                $hrtime->forHuman('min'),
+                $profiler->forHuman('min'),
+                $marker->forHuman('min'),
             ])
             ->addRow([
                 'Max',
-                DurationUnit::format($micro->max, 2),
-                DurationUnit::format($hrtime->max, 2),
-                DurationUnit::format($profiler->max, 2),
-                DurationUnit::format($marker->max, 2),
+                $micro->forHuman('max'),
+                $hrtime->forHuman('max'),
+                $profiler->forHuman('max'),
+                $marker->forHuman('max'),
             ])
             ->addRow([
                 'Median',
-                DurationUnit::format($micro->median, 2),
-                DurationUnit::format($hrtime->median, 2),
-                DurationUnit::format($profiler->median, 2),
-                DurationUnit::format($marker->median, 2),
+                $micro->forHuman('median'),
+                $hrtime->forHuman('median'),
+                $profiler->forHuman('median'),
+                $marker->forHuman('median'),
             ])
             ->addRow([
                 'Standard Deviation',
-                DurationUnit::format($micro->standardDeviation, 2),
-                DurationUnit::format($hrtime->standardDeviation, 2),
-                DurationUnit::format($profiler->standardDeviation, 2),
-                DurationUnit::format($marker->standardDeviation, 2),
+                $micro->forHuman('std_dev'),
+                $hrtime->forHuman('std_dev'),
+                $profiler->forHuman('std_dev'),
+                $marker->forHuman('std_dev'),
             ])
             ->addRow([
                 'Coeff Variation',
-                number_format($micro->coefficientVariation * 100, 4).' %',
-                number_format($hrtime->coefficientVariation * 100, 4).' %',
-                number_format($profiler->coefficientVariation * 100, 4).' %',
-                number_format($marker->coefficientVariation * 100, 4).' %',
+                $micro->forHuman('coef_var'),
+                $hrtime->forHuman('coef_var'),
+                $profiler->forHuman('coef_var'),
+                $marker->forHuman('coef_var'),
             ])
             ->render();
 

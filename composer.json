@@ -47,8 +47,7 @@
     },
     "autoload-dev": {
         "files": [
-            "benchmark/Benchmark.php",
-            "benchmark/Statistics.php"
+            "benchmark/Benchmark.php"
         ]
     },
     "scripts": {

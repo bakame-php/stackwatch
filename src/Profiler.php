@@ -15,6 +15,7 @@ use Traversable;
 use function array_column;
 use function array_filter;
 use function array_key_last;
+use function array_map;
 use function array_unique;
 use function array_values;
 use function count;
@@ -38,7 +39,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function __construct(callable $callback, ?string $identifier = null, ?LoggerInterface $logger = null)
     {
-        $identifier ??= (new LabelGenerator())->generate();
+        $identifier ??= self::generateLabel();
         $identifier = trim($identifier);
         '' !== $identifier || throw new InvalidArgument('The identifier must be a non-empty string.');
 
@@ -48,9 +49,32 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         $this->reset();
     }
 
+    /**
+     * @return non-empty-string
+     */
+    private static function generateLabel(): string
+    {
+        /** @var LabelGenerator $labelGenerator */
+        static $labelGenerator;
+        if (null === $labelGenerator) {
+            $labelGenerator = new LabelGenerator();
+        }
+
+        return $labelGenerator->generate();
+    }
+
     public function reset(): void
     {
         $this->summaries = [];
+    }
+
+    private static function warmup(int $warmup, callable $callback): void
+    {
+        if (0 < $warmup) {
+            for ($i = 0; $i < $warmup; ++$i) {
+                $callback();
+            }
+        }
     }
 
     public function identifier(): string
@@ -65,9 +89,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public static function execute(callable $callback, ?LoggerInterface $logger = null): ProfiledResult
     {
-        $labelGenerator = new LabelGenerator();
-
-        return self::profileOnce($labelGenerator->generate(), $labelGenerator->generate(), $callback, $logger);
+        return self::profileOnce(self::generateLabel(), self::generateLabel(), $callback, $logger);
     }
 
     /**
@@ -109,14 +131,8 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public static function metrics(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): Metrics
     {
-        1 <= $iterations || throw new InvalidArgument('The iterations argument must be a positive integer greater than or equal to 1.');
-        0 <= $warmup || throw new InvalidArgument('The warmup argument must be an integer greater than or equal to 0.');
-
-        if (0 < $warmup) {
-            for ($i = 0; $i < $warmup; ++$i) {
-                $callback();
-            }
-        }
+        self::assertItCanBeRun($iterations, $warmup);
+        self::warmup($warmup, $callback);
 
         $new = [];
         for ($i = 0; $i < $iterations; ++$i) {
@@ -124,6 +140,78 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         }
 
         return Metrics::average(...$new);
+    }
+
+    /**
+     * Returns the metrics associated with the callback.
+     *
+     * @param int<1, max> $iterations
+     * @param int<0, max> $warmup
+     *
+     * @throws InvalidArgument|Throwable
+     *
+     * @return array{
+     *     cpuTime: Statistics,
+     *     executionTime: Statistics,
+     *     memoryUsage: Statistics,
+     *     peakMemoryUsage: Statistics,
+     *     realMemoryUsage: Statistics,
+     *     realPeakMemoryUsage: Statistics,
+     * }
+     */
+    public static function statistics(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): array
+    {
+        self::assertItCanBeRun($iterations, $warmup);
+        self::warmup($warmup, $callback);
+        $statistics = [
+            'cpuTime' => [
+                'unit' => Unit::Nanoseconds,
+                'data' => [],
+            ],
+            'executionTime' => [
+                'unit' => Unit::Nanoseconds,
+                'data' => [],
+            ],
+            'memoryUsage' => [
+                'unit' => Unit::Bytes,
+                'data' => [],
+            ],
+            'peakMemoryUsage' => [
+                'unit' => Unit::Bytes,
+                'data' => [],
+            ],
+            'realMemoryUsage' => [
+                'unit' => Unit::Bytes,
+                'data' => [],
+            ],
+            'realPeakMemoryUsage' => [
+                'unit' => Unit::Bytes,
+                'data' => [],
+            ],
+        ];
+        for ($i = 0; $i < $iterations; ++$i) {
+            $metrics = self::execute($callback, $logger)->summary->metrics;
+            $statistics['cpuTime']['data'][] = $metrics->cpuTime;
+            $statistics['executionTime']['data'][] = $metrics->executionTime;
+            $statistics['memoryUsage']['data'][] = $metrics->memoryUsage;
+            $statistics['peakMemoryUsage']['data'][] = $metrics->peakMemoryUsage;
+            $statistics['realMemoryUsage']['data'][] = $metrics->realMemoryUsage;
+            $statistics['realPeakMemoryUsage']['data'][] = $metrics->realPeakMemoryUsage;
+        }
+
+        return array_map(
+            fn (array $values): Statistics => Statistics::fromValues($values['unit'], $values['data']),
+            $statistics
+        );
+    }
+
+    /**
+     * @throws InvalidArgument
+     */
+    private static function assertItCanBeRun(int $iterations, int $warmup): void
+    {
+        1 <= $iterations || throw new InvalidArgument('The iterations argument must be a positive integer greater than or equal to 1.');
+        0 <= $warmup || throw new InvalidArgument('The warmup argument must be an integer greater than or equal to 0.');
     }
 
     /**
@@ -209,7 +297,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function run(mixed ...$args): mixed
     {
-        return $this->profile((new LabelGenerator())->generate(), ...$args);
+        return $this->profile(self::generateLabel(), ...$args);
     }
 
     /**
@@ -294,6 +382,11 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         return $this->nth(0);
     }
 
+    /**
+     * Returns the Summary using its index.
+     *
+     * Negative offsets are supported
+     */
     public function nth(int $offset): ?Summary
     {
         if ($offset < 0) {

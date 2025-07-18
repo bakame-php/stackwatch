@@ -13,6 +13,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * @phpstan-import-type MetricsHumanReadable from Metrics
  * @phpstan-import-type SnapshotHumanReadable from Snapshot
+ * @phpstan-import-type StatsHumanReadable from Statistics
  */
 final class ConsoleTableExporter implements Exporter
 {
@@ -135,6 +136,40 @@ final class ConsoleTableExporter implements Exporter
                 $stats['peak_memory_usage'],
                 $stats['real_peak_memory_usage'],
                 $stats['cpu'],
+            ])
+            ->setVertical()
+            ->render();
+    }
+
+    public function exportStatistics(Statistics $statistics): void
+    {
+        /** @var StatsHumanReadable $stats */
+        $stats = $statistics->forHuman();
+
+        (new Table($this->output))
+            ->setHeaders([
+                'Nb Iterations',
+                'Min Value',
+                'Max Value',
+                'Median Value',
+                'Sum',
+                'Range',
+                'Average',
+                'Variance',
+                'Std Dev',
+                'Coef Var',
+            ])
+            ->addRow([
+                $stats['count'],
+                $stats['min'],
+                $stats['max'],
+                $stats['median'],
+                $stats['sum'],
+                $stats['range'],
+                $stats['average'],
+                $stats['variance'],
+                $stats['std_dev'],
+                $stats['coef_var'],
             ])
             ->setVertical()
             ->render();

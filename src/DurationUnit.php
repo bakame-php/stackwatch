@@ -178,4 +178,24 @@ enum DurationUnit: int
             self::Hour => 'h',
         };
     }
+
+    public static function formatSquared(float|int $ns2, ?int $precision = null): string
+    {
+        $units = [
+            'ns²' => 1,
+            'μs²' => 1_000 ** 2,             // (10^3)^2 = 10^6
+            'ms²' => 1_000_000 ** 2,         // (10^6)^2 = 10^12
+            's²'  => 1_000_000_000 ** 2,     // (10^9)^2 = 10^18
+            'min²' => (60_000_000_000) ** 2, // (60s in ns)^2
+        ];
+
+        foreach (array_reverse($units, true) as $unit => $factor) {
+            if ($ns2 >= $factor) {
+                $value = $ns2 / $factor;
+                return number_format($value, $precision ?? null) . " $unit";
+            }
+        }
+
+        return number_format($ns2, 6) . " ns²";
+    }
 }
