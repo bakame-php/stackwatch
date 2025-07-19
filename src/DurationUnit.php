@@ -17,6 +17,7 @@ use function strtolower;
 enum DurationUnit: int
 {
     private const REGEXP_PATTERN = '/^
+        \s*
         (?<number>\d+(?:\.\d+)?)
         \s*
         (?<unit>
@@ -27,6 +28,27 @@ enum DurationUnit: int
             min|minute|minutes|
             h|hour|hours
         )
+        \s*
+    $/ix';
+
+    private const REGEXP_SQUARED_PATTERN = '/^
+        \s*
+        (?<number>[\d.]+)
+        \s*
+        (?<unit>
+            n|ns|nanosecond|nanoseconds|
+            us|µs|microsecond|microseconds|
+            ms|millisecond|milliseconds|
+            s|second|seconds|
+            min|minute|minutes|
+            h|hour|hours
+        )
+        (?:
+            \^2 |         # caret notation: ^2
+            ²   |         # superscript 2
+            sq(?:uared)?  # "sq" or "squared"
+        )
+        \s*
     $/ix';
 
     //should be declared in descending order!
@@ -181,21 +203,40 @@ enum DurationUnit: int
 
     public static function formatSquared(float|int $ns2, ?int $precision = null): string
     {
-        $units = [
+        /** @var array<string, int|float> $units */
+        static $units = [
+            'min²' => 3.6e+21,
+            's²' => 1e+18,
+            'ms²' => 1e+12,
+            'μs²' => 1e+6,
             'ns²' => 1,
-            'μs²' => 1_000 ** 2,             // (10^3)^2 = 10^6
-            'ms²' => 1_000_000 ** 2,         // (10^6)^2 = 10^12
-            's²'  => 1_000_000_000 ** 2,     // (10^9)^2 = 10^18
-            'min²' => (60_000_000_000) ** 2, // (60s in ns)^2
         ];
 
-        foreach (array_reverse($units, true) as $unit => $factor) {
-            if ($ns2 >= $factor) {
-                $value = $ns2 / $factor;
-                return number_format($value, $precision ?? null) . " $unit";
+        $precision ??= 6;
+        foreach ($units as $unit => $factor) {
+            $value = $ns2 / $factor;
+            if ($value >= 1) {
+                return number_format($value, $precision)." $unit";
             }
         }
 
-        return number_format($ns2, 6) . " ns²";
+        return number_format($ns2, $precision).' ns²';
+    }
+
+    public static function parseSquared(string $value): float
+    {
+        1 === preg_match(self::REGEXP_SQUARED_PATTERN, $value, $matches) || throw new InvalidArgument("Invalid squared duration format: '$value'");
+
+        $base = match (strtolower($matches['unit'])) {
+            'ns', 'nanosecond', 'nanoseconds' => 1,
+            'μs', 'us', 'microsecond', 'microseconds' => 1_000,
+            'ms', 'millisecond', 'milliseconds' => 1_000_000,
+            's',  'sec', 'second', 'seconds' => 1_000_000_000,
+            'm', 'min', 'minute', 'minutes' => 60 * 1_000_000_000,
+            'h', 'hr', 'hour', 'hours' => 3600 * 1_000_000_000,
+            default => throw new InvalidArgument('Unsupported duration unit.'),
+        };
+
+        return ((float) $matches['number']) * ($base ** 2);
     }
 }

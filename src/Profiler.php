@@ -151,12 +151,12 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      * @throws InvalidArgument|Throwable
      *
      * @return array{
-     *     cpuTime: Statistics,
-     *     executionTime: Statistics,
-     *     memoryUsage: Statistics,
-     *     peakMemoryUsage: Statistics,
-     *     realMemoryUsage: Statistics,
-     *     realPeakMemoryUsage: Statistics,
+     *     cpu_time: Statistics,
+     *     execution_time: Statistics,
+     *     memory_usage: Statistics,
+     *     peak_memory_usage: Statistics,
+     *     real_memory_usage: Statistics,
+     *     real_peak_emory_usage: Statistics,
      * }
      */
     public static function statistics(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): array
@@ -164,39 +164,39 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         self::assertItCanBeRun($iterations, $warmup);
         self::warmup($warmup, $callback);
         $statistics = [
-            'cpuTime' => [
+            'cpu_time' => [
                 'unit' => Unit::Nanoseconds,
                 'data' => [],
             ],
-            'executionTime' => [
+            'execution_time' => [
                 'unit' => Unit::Nanoseconds,
                 'data' => [],
             ],
-            'memoryUsage' => [
+            'memory_usage' => [
                 'unit' => Unit::Bytes,
                 'data' => [],
             ],
-            'peakMemoryUsage' => [
+            'peak_memory_usage' => [
                 'unit' => Unit::Bytes,
                 'data' => [],
             ],
-            'realMemoryUsage' => [
+            'real_memory_usage' => [
                 'unit' => Unit::Bytes,
                 'data' => [],
             ],
-            'realPeakMemoryUsage' => [
+            'real_peak_emory_usage' => [
                 'unit' => Unit::Bytes,
                 'data' => [],
             ],
         ];
         for ($i = 0; $i < $iterations; ++$i) {
             $metrics = self::execute($callback, $logger)->summary->metrics;
-            $statistics['cpuTime']['data'][] = $metrics->cpuTime;
-            $statistics['executionTime']['data'][] = $metrics->executionTime;
-            $statistics['memoryUsage']['data'][] = $metrics->memoryUsage;
-            $statistics['peakMemoryUsage']['data'][] = $metrics->peakMemoryUsage;
-            $statistics['realMemoryUsage']['data'][] = $metrics->realMemoryUsage;
-            $statistics['realPeakMemoryUsage']['data'][] = $metrics->realPeakMemoryUsage;
+            $statistics['cpu_time']['data'][] = $metrics->cpuTime;
+            $statistics['execution_time']['data'][] = $metrics->executionTime;
+            $statistics['memory_usage']['data'][] = $metrics->memoryUsage;
+            $statistics['peak_memory_usage']['data'][] = $metrics->peakMemoryUsage;
+            $statistics['real_memory_usage']['data'][] = $metrics->realMemoryUsage;
+            $statistics['real_peak_emory_usage']['data'][] = $metrics->realPeakMemoryUsage;
         }
 
         return array_map(

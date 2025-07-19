@@ -17,6 +17,7 @@ use function strtoupper;
 enum MemoryUnit: int
 {
     private const REGEXP_PATTERN = '/^
+        \s*
         (?<number>\d+(?:\.\d+)?)
         \s*
         (?<unit>
@@ -24,8 +25,28 @@ enum MemoryUnit: int
             k|kb|kilobyte|kilobytes|
             m|mb|megabyte|megabytes|
             g|gb|gigabyte|gigabytes|
-            t|tb|terbyte|terabytes|
+            t|tb|terabyte|terabytes|
         )
+        \s*
+    $/ix';
+
+    private const REGEPX_SQUARED_PATTERN = '/^
+        \s*
+        (?<number>[\d.]+)
+        \s*
+        (?<unit>
+            b|byte|bytes|
+            k|kb|kilobyte|kilobytes|
+            m|mb|megabyte|megabytes|
+            g|gb|gigabyte|gigabytes|
+            t|tb|terabyte|terabytes|
+        )
+        (?:
+            \^2 |         # caret notation: ^2
+            ²   |         # superscript 2
+            sq(?:uared)?  # "sq" or "squared"
+        )
+        \s*
     $/ix';
 
     //should be declared in descending order!
@@ -177,22 +198,39 @@ enum MemoryUnit: int
 
     public static function formatSquared(float|int $bytes2, ?int $precision = null): string
     {
-        $units = [
-            'B²'  => 1,
-            'kB²' => 1_000 ** 2,       // 10^6
-            'MB²' => 1_000_000 ** 2,   // 10^12
-            'GB²' => 1_000_000_000 ** 2, // 10^18
-            'TB²' => 1_000_000_000_000 ** 2, // 10^24
+        /** @var array<string, int> $units */
+        static $units = [
+            'TB²' => 1024 ** 8,
+            'GB²' => 1024 ** 6,
+            'MB²' => 1024 ** 4,
+            'KB²' => 1024 ** 2,
+            'B²'   => 1,
         ];
 
-        foreach (array_reverse($units, true) as $unit => $factor) {
-            if ($bytes2 >= $factor) {
-                $value = $bytes2 / $factor;
-                return number_format($value, $precision ?? 6) . " $unit";
+        $precision ??= 6;
+        foreach ($units as $unit => $factor) {
+            $value = $bytes2 / $factor;
+            if ($value >= 1) {
+                return number_format($value, $precision)." $unit";
             }
         }
 
-        // Default fallback
-        return number_format($bytes2, 6) . " B²";
+        return number_format($bytes2, $precision).' B²';
+    }
+
+    public static function parseSquared(string $value): float
+    {
+        1 === preg_match(self::REGEPX_SQUARED_PATTERN, $value, $matches) || throw new InvalidArgument("Invalid squared memory format: '$value'");
+
+        $base = match (strtoupper($matches['unit'])) {
+            'B', 'BYTE', 'BYTES' => 1,
+            'K', 'KB', 'KILOBYTE', 'KYLOBYTES' => 1024,
+            'M', 'MB', 'MEGABYTE', 'MEGABYTES' => 1024 ** 2,
+            'G', 'GB', 'GIGABYTE', 'GIGABYTES' => 1024 ** 3,
+            'T', 'TB', 'TERABYTE', 'TERABYTES' => 1024 ** 4,
+            default => throw new InvalidArgument('Invalid or unsupported memory unit.'),
+        };
+
+        return ((float) $matches['number']) * ($base ** 2);
     }
 }
