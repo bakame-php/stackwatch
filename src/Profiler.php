@@ -87,7 +87,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @throws InvalidArgument|Throwable
      */
-    public static function execute(callable $callback, ?LoggerInterface $logger = null): ProfiledResult
+    public static function execute(callable $callback, ?LoggerInterface $logger = null): Result
     {
         return self::profileOnce(self::generateLabel(), self::generateLabel(), $callback, $logger);
     }
@@ -103,7 +103,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         callable $callback,
         ?LoggerInterface $logger = null,
         mixed ...$args
-    ): ProfiledResult {
+    ): Result {
         gc_collect_cycles();
         try {
             $logger?->info('Profiler ['.$identifier.'] starting profiling for label: '.$label.'.', ['identifier' => $identifier, 'label' => $label]);
@@ -113,7 +113,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
             $summary = new Summary($label, $start, $end);
             $logger?->info('Profiler ['.$identifier.'] ending profiling for label: '.$label.'.', [...['identifier' => $identifier], ...$summary->toArray()]);
 
-            return new ProfiledResult($returnValue, $summary);
+            return new Result($returnValue, $summary);
         } catch (Throwable $exception) {
             $logger?->error('Profiler ['.$identifier.'] profiling aborted for label: '.$label.' due to an error in the executed code.', ['identifier' => $identifier, 'label' => $label, 'exception' => $exception]);
 
@@ -149,60 +149,17 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      * @param int<0, max> $warmup
      *
      * @throws InvalidArgument|Throwable
-     *
-     * @return array{
-     *     cpu_time: Statistics,
-     *     execution_time: Statistics,
-     *     memory_usage: Statistics,
-     *     peak_memory_usage: Statistics,
-     *     real_memory_usage: Statistics,
-     *     real_peak_emory_usage: Statistics,
-     * }
      */
-    public static function statistics(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): array
+    public static function report(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): Report
     {
         self::assertItCanBeRun($iterations, $warmup);
         self::warmup($warmup, $callback);
-        $statistics = [
-            'cpu_time' => [
-                'unit' => Unit::Nanoseconds,
-                'data' => [],
-            ],
-            'execution_time' => [
-                'unit' => Unit::Nanoseconds,
-                'data' => [],
-            ],
-            'memory_usage' => [
-                'unit' => Unit::Bytes,
-                'data' => [],
-            ],
-            'peak_memory_usage' => [
-                'unit' => Unit::Bytes,
-                'data' => [],
-            ],
-            'real_memory_usage' => [
-                'unit' => Unit::Bytes,
-                'data' => [],
-            ],
-            'real_peak_emory_usage' => [
-                'unit' => Unit::Bytes,
-                'data' => [],
-            ],
-        ];
+        $metrics = [];
         for ($i = 0; $i < $iterations; ++$i) {
-            $metrics = self::execute($callback, $logger)->summary->metrics;
-            $statistics['cpu_time']['data'][] = $metrics->cpuTime;
-            $statistics['execution_time']['data'][] = $metrics->executionTime;
-            $statistics['memory_usage']['data'][] = $metrics->memoryUsage;
-            $statistics['peak_memory_usage']['data'][] = $metrics->peakMemoryUsage;
-            $statistics['real_memory_usage']['data'][] = $metrics->realMemoryUsage;
-            $statistics['real_peak_emory_usage']['data'][] = $metrics->realPeakMemoryUsage;
+            $metrics[] = self::execute($callback, $logger)->summary->metrics;
         }
 
-        return array_map(
-            fn (array $values): Statistics => Statistics::fromValues($values['unit'], $values['data']),
-            $statistics
-        );
+        return Report::fromMetrics(...$metrics);
     }
 
     /**
@@ -212,84 +169,6 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     {
         1 <= $iterations || throw new InvalidArgument('The iterations argument must be a positive integer greater than or equal to 1.');
         0 <= $warmup || throw new InvalidArgument('The warmup argument must be an integer greater than or equal to 0.');
-    }
-
-    /**
-     * Returns the CPU time in nanoseconds.
-     *
-     * @param int<1, max> $iterations
-     * @param int<0, max> $warmup
-     *
-     * @throws InvalidArgument|Throwable
-     */
-    public static function cpuTime(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): float
-    {
-        return self::metrics($callback, $iterations, $warmup, $logger)->cpuTime;
-    }
-
-    /**
-     * Returns the execution time in nanoseconds.
-     *
-     * @param int<1, max> $iterations
-     * @param int<0, max> $warmup
-     *
-     * @throws InvalidArgument|Throwable
-     */
-    public static function executionTime(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): float
-    {
-        return self::metrics($callback, $iterations, $warmup, $logger)->executionTime;
-    }
-
-    /**
-     * Returns the memory usage in bytes.
-     *
-     * @param int<1, max> $iterations
-     * @param int<0, max> $warmup
-     *
-     * @throws InvalidArgument|Throwable
-     */
-    public static function memoryUsage(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): float
-    {
-        return self::metrics($callback, $iterations, $warmup, $logger)->memoryUsage;
-    }
-
-    /**
-     * Returns the real memory usage in bytes.
-     *
-     * @param int<1, max> $iterations
-     * @param int<0, max> $warmup
-     *
-     * @throws InvalidArgument|Throwable
-     */
-    public static function realMemoryUsage(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): float
-    {
-        return self::metrics($callback, $iterations, $warmup, $logger)->realMemoryUsage;
-    }
-
-    /**
-     * Returns the peak memory usage in bytes.
-     *
-     * @param int<1, max> $iterations
-     * @param int<0, max> $warmup
-     *
-     * @throws InvalidArgument|Throwable
-     */
-    public static function peakMemoryUsage(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): float
-    {
-        return self::metrics($callback, $iterations, $warmup, $logger)->peakMemoryUsage;
-    }
-
-    /**
-     * Returns the real peak memory usage in bytes.
-     *
-     * @param int<1, max> $iterations
-     * @param int<0, max> $warmup
-     *
-     * @throws InvalidArgument|Throwable
-     */
-    public static function realPeakMemoryUsage(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): float
-    {
-        return self::metrics($callback, $iterations, $warmup, $logger)->realPeakMemoryUsage;
     }
 
     /**

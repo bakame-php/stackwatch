@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bakame\Aide\Profiler;
 
-final class ProfiledResult
+final class Result
 {
     public function __construct(
         public readonly mixed $returnValue,

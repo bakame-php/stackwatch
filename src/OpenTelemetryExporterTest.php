@@ -67,7 +67,7 @@ class OpenTelemetryExporterTest extends TestCase
 
     #[Test]
     #[DataProvider('providesSummaries')]
-    public function it_can_export_profiling_data(Summary|ProfiledResult $profiling): void
+    public function it_can_export_profiling_data(Summary|Result $profiling): void
     {
         $this->exporter->exportSummary($profiling);
 
@@ -95,7 +95,7 @@ class OpenTelemetryExporterTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{profiling: ProfiledResult|Summary}>
+     * @return iterable<string, array{profiling: Result|Summary}>
      */
     public static function providesSummaries(): iterable
     {
@@ -104,7 +104,7 @@ class OpenTelemetryExporterTest extends TestCase
         ];
 
         yield 'the profiling data comes from a ProfiledResult instance' => [
-            'profiling' => new ProfiledResult('result', self::createSummary('test_export')),
+            'profiling' => new Result('result', self::createSummary('test_export')),
         ];
     }
 

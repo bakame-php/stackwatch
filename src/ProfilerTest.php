@@ -17,7 +17,7 @@ use function usleep;
 
 #[CoversClass(Metrics::class)]
 #[CoversClass(Profiler::class)]
-#[CoversClass(ProfiledResult::class)]
+#[CoversClass(Result::class)]
 #[CoversClass(LabelGenerator::class)]
 /**
  * @phpstan-import-type SummaryStat from Summary
@@ -33,12 +33,14 @@ final class ProfilerTest extends TestCase
             return 'end';
         };
 
-        self::assertGreaterThanOrEqual(0, Profiler::executionTime($callback, iterations: 2, warmup: 5));
-        self::assertGreaterThanOrEqual(0, Profiler::cpuTime($callback, iterations: 3));
-        self::assertGreaterThanOrEqual(0, Profiler::memoryUsage($callback));
-        self::assertGreaterThanOrEqual(0, Profiler::realMemoryUsage($callback, iterations: 3));
-        self::assertGreaterThanOrEqual(0, Profiler::peakMemoryUsage($callback, iterations: 2));
-        self::assertGreaterThanOrEqual(0, Profiler::realPeakMemoryUsage($callback));
+        $metrics = Profiler::metrics($callback, iterations: 2, warmup: 3);
+
+        self::assertGreaterThanOrEqual(0, $metrics->executionTime);
+        self::assertGreaterThanOrEqual(0, $metrics->cpuTime);
+        self::assertGreaterThanOrEqual(0, $metrics->memoryUsage);
+        self::assertGreaterThanOrEqual(0, $metrics->realMemoryUsage);
+        self::assertGreaterThanOrEqual(0, $metrics->peakMemoryUsage);
+        self::assertGreaterThanOrEqual(0, $metrics->realPeakMemoryUsage);
     }
 
     #[Test]
@@ -46,7 +48,7 @@ final class ProfilerTest extends TestCase
     {
         $this->expectException(InvalidArgument::class);
 
-        Profiler::executionTime(fn () => null, 0); /* @phpstan-ignore-line  */
+        Profiler::metrics(fn () => null, 0); /* @phpstan-ignore-line  */
     }
 
     #[Test]

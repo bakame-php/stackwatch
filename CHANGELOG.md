@@ -2,6 +2,29 @@
 
 All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
+### Added
+
+- `Report` class and the `Profiler::report` method.
+
+### Fixed
+
+- None
+
+### Deprecated 
+
+- None
+
+### Removed
+
+- `Profiler::executionTime` removed use `Profiler::metrics` instead
+- `Profiler::cpuTime` removed use `Profiler::metrics` instead
+- `Profiler::memoryUsage` removed use `Profiler::metrics` instead
+- `Profiler::peakMemoryUsage` removed use `Profiler::metrics` instead
+- `Profiler::realMemoryUsage` removed use `Profiler::metrics` instead
+- `Profiler::realPeakMemoryUsage` removed use `Profiler::metrics` instead
+- `ProfiledResult` is renamed `Result`
+
+
 ## [0.10.0 - Johannesburg](https://github.com/bakame-php/aide-profiler/compare/0.9,0...0.10.0) - 2025-07-17
 
 ### Added

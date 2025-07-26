@@ -18,6 +18,8 @@ use function usleep;
 #[CoversClass(Snapshot::class)]
 #[CoversClass(Marker::class)]
 #[CoversClass(Profiler::class)]
+#[CoversClass(Unit::class)]
+#[CoversClass(Statistics::class)]
 final class ConsoleTableExporterTest extends TestCase
 {
     #[Test]
@@ -120,5 +122,50 @@ final class ConsoleTableExporterTest extends TestCase
 
         self::assertMatchesRegularExpression('/[a-z0-9][a-z0-9_]*/', $content); //random label
         self::assertMatchesRegularExpression('/\d+\.\d{3}/', $content); // cpu or exec time
+    }
+
+    #[Test]
+    public function it_can_output_a_cli_table_for_the_a_statistic(): void
+    {
+        $output = new BufferedOutput();
+        $renderer = new ConsoleTableExporter($output);
+
+        $callback = function (): string {
+            usleep(1000);
+
+            return 'end';
+        };
+
+        $report = Profiler::report($callback, iterations: 2, warmup: 3);
+
+        $renderer->exportStatistics($report->executionTime);
+        $content = $output->fetch();
+
+        self::assertStringContainsString('Range', $content);
+        self::assertStringContainsString('Std Dev', $content);
+        self::assertStringContainsString('Coef Var', $content);
+    }
+
+    #[Test]
+    public function it_can_output_a_cli_table_for_the_a_report(): void
+    {
+        $output = new BufferedOutput();
+        $renderer = new ConsoleTableExporter($output);
+
+        $callback = function (): string {
+            usleep(1000);
+
+            return 'end';
+        };
+
+        $report = Profiler::report($callback, iterations: 2, warmup: 3);
+
+        $renderer->exportReport($report);
+        $content = $output->fetch();
+
+        self::assertStringContainsString('CPU', $content);
+        self::assertStringContainsString('Range', $content);
+        self::assertStringContainsString('Std Dev', $content);
+        self::assertStringContainsString('Real Memory Usage', $content);
     }
 }

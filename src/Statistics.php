@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace Bakame\Aide\Profiler;
 
 use JsonSerializable;
+use Throwable;
 use ValueError;
 
+use function array_diff_key;
 use function array_keys;
 use function array_sum;
 use function implode;
@@ -66,7 +68,9 @@ final class Statistics implements JsonSerializable
     public static function fromValues(Unit $unit, array $values): self
     {
         $count = count($values);
-        0 !== $count || throw new ValueError('Cannot compute statistics from an empty list of values.');
+        if (0 === $count) {
+            return self::none($unit);
+        }
 
         $sum = array_sum($values);
         sort($values);
@@ -107,6 +111,66 @@ final class Statistics implements JsonSerializable
             stdDev: 0.0,
             coefVar: 0.0,
         );
+    }
+
+    public static function none(Unit $unit): self
+    {
+        return new self(
+            unit: $unit,
+            count: 0,
+            min: 0,
+            max: 0,
+            range: 0,
+            sum: 0,
+            average: 0,
+            median: 0,
+            variance: 0.0,
+            stdDev: 0.0,
+            coefVar: 0.0,
+        );
+    }
+
+    /**
+     * @param StatsMap $data
+     *
+     * @throws Throwable If the instance can not be generated
+     *
+     */
+    public static function fromArray(array $data): self
+    {
+        $missingKeys = array_diff_key([
+            'unit' => 1,
+            'count' => 1,
+            'min' => 1,
+            'max' => 1,
+            'range' => 1,
+            'sum' => 1,
+            'average' => 1,
+            'median' => 1,
+            'variance' => 1,
+            'std_dev' => 1,
+            'coef_var' => 1,
+        ], $data);
+
+        [] === $missingKeys || throw new InvalidArgument('The payload is missing the following keys: '.implode(', ', array_keys($missingKeys)));
+
+        try {
+            return new self(
+                Unit::from($data['unit']),
+                $data['count'],
+                $data['min'],
+                $data['max'],
+                $data['range'],
+                $data['sum'],
+                $data['average'],
+                $data['median'],
+                $data['variance'],
+                $data['std_dev'],
+                $data['coef_var'],
+            );
+        } catch (Throwable $exception) {
+            throw new InvalidArgument('Unable to create a '.self::class.' instance from the payload', previous: $exception);
+        }
     }
 
     /**

@@ -22,9 +22,9 @@ final class OpenTelemetryExporter implements Exporter
         $this->tracer = $this->tracerProvider->getTracer('profiler-exporter');
     }
 
-    public function exportSummary(ProfiledResult|Summary $summary, Profiler|Marker|null $parent = null): void
+    public function exportSummary(Result|Summary $summary, Profiler|Marker|null $parent = null): void
     {
-        if ($summary instanceof ProfiledResult) {
+        if ($summary instanceof Result) {
             $summary = $summary->summary;
         }
 

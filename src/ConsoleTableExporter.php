@@ -21,9 +21,9 @@ final class ConsoleTableExporter implements Exporter
     {
     }
 
-    public function exportSummary(ProfiledResult|Summary $summary, Profiler|Marker|null $parent = null): void
+    public function exportSummary(Result|Summary $summary, Profiler|Marker|null $parent = null): void
     {
-        if ($summary instanceof ProfiledResult) {
+        if ($summary instanceof Result) {
             $summary = $summary->summary;
         }
 
@@ -173,6 +173,60 @@ final class ConsoleTableExporter implements Exporter
             ])
             ->setVertical()
             ->render();
+    }
+
+    public function exportReport(Report $report): void
+    {
+        static $reportPropertyNames = [
+            'cpuTime' => 'CPU',
+            'executionTime' => 'Duration',
+            'memoryUsage' => 'Memory Usage',
+            'realMemoryUsage' => 'Real Memory Usage',
+            'peakMemoryUsage' => 'Peak Memory Usage',
+            'realPeakMemoryUsage' =>  'Real Peak Memory Usage',
+        ];
+
+        $reportData = [
+            'cpuTime' => $report->cpuTime->forHuman(),
+            'executionTime' => $report->executionTime->forHuman(),
+            'memoryUsage' => $report->memoryUsage->forHuman(),
+            'peakMemoryUsage' => $report->peakMemoryUsage->forHuman(),
+            'realMemoryUsage' => $report->realMemoryUsage->forHuman(),
+            'realPeakMemoryUsage' => $report->realPeakMemoryUsage->forHuman(),
+        ];
+
+        $table = (new Table($this->output))
+            ->setHeaders([
+                'Metric ',
+                'Nb Iterations',
+                'Min Value',
+                'Max Value',
+                'Median Value',
+                'Sum',
+                'Range',
+                'Average',
+                'Variance',
+                'Std Dev',
+                'Coef Var',
+            ]);
+
+        foreach ($reportData as $name => $stats) {
+            $table->addRow([
+                $reportPropertyNames[$name],
+                $stats['count'],
+                $stats['min'],
+                $stats['max'],
+                $stats['median'],
+                $stats['sum'],
+                $stats['range'],
+                $stats['average'],
+                $stats['variance'],
+                $stats['std_dev'],
+                $stats['coef_var'],
+            ]);
+        }
+
+        $table->render();
     }
 
     public function exportEnvironment(Environment $environment): void

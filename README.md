@@ -43,24 +43,11 @@ Let's adapt the first example using the `Profiler` class.
 ```php
 use Bakame\Aide\Profiler\Profiler;
 
-$duration = Profiler::executionTime(
+$duration = Profiler::metrics(
     $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'))
-);
+)->executionTime;
 // $duration is the execution time in nanosecond using hrtime instead of microtime
 ````
-
-They are as many static methods as they are metrics:
-
-- `Profiler::executionTime()`;
-- `Profiler::cpuTime()`;
-- `Profiler::memoryUsage()`;
-- `Profiler::peakMemoryUsage()`;
-- `Profiler::realMemoryUsage()`;
-- `Profiler::realPeakMemoryUsage()`;
-
-If you want to access all the metrics at once, you can use the following method
-
-- `Profiler::metrics()`;
 
 The method returns a `Metrics` class with readonly methods for each metric.
 
@@ -120,13 +107,35 @@ value over all iterations:
 ```php
 use Bakame\Aide\Profiler\Profiler;
 
-$cpuTime = Profiler::cpuTime(
+$cpuTime = Profiler::metrics(
     $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24')),
     5
-);
+)->cpuTime;
 // the average CPU Time used when executing 5 times the code.
 ````
 The `$iterations` argument is available for all metrics.
+
+#### Full report
+
+If you need access to the complete set of statistical data rather than just average values, use the `Profiler::report` method.
+This method returns a `Report` instance instead of a `Metrics` object. The `Report` aggregates detailed `Statistics` for each metric,
+offering a full performance profile.
+
+```php
+use Bakame\Aide\Profiler\Profiler;
+
+// you create a new Profiler by passing the callback you want to profile
+$report = Profiler::report(
+    $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'))
+);
+
+$report->executionTime->forHuman('average');
+$report->cpuTime; 
+$report->memoryUsage;
+$report->peakMemoryUsage;
+$report->realMemoryUsage;
+$report->realPeakMemoryUsage;
+````
 
 #### Accessing the result
 
@@ -138,13 +147,13 @@ profiling metrics collected during the call.
 ```php
 use Bakame\Aide\Profiler\Profiler;
 
-$profiled = Profiler::execute($service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24')));
-$profiled->returnValue; // the result of executing the `calculateHeavyStuff` method
-$profiled->summary; // the profiling data associated with the call.
-$profiled->summary->metrics; // returns a Metrics instance
-$profiled->summary->start;   // returns a Snapshot instance
-$profiled->summary->end;     // returns a Snapshot instance
-$profiled->summary->label;   // returns an identifier as a string
+$result = Profiler::execute($service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24')));
+$result->returnValue;      // the result of executing the `calculateHeavyStuff` method
+$result->summary;          // the profiling data associated with the call.
+$result->summary->metrics; // returns a Metrics instance
+$result->summary->start;   // returns a Snapshot instance
+$result->summary->end;     // returns a Snapshot instance
+$result->summary->label;   // returns an identifier as a string
 ````
 
 #### Metrics recording
@@ -257,9 +266,6 @@ $profiler->reset();
 count($profiler); // returns 0
 $profiler->isEmpty(); // return true
 ```
-
-> [!NOTE]  
-> PHP provides a `reset_peak_memory_usage` that will globally reset all peak memory usage data.
 
 ### Marker
 

@@ -79,7 +79,7 @@ final class Benchmark
     {
         $times = [];
         for ($i = 0; $i < $iterations; $i++) {
-            $times[] = Profiler::executionTime($callback);
+            $times[] = Profiler::metrics($callback)->executionTime;
         }
 
         return Statistics::fromValues(Unit::Nanoseconds, $times);
