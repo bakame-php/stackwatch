@@ -27,8 +27,8 @@ use function number_format;
  * @phpstan-type StatsMap array{
  *     unit: string,
  *     count:int,
- *     min:float|int,
- *     max:float|int,
+ *     minimum:float|int,
+ *     maximum:float|int,
  *     range:float|int,
  *     sum:float|int,
  *     average:float,
@@ -40,8 +40,8 @@ use function number_format;
  *
  * @phpstan-type StatsHumanReadable array{
  *      count:string,
- *      min:string,
- *      max:string,
+ *      minimum:string,
+ *      maximum:string,
  *      range:string,
  *      sum:string,
  *      average:string,
@@ -57,8 +57,8 @@ final class Statistics implements JsonSerializable
     public function __construct(
         public readonly Unit $unit,
         public readonly int $count,
-        public readonly float|int $min,
-        public readonly float|int $max,
+        public readonly float|int $minimum,
+        public readonly float|int $maximum,
         public readonly float|int $range,
         public readonly float|int $sum,
         public readonly float $average,
@@ -93,8 +93,8 @@ final class Statistics implements JsonSerializable
         return new self(
             unit: $unit,
             count: $count,
-            min: $min,
-            max: $max,
+            minimum: $min,
+            maximum: $max,
             range: $max - $min,
             sum: $sum,
             average: $average,
@@ -110,8 +110,8 @@ final class Statistics implements JsonSerializable
         return new self(
             unit: $unit,
             count: 1,
-            min: $value,
-            max: $value,
+            minimum: $value,
+            maximum: $value,
             range: 0,
             sum: $value,
             average: $value,
@@ -127,8 +127,8 @@ final class Statistics implements JsonSerializable
         return new self(
             unit: $unit,
             count: 0,
-            min: 0,
-            max: 0,
+            minimum: 0,
+            maximum: 0,
             range: 0,
             sum: 0,
             average: 0,
@@ -150,8 +150,8 @@ final class Statistics implements JsonSerializable
         $missingKeys = array_diff_key([
             'unit' => 1,
             'count' => 1,
-            'min' => 1,
-            'max' => 1,
+            'minimum' => 1,
+            'maximum' => 1,
             'range' => 1,
             'sum' => 1,
             'average' => 1,
@@ -167,8 +167,8 @@ final class Statistics implements JsonSerializable
             return new self(
                 Unit::from($data['unit']),
                 $data['count'],
-                $data['min'],
-                $data['max'],
+                $data['minimum'],
+                $data['maximum'],
                 $data['range'],
                 $data['sum'],
                 $data['average'],
@@ -213,8 +213,8 @@ final class Statistics implements JsonSerializable
         return [
             'unit' => $this->unit->value,
             'count' => $this->count,
-            'min' => $this->min,
-            'max' => $this->max,
+            'minimum' => $this->minimum,
+            'maximum' => $this->maximum,
             'range' => $this->range,
             'sum' => $this->sum,
             'average' => $this->average,
@@ -238,7 +238,7 @@ final class Statistics implements JsonSerializable
      *
      * If a `$property` is specified, returns only the formatted value of that metric.
      *
-     * @param 'count'|'min'|'max'|'range'|'sum'|'average'|'median'|'variance'|'std_dev'|'coef_var'|null $property
+     * @param 'count'|'minimum'|'maximum'|'range'|'sum'|'average'|'median'|'variance'|'std_dev'|'coef_var'|null $property
      *
      * @return StatsHumanReadable|string
      */
@@ -246,8 +246,8 @@ final class Statistics implements JsonSerializable
     {
         $humans = [
              'count' => (string) $this->count,
-             'min' => $this->unit->format($this->min, 3),
-             'max' => $this->unit->format($this->max, 3),
+             'minimum' => $this->unit->format($this->minimum, 3),
+             'maximum' => $this->unit->format($this->maximum, 3),
              'range' => $this->unit->format($this->range, 3),
              'sum' => $this->unit->format($this->sum, 3),
              'average' => $this->unit->format($this->average, 3),

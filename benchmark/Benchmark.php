@@ -142,17 +142,17 @@ final class Benchmark
             ])
             ->addRow([
                 'Min',
-                $micro->forHuman('min'),
-                $hrtime->forHuman('min'),
-                $profiler->forHuman('min'),
-                $marker->forHuman('min'),
+                $micro->forHuman('minimum'),
+                $hrtime->forHuman('minimum'),
+                $profiler->forHuman('minimum'),
+                $marker->forHuman('minimum'),
             ])
             ->addRow([
                 'Max',
-                $micro->forHuman('max'),
-                $hrtime->forHuman('max'),
-                $profiler->forHuman('max'),
-                $marker->forHuman('max'),
+                $micro->forHuman('maximum'),
+                $hrtime->forHuman('maximum'),
+                $profiler->forHuman('maximum'),
+                $marker->forHuman('maximum'),
             ])
             ->addRow([
                 'Median',

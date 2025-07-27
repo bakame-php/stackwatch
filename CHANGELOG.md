@@ -2,8 +2,11 @@
 
 All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
+## [Next - African City](https://github.com/bakame-php/aide-profiler/compare/0.10.0...main) - TBD
+
 ### Added
 
+- `Statistics` class
 - `Report` class and the `Profiler::report` method.
 
 ### Fixed
@@ -16,20 +19,19 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 ### Removed
 
-- `Profiler::executionTime` removed use `Profiler::metrics` instead
-- `Profiler::cpuTime` removed use `Profiler::metrics` instead
-- `Profiler::memoryUsage` removed use `Profiler::metrics` instead
-- `Profiler::peakMemoryUsage` removed use `Profiler::metrics` instead
-- `Profiler::realMemoryUsage` removed use `Profiler::metrics` instead
-- `Profiler::realPeakMemoryUsage` removed use `Profiler::metrics` instead
-- `Marker::executionTime` removed use `Marker::metrics` instead
-- `Marker::cpuTime` removed use `Marker::metrics` instead
-- `Marker::memoryUsage` removed use `Marker::metrics` instead
-- `Marker::peakMemoryUsage` removed use `Marker::metrics` instead
-- `Marker::realMemoryUsage` removed use `Marker::metrics` instead
-- `Marker::realPeakMemoryUsage` removed use `Marker::metrics` instead
-- `ProfiledResult` is renamed `Result`
-
+- **BC BREAK:** `Profiler::executionTime` removed use `Profiler::metrics` instead
+- **BC BREAK:** `Profiler::cpuTime` removed use `Profiler::metrics` instead
+- **BC BREAK:** `Profiler::memoryUsage` removed use `Profiler::metrics` instead
+- **BC BREAK:** `Profiler::peakMemoryUsage` removed use `Profiler::metrics` instead
+- **BC BREAK:** `Profiler::realMemoryUsage` removed use `Profiler::metrics` instead
+- **BC BREAK:** `Profiler::realPeakMemoryUsage` removed use `Profiler::metrics` instead
+- **BC BREAK:** `Marker::executionTime` removed use `Marker::metrics` instead
+- **BC BREAK:** `Marker::cpuTime` removed use `Marker::metrics` instead
+- **BC BREAK:** `Marker::memoryUsage` removed use `Marker::metrics` instead
+- **BC BREAK:** `Marker::peakMemoryUsage` removed use `Marker::metrics` instead
+- **BC BREAK:** `Marker::realMemoryUsage` removed use `Marker::metrics` instead
+- **BC BREAK:** `Marker::realPeakMemoryUsage` removed use `Marker::metrics` instead
+- **BC BREAK:** `ProfiledResult` is renamed `Result`
 
 ## [0.10.0 - Johannesburg](https://github.com/bakame-php/aide-profiler/compare/0.9,0...0.10.0) - 2025-07-17
 

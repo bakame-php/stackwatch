@@ -161,8 +161,8 @@ final class ConsoleTableExporter implements Exporter
             ])
             ->addRow([
                 $stats['count'],
-                $stats['min'],
-                $stats['max'],
+                $stats['minimum'],
+                $stats['maximum'],
                 $stats['median'],
                 $stats['sum'],
                 $stats['range'],
@@ -214,8 +214,8 @@ final class ConsoleTableExporter implements Exporter
             $table->addRow([
                 $reportPropertyNames[$name],
                 $stats['count'],
-                $stats['min'],
-                $stats['max'],
+                $stats['minimum'],
+                $stats['maximum'],
                 $stats['median'],
                 $stats['sum'],
                 $stats['range'],

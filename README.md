@@ -26,7 +26,7 @@ Traditionally, profiling a section of code quickly looks like this:
 
 ```php
 $start = microtime(true);
-$service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'));
+$service->calculateHeavyStuff();
 echo microtime(true) - $start; // the execution time of your code
 ```
 
@@ -43,9 +43,7 @@ Let's adapt the first example using the `Profiler` class.
 ```php
 use Bakame\Aide\Profiler\Profiler;
 
-$duration = Profiler::metrics(
-    $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'))
-)->executionTime;
+$duration = Profiler::metrics($service->calculateHeavyStuff(...))->executionTime;
 // $duration is the execution time in nanosecond using hrtime instead of microtime
 ````
 
@@ -55,9 +53,7 @@ The method returns a `Metrics` class with readonly methods for each metric.
 use Bakame\Aide\Profiler\Profiler;
 
 // you create a new Profiler by passing the callback you want to profile
-$metrics = Profiler::metrics(
-    $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'))
-);
+$metrics = Profiler::metrics($service->calculateHeavyStuff(...));
 
 $metrics->executionTime;
 $metrics->cpuTime; 
@@ -80,9 +76,7 @@ You can either:
 use Bakame\Aide\Profiler\Profiler;
 
 // you create a new Profiler by passing the callback you want to profile
-$metrics = Profiler::metrics(
-    $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'))
-);
+$metrics = Profiler::metrics($service->calculateHeavyStuff(...));
 
 $metrics->forHuman();
 // returns 
@@ -107,13 +101,9 @@ value over all iterations:
 ```php
 use Bakame\Aide\Profiler\Profiler;
 
-$cpuTime = Profiler::metrics(
-    $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24')),
-    5
-)->cpuTime;
+$cpuTime = Profiler::metrics($service->calculateHeavyStuff(...), 5)->cpuTime;
 // the average CPU Time used when executing 5 times the code.
 ````
-The `$iterations` argument is available for all metrics.
 
 #### Full report
 
@@ -131,18 +121,16 @@ and formatted.
 use Bakame\Aide\Profiler\Profiler;
 
 // you create a new Profiler by passing the callback you want to profile
-$report = Profiler::report(
-    $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'))
-);
+$report = Profiler::report($service->calculateHeavyStuff(...));
 
 // Access the raw statistical metrics
-$report->executionTime->min;     // Minimum execution time (as float|int, in nanoseconds)
+$report->executionTime->minimum; // Minimum execution time (as float|int, in nanoseconds)
 $report->executionTime->average; // Average execution time
 $report->executionTime->stdDev;  // Standard deviation
 
 // Get human-readable representations
-$report->executionTime->forHuman('min'); // e.g., "42.318 μs"
-$report->executionTime->forHuman();      // array of all formatted metrics
+$report->executionTime->forHuman('minimum'); // e.g., "42.318 μs"
+$report->executionTime->forHuman();          // array of all formatted metrics
 
 // The same applies to other profiling metrics:
 $report->cpuTime;
@@ -169,7 +157,7 @@ profiling metrics collected during the call.
 ```php
 use Bakame\Aide\Profiler\Profiler;
 
-$result = Profiler::execute($service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24')));
+$result = Profiler::execute($service->calculateHeavyStuff(...));
 $result->returnValue;      // the result of executing the `calculateHeavyStuff` method
 $result->summary;          // the profiling data associated with the call.
 $result->summary->metrics; // returns a Metrics instance
@@ -689,7 +677,7 @@ Will return
 +--------------------------------+
 ```
 
-#### MemoryUnit and DurationUnit
+#### Unit of Measurement
 
 To correctly show the memory and duration unit, the package comes with 2 helper Enum:
 

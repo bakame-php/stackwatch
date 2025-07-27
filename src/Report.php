@@ -9,7 +9,6 @@ use Throwable;
 
 use function array_diff_key;
 use function array_keys;
-use function array_map;
 use function implode;
 
 /**
@@ -81,65 +80,45 @@ final class Report implements JsonSerializable
     public static function fromMetrics(Metrics ...$metrics): self
     {
         $statistics = [
-            'cpu_time' => [
-                'unit' => Unit::Nanoseconds,
-                'data' => [],
-            ],
-            'execution_time' => [
-                'unit' => Unit::Nanoseconds,
-                'data' => [],
-            ],
-            'memory_usage' => [
-                'unit' => Unit::Bytes,
-                'data' => [],
-            ],
-            'peak_memory_usage' => [
-                'unit' => Unit::Bytes,
-                'data' => [],
-            ],
-            'real_memory_usage' => [
-                'unit' => Unit::Bytes,
-                'data' => [],
-            ],
-            'real_peak_memory_usage' => [
-                'unit' => Unit::Bytes,
-                'data' => [],
-            ],
+            'cpuTime' => [],
+            'executionTime' => [],
+            'memoryUsage' => [],
+            'peakMemoryUsage' => [],
+            'realMemoryUsage' => [],
+            'realPeakMemoryUsage' => [],
         ];
 
         foreach ($metrics as $metric) {
-            $statistics['cpu_time']['data'][] = $metric->cpuTime;
-            $statistics['execution_time']['data'][] = $metric->executionTime;
-            $statistics['memory_usage']['data'][] = $metric->memoryUsage;
-            $statistics['peak_memory_usage']['data'][] = $metric->peakMemoryUsage;
-            $statistics['real_memory_usage']['data'][] = $metric->realMemoryUsage;
-            $statistics['real_peak_memory_usage']['data'][] = $metric->realPeakMemoryUsage;
+            $statistics['cpuTime'][] = $metric->cpuTime;
+            $statistics['executionTime'][] = $metric->executionTime;
+            $statistics['memoryUsage'][] = $metric->memoryUsage;
+            $statistics['peakMemoryUsage'][] = $metric->peakMemoryUsage;
+            $statistics['realMemoryUsage'][] = $metric->realMemoryUsage;
+            $statistics['realPeakMemoryUsage'][] = $metric->realPeakMemoryUsage;
         }
 
-        $data = array_map(
-            fn (array $values): Statistics => Statistics::fromValues($values['unit'], $values['data']),
-            $statistics
-        );
-
         return new self(
-            cpuTime: $data['cpu_time'],
-            executionTime: $data['execution_time'],
-            memoryUsage: $data['memory_usage'],
-            peakMemoryUsage: $data['peak_memory_usage'],
-            realMemoryUsage: $data['real_memory_usage'],
-            realPeakMemoryUsage: $data['real_peak_memory_usage'],
+            cpuTime: Statistics::fromValues(Unit::Nanoseconds, $statistics['cpuTime']),
+            executionTime: Statistics::fromValues(Unit::Nanoseconds, $statistics['executionTime']),
+            memoryUsage: Statistics::fromValues(Unit::Bytes, $statistics['memoryUsage']),
+            peakMemoryUsage: Statistics::fromValues(Unit::Bytes, $statistics['peakMemoryUsage']),
+            realMemoryUsage: Statistics::fromValues(Unit::Bytes, $statistics['realMemoryUsage']),
+            realPeakMemoryUsage: Statistics::fromValues(Unit::Bytes, $statistics['realPeakMemoryUsage']),
         );
     }
 
     public static function none(): self
     {
+        $nanoStats = Statistics::none(Unit::Nanoseconds);
+        $byteStats = Statistics::none(Unit::Bytes);
+
         return new self(
-            cpuTime: Statistics::none(Unit::Nanoseconds),
-            executionTime: Statistics::none(Unit::Nanoseconds),
-            memoryUsage: Statistics::none(Unit::Bytes),
-            peakMemoryUsage: Statistics::none(Unit::Bytes),
-            realMemoryUsage: Statistics::none(Unit::Bytes),
-            realPeakMemoryUsage: Statistics::none(Unit::Bytes),
+            cpuTime: $nanoStats,
+            executionTime: $nanoStats,
+            memoryUsage: $byteStats,
+            peakMemoryUsage: $byteStats,
+            realMemoryUsage: $byteStats,
+            realPeakMemoryUsage: $byteStats,
         );
     }
 
@@ -162,23 +141,16 @@ final class Report implements JsonSerializable
         [] === $missingKeys || throw new InvalidArgument('The payload is missing the following keys: '.implode(', ', array_keys($missingKeys)));
 
         try {
-            $cpuTime = Statistics::fromArray($data['cpu_time']);
-            $executionTime = Statistics::fromArray($data['execution_time']);
-            $memoryUsage = Statistics::fromArray($data['memory_usage']);
-            $realMemoryUsage = Statistics::fromArray($data['real_memory_usage']);
-            $peakMemoryUsage = Statistics::fromArray($data['peak_memory_usage']);
-            $realPeakMemoryUsage = Statistics::fromArray($data['real_peak_memory_usage']);
+            return new self(
+                cpuTime: Statistics::fromArray($data['cpu_time']),
+                executionTime: Statistics::fromArray($data['execution_time']),
+                memoryUsage: Statistics::fromArray($data['memory_usage']),
+                peakMemoryUsage: Statistics::fromArray($data['peak_memory_usage']),
+                realMemoryUsage: Statistics::fromArray($data['real_memory_usage']),
+                realPeakMemoryUsage: Statistics::fromArray($data['real_peak_memory_usage']),
+            );
         } catch (Throwable $exception) {
-            throw new InvalidArgument('Unable to create a metrics from the payload', previous: $exception);
+            throw new InvalidArgument('Unable to create a report from the payload', previous: $exception);
         }
-
-        return new self(
-            $cpuTime,
-            $executionTime,
-            $memoryUsage,
-            $realMemoryUsage,
-            $peakMemoryUsage,
-            $realPeakMemoryUsage,
-        );
     }
 }

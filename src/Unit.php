@@ -17,6 +17,14 @@ enum Unit: string
         };
     }
 
+    public function tryParse(string $format): int|null
+    {
+        return match ($this) {
+            self::Nanoseconds => DurationUnit::tryParse($format),
+            default => MemoryUnit::tryParse($format),
+        };
+    }
+
     public function parseSquared(string $format): float
     {
         return match ($this) {

@@ -57,6 +57,16 @@ final class SummaryTest extends TestCase
     }
 
     #[Test]
+    public function it_can_do_a_roundtrup_with_from_and_to_array_methods(): void
+    {
+        $start = Snapshot::now();
+        usleep(1000);
+        $summary = new Summary('test', $start, Snapshot::now());
+
+        self::assertEquals($summary, Summary::fromArray($summary->toArray()));
+    }
+
+    #[Test]
     public function it_can_be_json_encoded(): void
     {
         $start = Snapshot::now();
