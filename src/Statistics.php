@@ -15,6 +15,15 @@ use function implode;
 use function number_format;
 
 /**
+ *
+ * Represents a detailed statistical summary of a numeric dataset.
+ *
+ * This class captures core statistical metrics like min, max, average, standard deviation,
+ * coefficient of variation, etc., and formats them using the associated `Unit`.
+ *
+ * Use `Statistics::fromValues()` to compute the statistics from a dataset.
+ * Use `Statistics::none()`to generate an empty/default profile.
+
  * @phpstan-type StatsMap array{
  *     unit: string,
  *     count:int,
@@ -225,6 +234,12 @@ final class Statistics implements JsonSerializable
     }
 
     /**
+     * Returns a human-readable version of the statistics.
+     *
+     * If a `$property` is specified, returns only the formatted value of that metric.
+     *
+     * @param 'count'|'min'|'max'|'range'|'sum'|'average'|'median'|'variance'|'std_dev'|'coef_var'|null $property
+     *
      * @return StatsHumanReadable|string
      */
     public function forHuman(?string $property = null): array|string

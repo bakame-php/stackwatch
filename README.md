@@ -118,8 +118,14 @@ The `$iterations` argument is available for all metrics.
 #### Full report
 
 If you need access to the complete set of statistical data rather than just average values, use the `Profiler::report` method.
-This method returns a `Report` instance instead of a `Metrics` object. The `Report` aggregates detailed `Statistics` for each metric,
-offering a full performance profile.
+This method returns a `Report` instance instead of a `Metrics` object. The `Report` aggregates detailed statistics for each metric,
+offering a full performance profile. The `Report` class exposes the same properties as the `Metrics` class but the type differs.
+Each property of the `Report` is a `Statistics` instance.
+
+The `Statistics` class represents a full statistical summary computed from a set of numeric values. It provides key metrics
+such as minimum, maximum, sum, average, median, variance, standard deviation, and coefficient of variation.
+Each instance is associated with a Unit (e.g., bytes, nanoseconds) to ensure values are consistently interpreted
+and formatted.
 
 ```php
 use Bakame\Aide\Profiler\Profiler;
@@ -129,13 +135,29 @@ $report = Profiler::report(
     $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'))
 );
 
-$report->executionTime->forHuman('average');
-$report->cpuTime; 
+// Access the raw statistical metrics
+$report->executionTime->min;     // Minimum execution time (as float|int, in nanoseconds)
+$report->executionTime->average; // Average execution time
+$report->executionTime->stdDev;  // Standard deviation
+
+// Get human-readable representations
+$report->executionTime->forHuman('min'); // e.g., "42.318 μs"
+$report->executionTime->forHuman();      // array of all formatted metrics
+
+// The same applies to other profiling metrics:
+$report->cpuTime;
 $report->memoryUsage;
 $report->peakMemoryUsage;
 $report->realMemoryUsage;
 $report->realPeakMemoryUsage;
 ````
+Each `Statistics` instance provides:
+
+- `toArray` – for machine-readable data
+- `forHuman` – for formatted, human-friendly output
+- implements the `JsonSerializable` interface to enable easy JSON export
+
+Use this structure to analyze performance in depth, log profiles, or visualize trends over time.
 
 #### Accessing the result
 
@@ -312,26 +334,16 @@ If needed, you can measure the profiling data between two specific labels:
 
 ```php
 $delta = $marker->delta('init', 'render'); // Returns Summary
-$executionTime = $marker->executionTime('init', 'render'); // Returns a float in nanoseconds
+$executionTime = $marker->metrics('init', 'render'); // Returns a Metrics object
 ```
-There are as many methods as there are metrics:
 
-```php
-$marker->executionTime('init', 'render');
-$marker->cpuTime('init', 'render');
-$marker->memoryUsage('init', 'render');
-$marker->realMemoryUsage('init', 'render');
-$marker->peakMemoryUsage('init', 'render');
-$marker->realPeakMemoryUsage('init', 'render');
-$marker->metrics('init', 'render'); //returns a Metrics instance
-```
 If you do not specify the second label, the method will default to using the latest snapshot
 as the second argument.
 
 ```php
-$marker->executionTime('init', 'render');
+$marker->metrics('init', 'render');
 //is equivalent to
-$marker->executionTime('init');
+$marker->metrics('init');
 ```
 
 You can iterate over each successive pair of snapshots to return the consecutive deltas:

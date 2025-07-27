@@ -61,10 +61,10 @@ final class MarkerTest extends TestCase
 
         self::assertEquals($delta, $this->marker->delta('a'));
         self::assertGreaterThan(0, $delta->metrics->toArray()['cpu_time'] ?? 0);
-        self::assertSame($metrics->executionTime, $this->marker->executionTime('a', 'b'));
-        self::assertSame($metrics->cpuTime, $this->marker->cpuTime('a'));
-        self::assertSame($metrics->realPeakMemoryUsage, $this->marker->realPeakMemoryUsage('a'));
-        self::assertSame($metrics->realMemoryUsage, $this->marker->realMemoryUsage('a'));
+        self::assertSame($metrics->executionTime, $this->marker->metrics('a', 'b')->executionTime);
+        self::assertSame($metrics->cpuTime, $this->marker->metrics('a')->cpuTime);
+        self::assertSame($metrics->realPeakMemoryUsage, $this->marker->metrics('a')->realPeakMemoryUsage);
+        self::assertSame($metrics->realMemoryUsage, $this->marker->metrics('a')->realMemoryUsage);
     }
 
     #[Test]

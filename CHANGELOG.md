@@ -22,6 +22,12 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 - `Profiler::peakMemoryUsage` removed use `Profiler::metrics` instead
 - `Profiler::realMemoryUsage` removed use `Profiler::metrics` instead
 - `Profiler::realPeakMemoryUsage` removed use `Profiler::metrics` instead
+- `Marker::executionTime` removed use `Marker::metrics` instead
+- `Marker::cpuTime` removed use `Marker::metrics` instead
+- `Marker::memoryUsage` removed use `Marker::metrics` instead
+- `Marker::peakMemoryUsage` removed use `Marker::metrics` instead
+- `Marker::realMemoryUsage` removed use `Marker::metrics` instead
+- `Marker::realPeakMemoryUsage` removed use `Marker::metrics` instead
 - `ProfiledResult` is renamed `Result`
 
 

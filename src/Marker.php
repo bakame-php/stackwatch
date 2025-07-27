@@ -182,36 +182,6 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
         return $this->delta($from, $to)->metrics;
     }
 
-    public function executionTime(string $from, ?string $to = null): float
-    {
-        return $this->metrics($from, $to)->executionTime;
-    }
-
-    public function cpuTime(string $from, ?string $to = null): float
-    {
-        return $this->metrics($from, $to)->cpuTime;
-    }
-
-    public function memoryUsage(string $from, ?string $to = null): float
-    {
-        return $this->metrics($from, $to)->memoryUsage;
-    }
-
-    public function realMemoryUsage(string $from, ?string $to = null): float
-    {
-        return $this->metrics($from, $to)->realMemoryUsage;
-    }
-
-    public function peakMemoryUsage(string $from, ?string $to = null): float
-    {
-        return $this->metrics($from, $to)->peakMemoryUsage;
-    }
-
-    public function realPeakMemoryUsage(string $from, ?string $to = null): float
-    {
-        return $this->metrics($from, $to)->realPeakMemoryUsage;
-    }
-
     /**
      *  Returns a sequence of Summary instances computed from each successive pair of snapshots.
      *
