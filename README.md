@@ -10,7 +10,8 @@
 [![Sponsor development of this project](https://img.shields.io/badge/sponsor%20this%20package-%E2%9D%A4-ff69b4.svg?style=flat-square)](https://github.com/sponsors/nyamsprod)
 
 A minimalist profiler for PHP. The profiler is embeddable, multi-metric, and framework-agnostic 
-It fills the gap between a basic timer and full-blown profilers like [Xdebug](https://xdebug.org/) or [Blackfire](https://www.blackfire.io/).
+It fills the gap between a basic timer and full-blown profilers like: [PHPBench](https://phpbench.readthedocs.io/en/latest/), 
+[Xdebug](https://xdebug.org/), [Blackfire](https://www.blackfire.io/).
 
 ## Installation
 
@@ -121,7 +122,7 @@ and formatted.
 use Bakame\Aide\Profiler\Profiler;
 
 // you create a new Profiler by passing the callback you want to profile
-$report = Profiler::report($service->calculateHeavyStuff(...));
+$report = Profiler::report($service->calculateHeavyStuff(...), 500);
 
 // Access the raw statistical metrics
 $report->executionTime->minimum; // Minimum execution time (as float|int, in nanoseconds)
@@ -532,6 +533,25 @@ echo json_encode($marker), PHP_EOL;
 ```
 See a [sample marker JSON output](./examples/marker-sample.json) for a complete structure.
 
+In order to facilitate JSON export, the package has a dedicated `JsonExporter` class
+which will be able to store the generated json in the specified location. It supports
+streams, string path and `SplFileInfo` objects.
+
+```php
+use Bakame\Aide\Profiler\JsonExporter;
+use Bakame\Aide\Profiler\Profiler;
+
+$report = Profiler::report($service->calculateHeavyStuff(...), 500);
+$exporter = new JsonExporter('path/to/store/the/profile.json', JSON_PRETTY_PRINT|JSON_BIGINT_AS_STRING);
+$exporter->exportReport($report);
+```
+The report will be stored in the designated location.
+
+> [!IMPORTANT]  
+> If you try to store multiple export in the same file (specified by a string)
+> They will get overwritten and only the last export will be stored.
+> To get the data appended provide an already open `resource` or `SplFileObject`.
+
 #### CLI
 
 If you have the `symfony\console` package installed in your application, you can export
@@ -609,6 +629,138 @@ $exporter->exportProfilter($profiler);
 ```
 
 Remember to change the `$tracerProvider` to connect to your own environment and server.
+
+### CLI command
+
+A CLI Command is available to allow you to benchmark PHP **functions and methods** located in a specific file or directory using the custom `#[Profile]` attribute.
+
+This is especially useful for:
+
+- Automating performance regressions in CI pipelines
+- Profiling code outside the context of an application
+
+#### Usage
+
+```bash
+php bin/phpProf --path=your/script.php [--output=cli|json] [--info] [--help]
+```
+
+| Option              | Description                                                                   |
+|---------------------|-------------------------------------------------------------------------------|
+| `--path[=PATH]`     | **(Required)** Path to the file to scan for profiled functions and methods.   |
+| `--output[=OUTPUT]` | Output format: either `json` or `cli` (default) table.                        |
+| `-i`, `--info`      | Additionally display system-level profiling metadata (PHP version, CPU, etc). |
+| `-h`, `--help`      | Show help for the command.                                                    |
+
+#### Example
+
+let's assume you have the following file located in `/path/profiler/test.php`.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Foobar\Baz;
+
+use Bakame\Aide\Profiler\Profile;
+use function random_int;
+use function usleep;
+
+require 'vendor/autoload.php';
+
+trait TimerTrait {
+    #[Profile(type: Profile::METRICS, iterations: 10)]
+    private function test() : int {
+        usleep(100);
+
+        return random_int(1, 100);
+    }
+}
+
+enum Foobar
+{
+    use TimerTrait;
+
+    case Foobar;
+}
+
+#[Profile(type: Profile::REPORT, iterations: 20, warmup: 2)]
+function test() : int {
+    usleep(100);
+
+    return random_int(1, 100);
+}
+```
+If you run the following command:
+
+```bash
+php bin/phpProf --path=/path/profiler/test.php
+```
+It will output 2 console tables:
+
+```bash
+phpProf 0.11.0 by Ignace Nyamagana Butera and contributors.
+
+Runtime: PHP 8.3.23
+Platform:    Linux
+
+Report for the function Foobar\Baz\test located in /path/profiler/test.php called 20 times
++------------------------+---------------+------------+------------+--------------+------------+-----------+------------+------------+----------+-----------+
+| Metric                 | Nb Iterations | Min Value  | Max Value  | Median Value | Sum        | Range     | Average    | Variance   | Std Dev  | Coef Var  |
++------------------------+---------------+------------+------------+--------------+------------+-----------+------------+------------+----------+-----------+
+| CPU Time               | 20            | 7.000 µs   | 32.000 µs  | 8.000 µs     | 183.000 µs | 25.000 µs | 9.150 µs   | 28.128 μs² | 5.304 µs | 57.9621 % |
+| Execution Time         | 20            | 132.125 µs | 158.208 µs | 133.292 µs   | 2.701 ms   | 26.083 µs | 135.029 µs | 32.436 μs² | 5.695 µs | 4.2178 %  |
+| Memory Usage           | 20            | 1.031 KB   | 1.031 KB   | 1.031 KB     | 20.625 KB  | 0.000 B   | 1.031 KB   | 0.000 B²   | 0.000 B  | 0.0000 %  |
+| Peak Memory Usage      | 20            | 0.000 B    | 0.000 B    | 0.000 B      | 0.000 B    | 0.000 B   | 0.000 B    | 0.000 B²   | 0.000 B  | 0.0000 %  |
+| Real Memory Usage      | 20            | 0.000 B    | 0.000 B    | 0.000 B      | 0.000 B    | 0.000 B   | 0.000 B    | 0.000 B²   | 0.000 B  | 0.0000 %  |
+| Real Peak Memory Usage | 20            | 0.000 B    | 0.000 B    | 0.000 B      | 0.000 B    | 0.000 B   | 0.000 B    | 0.000 B²   | 0.000 B  | 0.0000 %  |
++------------------------+---------------+------------+------------+--------------+------------+-----------+------------+------------+----------+-----------+
+Average metrics for the method Foobar\Baz\Foobar::test located in /path/profiler/test.php called 10 times
++------------------------------------+
+|         Execution Time: 140.213 µs |
+|               CPU Time: 11.700 µs  |
+|           Memory Usage: 1.0 KB     |
+|      Real Memory Usage: 0.0 B      |
+|      Peak Memory Usage: 0.0 B      |
+| Real Peak Memory Usage: 0.0 B      |
++------------------------------------+
+```
+
+- one about the full report on the function `test` (this is equivalent as using `Profiler::report`)
+- the other about the average metrics for the `Foobar::test` method.  (this is equivalent as using `Profiler::metrics`)
+
+The `#[Profile]` attribute exposes the same arguments as the `Profiler` methods:
+
+- `iterations`: Number of times to execute the function for statistical significance.
+- `warmup`: (Optional) Number of warmup iterations before measuring.
+- `type`: Either `Profile::METRICS` or `Profile::REPORT`; To determine if you want the `Profiler::report` or the `Profiler::metrics` output.
+
+#### Notes
+
+The command line supports **function-level** and **method-level** profiling, including methods defined
+via traits, even inside Enums.
+
+- Functions or methods without a `#[Profile]` attribute will be ignored.
+- Functions or methods with arguments will also be ignored.
+
+All required dependencies should be loaded in the target file (use `require`, `include` or Composer autoload).
+
+#### Integration into CI
+
+You can run the profiler command in your CI pipelines to detect regressions or performance anomalies.
+
+```yaml
+- name: Run Profiler
+  run: php bin/phpProf --path=/path/profiler/test.php --output=json
+```
+
+> [!IMPORTANT]  
+> The command line requires `symfony\console` and the `psr\log` interfaces to work.
+
+> [!CAUTION]  
+> The command line can scan your full codebase if you specify a directory instead of a path. But
+> favor the cli output as the json output will not return a valid json file.
 
 ### Helpers
 

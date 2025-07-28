@@ -35,7 +35,7 @@ final class ConsoleTableExporterTest extends TestCase
 
         self::assertStringContainsString('Label', $content);
         self::assertStringContainsString('CPU Time', $content);
-        self::assertStringContainsString('Exec Time', $content);
+        self::assertStringContainsString('Execution Time', $content);
 
         self::assertStringContainsString('cli_test', $content);
         self::assertMatchesRegularExpression('/\d+\.\d{3}/', $content); // cpu or exec time
@@ -53,7 +53,7 @@ final class ConsoleTableExporterTest extends TestCase
 
         self::assertStringContainsString('Label', $content);
         self::assertStringContainsString('CPU Time', $content);
-        self::assertStringContainsString('Exec Time', $content);
+        self::assertStringContainsString('Execution Time', $content);
 
         self::assertMatchesRegularExpression('/[a-z0-9][a-z0-9_]*/', $content); //random label
         self::assertMatchesRegularExpression('/\d+\.\d{3}/', $content); // cpu or exec time
@@ -118,7 +118,7 @@ final class ConsoleTableExporterTest extends TestCase
         self::assertStringNotContainsString('Not enough snapshot to generate an export', $content);
         self::assertStringContainsString('Label', $content);
         self::assertStringContainsString('CPU Time', $content);
-        self::assertStringContainsString('Exec Time', $content);
+        self::assertStringContainsString('Execution Time', $content);
 
         self::assertMatchesRegularExpression('/[a-z0-9][a-z0-9_]*/', $content); //random label
         self::assertMatchesRegularExpression('/\d+\.\d{3}/', $content); // cpu or exec time
@@ -167,5 +167,22 @@ final class ConsoleTableExporterTest extends TestCase
         self::assertStringContainsString('Range', $content);
         self::assertStringContainsString('Std Dev', $content);
         self::assertStringContainsString('Real Memory Usage', $content);
+    }
+
+    #[Test]
+    public function it_can_output_a_cli_table_for_some_metrics(): void
+    {
+        $output = new BufferedOutput();
+        $renderer = new ConsoleTableExporter($output);
+
+        $summary = Profiler::execute(fn () => usleep(1000));
+        $renderer->exportMetrics($summary);
+        $content = $output->fetch();
+
+        self::assertStringContainsString('CPU Time', $content);
+        self::assertStringContainsString('Execution Time', $content);
+
+        self::assertMatchesRegularExpression('/[a-z0-9][a-z0-9_]*/', $content); //random label
+        self::assertMatchesRegularExpression('/\d+\.\d{3}/', $content); // cpu or exec time
     }
 }

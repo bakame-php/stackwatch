@@ -50,6 +50,9 @@
             "benchmark/Benchmark.php"
         ]
     },
+    "bin": [
+        "bin/stackwatch"
+    ],
     "scripts": {
         "phpcs": "php-cs-fixer fix -vvv --diff --dry-run --allow-risky=yes --ansi",
         "phpcs:fix": "php-cs-fixer fix -vvv --allow-risky=yes --ansi",
@@ -71,7 +74,7 @@
     },
     "suggest": {
         "psr/log": "to log the profiling process",
-        "symfony/console": "to render the profiler in your CLI command",
+        "symfony/console": "to use the CLI command",
         "open-telemetry/exporter-otlp": "to export the profiler results to an opentelemetry compatible server"
     },
     "extra": {

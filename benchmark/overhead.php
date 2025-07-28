@@ -12,6 +12,4 @@ $callback = function (): int {
     return strlen(str_repeat('abc', 1_000));
 };
 
-Benchmark::toConsole(
-    Benchmark::run(callback: $callback, iterations: $iterations, warmup: $warmup)
-);
+Benchmark::toConsole(Benchmark::run(callback: $callback, iterations: $iterations, warmup: $warmup));

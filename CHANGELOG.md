@@ -8,6 +8,11 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 - `Statistics` class
 - `Report` class and the `Profiler::report` method.
+- `ConsoleTableExporter::exportReport`
+- `ConsoleTableExporter::exportStatistics`
+- `ConsoleTableExporter::exportMetrics`
+- `JsonExporter`
+- `Profile` attribute, the `PathProfiler` class and the `phpProfiler` command to ease profiling
 
 ### Fixed
 

@@ -15,9 +15,9 @@ use Symfony\Component\Console\Output\OutputInterface;
  * @phpstan-import-type SnapshotHumanReadable from Snapshot
  * @phpstan-import-type StatsHumanReadable from Statistics
  */
-final class ConsoleTableExporter implements Exporter
+final class ConsoleTableExporter implements ExtendedExporter
 {
-    public function __construct(private readonly OutputInterface $output = new ConsoleOutput())
+    public function __construct(public readonly OutputInterface $output = new ConsoleOutput())
     {
     }
 
@@ -71,11 +71,11 @@ final class ConsoleTableExporter implements Exporter
             ->setHeaders([
             'Label',
             'CPU Time',
-            'Exec Time',
-            'Memory',
-            'Real Mem',
-            'Peak Mem',
-            'Real Peak',
+            'Execution Time',
+            'Memory Usage',
+            'Real Memory Usage',
+            'Peak Memory Usage',
+            'Real Peak Memory Usage',
         ]);
     }
 
@@ -141,6 +141,36 @@ final class ConsoleTableExporter implements Exporter
             ->render();
     }
 
+    public function exportMetrics(Result|Summary|Metrics $metrics): void
+    {
+        /** @var MetricsHumanReadable $stats */
+        $stats = (match (true) {
+            $metrics instanceof Result => $metrics->summary->metrics,
+            $metrics instanceof Summary => $metrics->metrics,
+            default => $metrics,
+        })->forHuman();
+
+        (new Table($this->output))
+            ->setHeaders([
+                'Execution Time',
+                'CPU Time',
+                'Memory Usage',
+                'Real Memory Usage',
+                'Peak Memory Usage',
+                'Real Peak Memory Usage',
+            ])
+            ->addRow([
+                $stats['execution_time'],
+                $stats['cpu_time'],
+                $stats['memory_usage'],
+                $stats['real_memory_usage'],
+                $stats['peak_memory_usage'],
+                $stats['real_peak_memory_usage'],
+            ])
+            ->setVertical()
+            ->render();
+    }
+
     public function exportStatistics(Statistics $statistics): void
     {
         /** @var StatsHumanReadable $stats */
@@ -178,8 +208,8 @@ final class ConsoleTableExporter implements Exporter
     public function exportReport(Report $report): void
     {
         static $reportPropertyNames = [
-            'cpuTime' => 'CPU',
-            'executionTime' => 'Duration',
+            'cpuTime' => 'CPU Time',
+            'executionTime' => 'Execution Time',
             'memoryUsage' => 'Memory Usage',
             'realMemoryUsage' => 'Real Memory Usage',
             'peakMemoryUsage' => 'Peak Memory Usage',
