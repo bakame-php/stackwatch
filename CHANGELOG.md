@@ -1,8 +1,8 @@
 # Changelog
 
-All Notable changes to `bakame/aide-profiler` will be documented in this file.
+All Notable changes to `bakame/stackwatch` will be documented in this file.
 
-## [Next - African City](https://github.com/bakame-php/aide-profiler/compare/0.10.0...main) - TBD
+## [Next - African City](https://github.com/bakame-php/stackwatch/compare/0.10.0...main) - TBD
 
 ### Added
 
@@ -38,7 +38,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 - **BC BREAK:** `Marker::realPeakMemoryUsage` removed use `Marker::metrics` instead
 - **BC BREAK:** `ProfiledResult` is renamed `Result`
 
-## [0.10.0 - Johannesburg](https://github.com/bakame-php/aide-profiler/compare/0.9,0...0.10.0) - 2025-07-17
+## [0.10.0 - Johannesburg](https://github.com/bakame-php/stackwatch/compare/0.9,0...0.10.0) - 2025-07-17
 
 ### Added
 
@@ -79,7 +79,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 - None
 
-## [0.9.0 - Ibadan](https://github.com/bakame-php/aide-profiler/compare/0.8,0...0.9.0) - 2025-07-09
+## [0.9.0 - Ibadan](https://github.com/bakame-php/stackwatch/compare/0.8,0...0.9.0) - 2025-07-09
 
 ### Added
 
@@ -105,7 +105,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 - None
 
-## [0.8.0 - Harare](https://github.com/bakame-php/aide-profiler/compare/0.7.1...0.8.0) - 2025-07-07
+## [0.8.0 - Harare](https://github.com/bakame-php/stackwatch/compare/0.7.1...0.8.0) - 2025-07-07
 
 ### Added
 
@@ -127,7 +127,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 - None
 
-## [0.7.1 - Gaborone](https://github.com/bakame-php/aide-profiler/compare/0.7.0...0.7.1) - 2025-07-06
+## [0.7.1 - Gaborone](https://github.com/bakame-php/stackwatch/compare/0.7.0...0.7.1) - 2025-07-06
 
 ### Added
 
@@ -145,7 +145,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 - None
 
-## [0.7.0 - Gaborone](https://github.com/bakame-php/aide-profiler/compare/0.6.0...0.7.0) - 2025-07-05
+## [0.7.0 - Gaborone](https://github.com/bakame-php/stackwatch/compare/0.6.0...0.7.0) - 2025-07-05
 
 ### Added
 
@@ -167,7 +167,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 - None
 
-## [0.6.0 - Fezzan](https://github.com/bakame-php/aide-profiler/compare/0.5.0...0.6.0) - 2025-07-03
+## [0.6.0 - Fezzan](https://github.com/bakame-php/stackwatch/compare/0.5.0...0.6.0) - 2025-07-03
 
 ### Added
 
@@ -189,7 +189,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 - **BC BREAK:**  `TimeUnit` is removed in favor of `DurationUnit` Enum
 
-## [0.5.0 - Enugu](https://github.com/bakame-php/aide-profiler/compare/0.4.0...0.5.0) - 2025-07-01
+## [0.5.0 - Enugu](https://github.com/bakame-php/stackwatch/compare/0.4.0...0.5.0) - 2025-07-01
 
 ### Added
 
@@ -208,7 +208,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 - **BC BREAK:** renamed `CliExporter` as `ConsoleTableExporter`
 
-## [0.4.0 - Durban](https://github.com/bakame-php/aide-profiler/compare/0.3.0...0.4.0) - 2025-06-29
+## [0.4.0 - Durban](https://github.com/bakame-php/stackwatch/compare/0.3.0...0.4.0) - 2025-06-29
 
 ### Added
 
@@ -231,7 +231,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 - **BC BREAK:** `ProfilingResult::profile` static method removed
 - **BC BREAK:** `ProfilingData::randomLabel` static method removed
 
-## [0.3.0 - Cairo](https://github.com/bakame-php/aide-profiler/compare/0.2.0...0.3.0) - 2025-06-29
+## [0.3.0 - Cairo](https://github.com/bakame-php/stackwatch/compare/0.2.0...0.3.0) - 2025-06-29
 
 ### Added
 
@@ -262,7 +262,7 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 - **BC BREAK:** `ProfileResult::value` renamed `ProfileResult::result`
 - **BC BREAK:** `ProfileResult::profile` renamed `ProfileResult::profilingData`
 
-## [0.2.0 - Bamako](https://github.com/bakame-php/aide-profiler/compare/0.1.0...0.2.0) - 2025-06-27
+## [0.2.0 - Bamako](https://github.com/bakame-php/stackwatch/compare/0.1.0...0.2.0) - 2025-06-27
 
 ### Added
 
@@ -282,6 +282,6 @@ All Notable changes to `bakame/aide-profiler` will be documented in this file.
 
 - None
 
-## [0.1.0 - Addis Ababa](https://github.com/bakame-php/aide-profiler/releases/tag/0.1.0) - 2025-06-26
+## [0.1.0 - Addis Ababa](https://github.com/bakame-php/stackwatch/releases/tag/0.1.0) - 2025-06-26
 
 **Initial release!**

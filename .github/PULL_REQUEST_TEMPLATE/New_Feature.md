@@ -27,7 +27,7 @@ _(Please explain in plain english the feature you would like to see implemented.
 
 ## Checks before submitting
 
-* [ ] Be sure that there isn't already a pull request about this. See: [Pull requests](https://github.com/bakame-php/aide-profiler/pulls)
+* [ ] Be sure that there isn't already a pull request about this. See: [Pull requests](https://github.com/bakame-php/stackwatch/pulls)
 * [ ] This pull request is about 1 new feature and nothing more.
 * [ ] Be sure to always target the lowest supported PHP version.
 * [ ] Be sure to include tests.

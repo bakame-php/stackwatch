@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Aide\Profiler;
+namespace Bakame\Stackwatch;
 
 use ReflectionMethod;
 use SplFileInfo;
@@ -41,7 +41,7 @@ final class JsonProcessor implements Processor
                 $path = $method->getFileName();
             }
             $data = [
-                'type' => Profile::REPORT === $profile->type ? 'report' : 'average',
+                'type' => Profile::DETAILED === $profile->type ? 'report' : 'average',
                 'iterations' => $profile->iterations,
                 'path' => $method->getFileName(),
             ];
@@ -52,7 +52,7 @@ final class JsonProcessor implements Processor
             } else {
                 $data['function'] = $method->getName();
             }
-            $data['attributes'] = Profile::REPORT === $profile->type ? Profiler::report($closure, $profile->iterations, $profile->warmup) : Profiler::metrics($closure, $profile->iterations, $profile->warmup);
+            $data['attributes'] = Profile::DETAILED === $profile->type ? Profiler::report($closure, $profile->iterations, $profile->warmup) : Profiler::metrics($closure, $profile->iterations, $profile->warmup);
             $json[] = $data;
         }
 

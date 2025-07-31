@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Aide\Profiler;
+namespace Bakame\Stackwatch;
 
 use CallbackFilterIterator;
 use FilesystemIterator;
@@ -21,6 +21,7 @@ use SplFileInfo;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
+use UnitEnum;
 
 use function array_is_list;
 use function array_merge;
@@ -148,9 +149,9 @@ final class PathProfiler
     }
 
     /**
-     * @throws InvalidArgument
+     * @param ReflectionClass<object|UnitEnum>|ReflectionFunctionAbstract $ref
      */
-    private function findProfile(ReflectionFunctionAbstract $ref): ?Profile
+    private function findProfile(ReflectionClass|ReflectionFunctionAbstract $ref): ?Profile
     {
         $attributes = $ref->getAttributes(Profile::class);
 
@@ -203,10 +204,11 @@ final class PathProfiler
         $targetRequiresConstructorArgs = !$refClass instanceof ReflectionEnum && (($refClass->getConstructor()?->getNumberOfRequiredParameters() ?? 0) !== 0);
         $isTargetInstantiated = false;
         $instance = null;
+        $parentProfile = $this->findProfile($refClass);
 
         $results = [];
         foreach ($refClass->getMethods() as $method) {
-            $profile = $this->findProfile($method);
+            $profile = $this->findProfile($method) ?? $parentProfile;
             if (null === $profile) {
                 continue;
             }

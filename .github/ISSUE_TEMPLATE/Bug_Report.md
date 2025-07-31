@@ -8,10 +8,10 @@ about: Something is broken? 🔨
 _(Fill in the relevant information below to help triage your issue.)_
 
 | Information | Description |
-|--------------|---------|
-| Version |  |
-| PHP version |  |
-| OS Platform |  |
+|-------------|-------------|
+| Version     |             |
+| PHP version |             |
+| OS Platform |             |
 
 ### Summary
 
@@ -31,8 +31,8 @@ _(What is the current (buggy) behavior?)_
 
 ## Checks before submitting
 
-* [ ] Be sure that there isn't already an issue about this. See: [Issues list](https://github.com/bakame-php/aide-profiler/issues)
-* [ ] Be sure that there isn't already a pull request about this. See: [Pull requests](https://github.com/bakame-php/aide-profiler/pulls)
+* [ ] Be sure that there isn't already an issue about this. See: [Issues list](https://github.com/bakame-php/stackwatch/issues)
+* [ ] Be sure that there isn't already a pull request about this. See: [Pull requests](https://github.com/bakame-php/stackwatch/pulls)
 * [ ] I have added every step to reproduce the bug.
 * [ ] If possible I added relevant code examples.
 * [ ] This issue is about 1 bug and nothing more.

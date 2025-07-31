@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Aide\Profiler;
+namespace Bakame\Stackwatch;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;

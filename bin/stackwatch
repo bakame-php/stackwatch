@@ -3,7 +3,7 @@
 
 declare(strict_types=1);
 
-use Bakame\Aide\Profiler\Stackwatch;
+use Bakame\Stackwatch\Stackwatch;
 
 if (is_file(__DIR__ . '/../vendor/autoload.php')) {
     require __DIR__ . '/../vendor/autoload.php';

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Aide\Profiler;
+namespace Bakame\Stackwatch;
 
 use Attribute;
 use JsonSerializable;
@@ -10,19 +10,19 @@ use JsonSerializable;
 use function in_array;
 use function json_encode;
 
-#[Attribute(Attribute::TARGET_FUNCTION | Attribute::TARGET_METHOD)]
+#[Attribute(Attribute::TARGET_FUNCTION | Attribute::TARGET_METHOD | Attribute::TARGET_CLASS)]
 final class Profile implements JsonSerializable
 {
-    public const REPORT = 'report';
-    public const METRICS = 'metrics';
+    public const DETAILED = 'detailed';
+    public const SUMMARY = 'summary';
 
     /**
-     * @param self::REPORT|self::METRICS $type
+     * @param self::DETAILED|self::SUMMARY $type
      * @param int<1, max> $iterations
      * @param int<0, max> $warmup
      */
     public function __construct(
-        public readonly string $type = self::METRICS,
+        public readonly string $type = self::SUMMARY,
         public readonly int $iterations = 1,
         public readonly int $warmup = 0,
     ) {
@@ -33,7 +33,7 @@ final class Profile implements JsonSerializable
 
     public static function isValidReport(string $type): void
     {
-        in_array($type, [self::REPORT, self::METRICS], true) || throw new InvalidArgument('The defined type is not supported.');
+        in_array($type, [self::DETAILED, self::SUMMARY], true) || throw new InvalidArgument('The defined type is not supported.');
     }
 
     public static function isValidIterations(int $iterations): void

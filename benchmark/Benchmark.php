@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Bakame\Aide\Profiler\ConsoleTableExporter;
-use Bakame\Aide\Profiler\DurationUnit;
-use Bakame\Aide\Profiler\Environment;
-use Bakame\Aide\Profiler\Marker;
-use Bakame\Aide\Profiler\Profiler;
-use Bakame\Aide\Profiler\Statistics;
-use Bakame\Aide\Profiler\Unit;
+use Bakame\Stackwatch\ConsoleTableExporter;
+use Bakame\Stackwatch\DurationUnit;
+use Bakame\Stackwatch\Environment;
+use Bakame\Stackwatch\Marker;
+use Bakame\Stackwatch\Profiler;
+use Bakame\Stackwatch\Statistics;
+use Bakame\Stackwatch\Unit;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;

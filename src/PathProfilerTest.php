@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Aide\Profiler;
+namespace Bakame\Stackwatch;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -55,9 +55,9 @@ final class PathProfilerTest extends TestCase
 <?php
 namespace Test;
 
-use Bakame\Aide\Profiler\Profile;
+use Bakame\Stackwatch\Profile;
 
-#[Profile(iterations: 5, warmup: 1, type: Profile::REPORT)]
+#[Profile(iterations: 5, warmup: 1, type: Profile::DETAILED)]
 function testFunction(): void
 {
     usleep(1000);
@@ -65,7 +65,7 @@ function testFunction(): void
 
 class TestClass
 {
-    #[Profile(iterations: 3, warmup: 1, type: Profile::METRICS)]
+    #[Profile(iterations: 3, warmup: 1, type: Profile::SUMMARY)]
     public function testMethod(): void
     {
         usleep(500);
@@ -92,13 +92,13 @@ PHP;
 <?php
 namespace Test;
 
-use Bakame\Aide\Profiler\Profile;
+use Bakame\Stackwatch\Profile;
 
 enum TestEnum
 {
     case Foo;
 
-    #[Profile(iterations: 3, warmup: 1, type: Profile::REPORT)]
+    #[Profile(iterations: 3, warmup: 1, type: Profile::DETAILED)]
     public function testMethod(): void
     {
         usleep(500);
@@ -123,13 +123,13 @@ PHP;
 <?php
 namespace Test;
 
-use Bakame\Aide\Profiler\Profile;
+use Bakame\Stackwatch\Profile;
 
 enum TestMethodWithArguments
 {
     case Foo;
 
-    #[Profile(iterations: 3, warmup: 1, type: Profile::METRICS)]
+    #[Profile(iterations: 3, warmup: 1, type: Profile::SUMMARY)]
     public function testMethod(string $foo): string
     {
         return $foo;
@@ -156,11 +156,11 @@ PHP;
 <?php
 namespace Test;
 
-use Bakame\Aide\Profiler\Profile;
+use Bakame\Stackwatch\Profile;
 
 interface TestInterface
 {
-    #[Profile(iterations: 3, warmup: 1, type: Profile::METRICS)]
+    #[Profile(iterations: 3, warmup: 1, type: Profile::SUMMARY)]
     public function testMethod(string $foo): string;
 }
 PHP;
@@ -181,7 +181,7 @@ PHP;
 <?php
 namespace Test;
 
-use Bakame\Aide\Profiler\Profile;
+use Bakame\Stackwatch\Profile;
 
 class TestConstructorsArgument
 {
@@ -189,7 +189,7 @@ class TestConstructorsArgument
     {
     }
 
-    #[Profile(iterations: 3, warmup: 1, type: Profile::METRICS)]
+    #[Profile(iterations: 3, warmup: 1, type: Profile::SUMMARY)]
     public function testMethod(): int
     {
         return 42;
@@ -214,11 +214,11 @@ PHP;
 <?php
 namespace Test;
 
-use Bakame\Aide\Profiler\Profile;
+use Bakame\Stackwatch\Profile;
 
 abstract class TestAbstractMethod
 {
-    #[Profile(iterations: 3, warmup: 1, type: Profile::METRICS)]
+    #[Profile(iterations: 3, warmup: 1, type: Profile::SUMMARY)]
     public abstract function testMethod(): int;
 }
 PHP;
@@ -262,9 +262,9 @@ PHP;
 <?php
 namespace Test;
 
-use Bakame\Aide\Profiler\Profile as Yolo;
+use Bakame\Stackwatch\Profile as Yolo;
 
-#[Yolo(iterations: 3, warmup: 1, type: Yolo::METRICS)]
+#[Yolo(iterations: 3, warmup: 1, type: Yolo::SUMMARY)]
 function foo_with_arguments(string $foo): string
 {
     return $foo;
@@ -284,10 +284,14 @@ PHP;
     public function it_will_handle_partial_namespace_redering(): void
     {
         $content = <<<'PHP'
-use Bakame\Aide\Profiler;
+<?php
+
+namespace Test;
+
+use Bakame\Stackwatch;
 
 trait PartielTimerTrait {
-    #[Profiler\Profile(type: Profiler\Profile::METRICS, iterations: 10)]
+    #[Stackwatch\Profile(type: Profiler\Profile::METRICS, iterations: 10)]
     public function test() : int {
         usleep(100);
 
@@ -302,7 +306,7 @@ enum PartialFoobar
     case Foobar;
 }
 
-#[Profiler\Profile(type: Profiler\Profile::REPORT, iterations: 20, warmup: 2)]
+#[Stackwatch\Profile(type: Profiler\Profile::REPORT, iterations: 20, warmup: 2)]
 function test() : void {
     Profiler\Profiler::metrics(PartialFoobar::Foobar->test(...), 5);
 }
@@ -315,6 +319,37 @@ PHP;
         $errorOutput = $this->stderr->fetch();
 
         self::assertEmpty($output, 'No success messages expected');
+        self::assertEmpty($errorOutput, 'No error messages expected');
+    }
+
+    #[Test]
+    public function it_will_handle_the_attribute_on_the_class(): void
+    {
+        $content = <<<'PHP'
+<?php
+namespace Test;
+
+use Bakame\Stackwatch\Profile;
+
+#[Profile(type: Profile::SUMMARY, iterations: 10)]
+class PartialFoobarClass
+{
+    public function test() : int
+    {
+        usleep(100);
+
+        return random_int(1, 100);
+    }
+}
+PHP;
+
+        $this->loadTempFile($content);
+        $this->command->handle($this->tmpFile);
+
+        $output = $this->stdout->fetch();
+        $errorOutput = $this->stderr->fetch();
+
+        self::assertNotEmpty($output, 'should contain some data');
         self::assertEmpty($errorOutput, 'No error messages expected');
     }
 }

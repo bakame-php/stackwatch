@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Bakame\Aide\Profiler\PathInspector;
+use Bakame\Stackwatch\PathInspector;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;

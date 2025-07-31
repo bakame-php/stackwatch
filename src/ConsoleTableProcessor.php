@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Aide\Profiler;
+namespace Bakame\Stackwatch;
 
 use ReflectionMethod;
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -32,7 +32,7 @@ final class ConsoleTableProcessor implements Processor
     {
         foreach ($targetList as $target) {
             ['closure' => $closure, 'profile' => $profile, 'method' => $method] = $target;
-            if (Profile::REPORT === $profile->type) {
+            if (Profile::DETAILED === $profile->type) {
                 $text = match (true) {
                     $method instanceof ReflectionMethod => 'Report for the method <fg=green>'.$method->class.'::'.$method->getName().'</> located in <fg=green>'.$method->getFileName().'</> called <fg=yellow>'.$profile->iterations.'</> times',
                     default => 'Report for the function <fg=green>'.$method->getName().'</> located in <fg=green>'.$method->getFileName().'</> called <fg=yellow>'.$profile->iterations.'</> times',

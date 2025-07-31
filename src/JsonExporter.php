@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Aide\Profiler;
+namespace Bakame\Stackwatch;
 
 use JsonException;
 use RuntimeException;
@@ -29,7 +29,7 @@ final class JsonExporter implements ExtendedExporter
      * @param SplFileInfo|resource|string $path
      * @param ?resource $context
      */
-    public function __construct(mixed $path, private readonly int $jsonOptions, $context = null)
+    public function __construct(mixed $path, private readonly int $jsonOptions = 0, $context = null)
     {
         $this->path = match (true) {
             is_string($path) => new SplFileObject($path, 'wb', context: $context),

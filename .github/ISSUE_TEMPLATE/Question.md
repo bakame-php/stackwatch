@@ -15,8 +15,8 @@ _(Please explain in plain english your question)_
 
 ## Checks before submitting
 
-* [ ] Be sure that there isn't already an issue about this. See: [Issues list](https://github.com/bakame-php/aide-profiler/issues)
-* [ ] Be sure that there isn't already a pull request about this. See: [Pull requests](https://github.com/bakame-php/aide-profiler/pulls)
+* [ ] Be sure that there isn't already an issue about this. See: [Issues list](https://github.com/bakame-php/stackwatch/issues)
+* [ ] Be sure that there isn't already a pull request about this. See: [Pull requests](https://github.com/bakame-php/stackwatch/pulls)
 * [ ] I have read, searched and not found the information on the [documentation website](https://csv.thephpleague.com).
 * [ ] I have read, searched and not found the information on PHP related forums and/or websites.
 * [ ] This issue is about 1 question around the package with no business or domain specific logic related to a specific situation.

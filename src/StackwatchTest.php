@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Aide\Profiler;
+namespace Bakame\Stackwatch;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -71,9 +71,9 @@ final class StackwatchTest extends TestCase
 <?php
 namespace Test;
 
-use Bakame\Aide\Profiler\Profile;
+use Bakame\Stackwatch\Profile;
 
-#[Profile(iterations: 5, warmup: 1, type: Profile::REPORT)]
+#[Profile(iterations: 5, warmup: 1, type: Profile::DETAILED)]
 function testCommandLineFunction(): void
 {
     usleep(1000);
@@ -81,7 +81,7 @@ function testCommandLineFunction(): void
 
 class TestCommandLineClass
 {
-    #[Profile(iterations: 3, warmup: 1, type: Profile::METRICS)]
+    #[Profile(iterations: 3, warmup: 1, type: Profile::SUMMARY)]
     public function testMethod(): void
     {
         usleep(500);
