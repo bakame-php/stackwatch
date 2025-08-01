@@ -23,7 +23,6 @@ final class JsonHandler implements Handler
         $jsonOptions = $input->pretty
             ? JSON_PRETTY_PRINT | JSON_BIGINT_AS_STRING
             : JSON_BIGINT_AS_STRING;
-
         $stream = $input->output ?? STDOUT;
         $profiler = PathProfiler::forJson($stream, $jsonOptions, $this->logger);
 

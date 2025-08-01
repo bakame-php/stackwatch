@@ -26,9 +26,7 @@ final class ConsoleHandler implements Handler
             set_error_handler(fn () => true);
             $handler = @fopen($input->output, 'w');
             restore_error_handler();
-            if (false === $handler) {
-                throw new RuntimeException('Unable to open the file for storing the output.');
-            }
+            false !== $handler || throw new RuntimeException('Unable to open the file for storing the output.');
             $output = new StreamOutput($handler);
         }
 
@@ -45,7 +43,6 @@ final class ConsoleHandler implements Handler
         }
 
         $output->writeln('');
-
         if (null !== $input->path) {
             $profiler->handle($input->path);
         }
