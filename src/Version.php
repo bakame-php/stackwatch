@@ -4,23 +4,56 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch;
 
-final class Version
-{
-    private const VERSION = '0.11.0';
-    private const NAME = 'Kampala';
+use Stringable;
 
-    public static function identifier(): string
-    {
-        return self::VERSION;
-    }
+final class Version implements Stringable
+{
+    private const NAME = 'stackwatch';
+    private const VERSION_ID = '0.11.0';
+    private const VERSION_NAME = 'Kampala';
+    private const AUTHOR = 'Ignace Nyamagana Butera';
 
     public static function name(): string
     {
         return self::NAME;
     }
 
+    public static function identifier(): string
+    {
+        return self::VERSION_ID;
+    }
+
+    public static function codename(): string
+    {
+        return self::VERSION_NAME;
+    }
+
     public static function full(): string
     {
-        return 'v'.self::VERSION.' ('.self::NAME.')';
+        return 'v'.self::VERSION_ID.' ('.self::VERSION_NAME.')';
+    }
+
+    public static function author(): string
+    {
+        return self::AUTHOR;
+    }
+
+    public static function copyrights(): string
+    {
+        return self::NAME.' '.self::full().' by '.self::AUTHOR.' and contributors.';
+    }
+
+    public static function banner(): string
+    {
+        $text = self::copyrights();
+        $before = strstr($text, ' by', true);
+        $after = strstr($text, 'by ');
+
+        return '<fg=green>'.$before.'</> <fg=yellow>'.$after.'</>'."\n";
+    }
+
+    public function __toString(): string
+    {
+        return self::copyrights();
     }
 }

@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
-use Bakame\Stackwatch\PathInspector;
+namespace Bakame\Stackwatch;
+
+use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ValueError;
 
 #[CoversClass(PathInspector::class)]
 final class PathInspectorTest extends TestCase

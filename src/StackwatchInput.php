@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch;
 
+use Symfony\Component\Console\Input\InputInterface;
+
 use function getopt;
 use function in_array;
 use function is_string;
@@ -44,50 +46,95 @@ final class StackwatchInput
     ) {
         in_array($this->format, [self::JSON_FORMAT, self::CLI_FORMAT], true) || throw new InvalidArgument('Output format is not supported');
         null === $this->path || '' !== trim($this->path) || throw new InvalidArgument('path format is not valid');
+        ($this->showHelp || $this->showInfo || $this->showVersion || null !== $this->path) || throw new InvalidArgument('Missing required option: --path');
     }
 
     /**
-     * @param OptionMap $options
+     * @param OptionMap|InputInterface $input
      */
-    public static function fromOptions(array $options): self
+    public static function fromInput(array|InputInterface $input): self
     {
-        $showInfo = isset($options['info']) || isset($options['i']);
-        $showHelp = isset($options['help']) || isset($options['h']);
-        $showVersion = isset($options['version']) || isset($options['V']);
-        $pretty = isset($options['pretty']) || isset($options['P']);
-        $output = null;
-        if (isset($options['output']) && is_string($options['output'])) {
-            $output = trim($options['output']);
-        }
-        if (isset($options['o']) && is_string($options['o'])) {
-            $output = trim($options['o']);
-        }
-
-        $path = null;
-        if (isset($options['path']) && is_string($options['path'])) {
-            $path = trim($options['path']);
-        } elseif (isset($options['p']) && is_string($options['p'])) {
-            $path = trim($options['p']);
-        }
-
-        $format = strtolower($options['format'] ?? $options['f'] ?? self::CLI_FORMAT);
-
         return new self(
-            path: $path,
-            showHelp: $showHelp,
-            showInfo: $showInfo,
-            showVersion: $showVersion,
-            format: self::JSON_FORMAT === $format ? self::JSON_FORMAT : self::CLI_FORMAT,
-            output: $output,
-            pretty: $pretty,
+            path: self::getFirstValue($input, 'path', 'p'),
+            showHelp: self::hasFlag($input, 'help', 'h'),
+            showInfo: self::hasFlag($input, 'info', 'i'),
+            showVersion: self::hasFlag($input, 'version', 'V'),
+            format: self::normalizeFormat(self::getFirstValue($input, 'format', 'f') ?? self::CLI_FORMAT),
+            output: self::getFirstValue($input, 'output', 'o'),
+            pretty: self::hasFlag($input, 'pretty', 'P'),
         );
     }
 
     public static function fromCli(): self
     {
         /** @var OptionMap $options */
-        $options = getopt('ihvPp:f:o:', ['path:', 'format:', 'output:', 'info', 'help', 'version', 'pretty']);
+        $options = getopt('ihVPp:f:o:', ['path:', 'format:', 'output:', 'info', 'help', 'version', 'pretty']);
 
-        return self::fromOptions($options);
+        return self::fromInput($options);
+    }
+
+    /**
+     * @param array<string, string|false>|InputInterface $input
+     */
+    private static function getFirstValue(array|InputInterface $input, string ...$keys): ?string
+    {
+        foreach ($keys as $key) {
+            $value = is_array($input)
+                ? ($input[$key] ?? null)
+                : $input->getOption($key);
+
+            if (is_string($value)) {
+                return trim($value);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, string|false>|InputInterface $input
+     */
+    private static function hasFlag(array|InputInterface $input, string ...$keys): bool
+    {
+        foreach ($keys as $key) {
+            if (is_array($input) && array_key_exists($key, $input)) {
+                return true;
+            }
+
+            if ($input instanceof InputInterface && null !== $input->getOption($key)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static function normalizeFormat(string $format): string
+    {
+        $format = strtolower(trim($format));
+
+        return match ($format) {
+            self::JSON_FORMAT => self::JSON_FORMAT,
+            self::CLI_FORMAT => self::CLI_FORMAT,
+            default => throw new InvalidArgument("Unsupported format: $format"),
+        };
+    }
+
+    public static function usage(): string
+    {
+        return '--path=PATH [--output=OUTPUT] [--format=FORMAT] [--pretty] [--info] [--help] [--version]';
+    }
+
+    public static function description(): string
+    {
+        return <<<HELP
+<fg=green>  -p, --path=PATH</>       Path to scan for PHP files to profile (required)
+<fg=green>  -f, --format=FORMAT</>   Output format: 'cli' or 'json' (default: 'cli')
+<fg=green>  -o, --output=OUTPUT</>   Path to store the profiling output (optional)
+<fg=green>  -P, --pretty</>          Pretty-print the JSON/NDJSON output (json only)
+<fg=green>  -i, --info</>            Show additional system/environment information
+<fg=green>  -h, --help</>            Display this help message
+<fg=green>  -V, --version</>         Display the version and exit
+HELP;
     }
 }
