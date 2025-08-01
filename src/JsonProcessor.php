@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch;
 
+use Closure;
+use ReflectionFunctionAbstract;
 use ReflectionMethod;
 use SplFileInfo;
 use Throwable;
@@ -36,18 +38,21 @@ final class JsonProcessor implements Processor
         $json = [];
         $path = null;
         foreach ($targetList as $target) {
+            /**
+             * @var Closure $closure
+             * @var Profile $profile
+             * @var ReflectionFunctionAbstract $method
+             */
             ['closure' => $closure, 'profile' => $profile, 'method' => $method] = $target;
-            if (null === $path) {
-                $path = $method->getFileName();
-            }
+            $path ??= $method->getFileName();
             $data = [
-                'type' => Profile::DETAILED === $profile->type ? 'report' : 'average',
+                'type' => $profile->type,
                 'iterations' => $profile->iterations,
-                'path' => $method->getFileName(),
+                'warmup' => $profile->warmup,
             ];
 
             if ($method instanceof ReflectionMethod) {
-                $data['class_name'] = $method->class;
+                $data['class'] = $method->class;
                 $data['method'] = $method->getName();
             } else {
                 $data['function'] = $method->getName();
