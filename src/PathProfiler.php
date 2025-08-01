@@ -23,7 +23,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 use UnitEnum;
 
-use function array_is_list;
 use function array_merge;
 use function array_reduce;
 use function class_exists;
@@ -38,7 +37,6 @@ use function strtolower;
  * using the Profile attribute.
  *
  * @phpstan-import-type TargetList from Processor
- * @phpstan-import-type Target from Processor
  */
 final class PathProfiler
 {
@@ -109,7 +107,7 @@ final class PathProfiler
             return;
         }
 
-        $code = $path->openFile('r')->fread($filesize);
+        $code = $path->openFile()->fread($filesize);
         if (false === $code) {
             $this->logger->notice('The file '.$realPath.' can not be profiled because it is not readable.', ['path' => $realPath]);
 
@@ -123,7 +121,7 @@ final class PathProfiler
 
         require_once $realPath;
 
-        /** @var TargetList $targets */
+        /** @var iterable<Target> $targets */
         $targets = array_reduce($tuples, function (array $targets, array $tuple) use ($realPath): array {
             $target = match ($tuple[0]) {
                 'function' => $this->prepareFunctionProcess($tuple[1]),
@@ -131,18 +129,17 @@ final class PathProfiler
                 default => throw new LogicException("Unable to prepare process for target type $tuple[1] in $realPath"),
             };
 
-            if ([] === $target) {
+            if ([] === $target || null === $target) {
                 return $targets;
             }
 
-            if (array_is_list($target)) {
-                return array_merge($targets, $target);
+            if ($target instanceof Target) {
+                $targets[] = $target;
+
+                return $targets;
             }
 
-            $targets[] = $target;
-
-            return $targets;
-
+            return array_merge($targets, $target);
         }, []);
 
         $this->processor->process($targets);
@@ -158,19 +155,16 @@ final class PathProfiler
         return 1 === count($attributes) ? $attributes[0]->newInstance() : null;
     }
 
-    /**
-     * @return array{}|Target
-     */
-    public function prepareFunctionProcess(string $functionName): array
+    public function prepareFunctionProcess(string $functionName): ?Target
     {
         if (!function_exists($functionName)) {
-            return [];
+            return null;
         }
 
         $method = new ReflectionFunction($functionName);
         $profile = $this->findProfile($method);
         if (null === $profile) {
-            return [];
+            return null;
         }
 
         if (0 !== $method->getNumberOfParameters()) {
@@ -179,20 +173,16 @@ final class PathProfiler
                 'method' => $functionName,
                 'path' => $method->getFileName(),
             ]);
-            return [];
+            return null;
         }
 
-        return [
-            'closure' => $method->invoke(...),
-            'profile' => $profile,
-            'method' => $method,
-        ];
+        return new Target(callback: $method->invoke(...), profile: $profile, source: $method);
     }
 
     /**
      * @throws ReflectionException
      *
-     * @return array{}|TargetList
+     * @return TargetList
      */
     public function prepareMethodsProcess(string $className): array
     {
@@ -250,12 +240,11 @@ final class PathProfiler
                 }
             }
 
-            $results[] = [
-                'closure' => fn () => $method->invoke($method->isStatic() ? null : $instance),
-                'profile' => $profile,
-                'method' => $method,
-            ];
-            ;
+            $results[] = new Target(
+                callback: fn () => $method->invoke($method->isStatic() ? null : $instance),
+                profile: $profile,
+                source: $method,
+            );
         }
 
         return $results;

@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch;
 
-use Closure;
-use ReflectionFunctionAbstract;
-use ReflectionMethod;
-use SplFileInfo;
 use Throwable;
 
 /**
@@ -20,16 +16,7 @@ final class JsonProcessor implements Processor
     }
 
     /**
-     * @param SplFileInfo|resource|string $path
-     * @param ?resource $context
-     */
-    public static function fromStream(mixed $path, int $jsonOptions, $context = null): self
-    {
-        return new self(new JsonExporter($path, $jsonOptions, $context));
-    }
-
-    /**
-     * @param TargetList $targetList
+     * @param iterable<Target> $targetList
      *
      * @throws Throwable
      */
@@ -38,27 +25,8 @@ final class JsonProcessor implements Processor
         $json = [];
         $path = null;
         foreach ($targetList as $target) {
-            /**
-             * @var Closure $closure
-             * @var Profile $profile
-             * @var ReflectionFunctionAbstract $method
-             */
-            ['closure' => $closure, 'profile' => $profile, 'method' => $method] = $target;
-            $path ??= $method->getFileName();
-            $data = [
-                'type' => $profile->type,
-                'iterations' => $profile->iterations,
-                'warmup' => $profile->warmup,
-            ];
-
-            if ($method instanceof ReflectionMethod) {
-                $data['class'] = $method->class;
-                $data['method'] = $method->getName();
-            } else {
-                $data['function'] = $method->getName();
-            }
-            $data['attributes'] = Profile::DETAILED === $profile->type ? Profiler::report($closure, $profile->iterations, $profile->warmup) : Profiler::metrics($closure, $profile->iterations, $profile->warmup);
-            $json[] = $data;
+            $path ??= $target->source->getFileName();
+            $json[] = array_merge($target->toArray(), ['attributes' => $target->generate()]);
         }
 
         $this->exporter->writeln(null === $path ? [] : ['path' => $path, 'data' => $json]);
