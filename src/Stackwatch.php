@@ -51,20 +51,26 @@ final class Stackwatch
         }
 
         try {
-            $handler = match ($options->format) {
-                StackwatchInput::CLI_FORMAT => new ConsoleHandler($this->stdout, $this->logger, $this->environment),
-                StackwatchInput::JSON_FORMAT => new JsonHandler($this->logger, $this->environment),
-                default => throw new RuntimeException('Unknown output format: '.$options->format),
-            };
-
-            $handler->handle($options);
+            $this->resolveHandler($options)->handle($options);
 
             return self::SUCCESS;
-        } catch (Throwable $e) {
-            $this->stderr->writeln('<error> Execution Error: '.$e->getMessage().'</error>');
+        } catch (Throwable $exception) {
+            $this->stderr->writeln('<error> Execution Error: '.$exception->getMessage().'</error>');
 
             return self::ERROR;
         }
+    }
+
+    /**
+     * @throws RuntimeException If no handler is found
+     */
+    private function resolveHandler(StackwatchInput $options): Handler
+    {
+        return match ($options->format) {
+            StackwatchInput::CLI_FORMAT => new ConsoleHandler($this->stdout, $this->logger, $this->environment),
+            StackwatchInput::JSON_FORMAT => new JsonHandler($this->logger, $this->environment),
+            default => throw new RuntimeException('Unknown output format: '.$options->format),
+        };
     }
 
     private function helpText(): string
