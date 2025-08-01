@@ -125,7 +125,7 @@ final class StackwatchInput
         return '--path=PATH [--output=OUTPUT] [--format=FORMAT] [--pretty] [--info] [--help] [--version]';
     }
 
-    public static function description(): string
+    public static function consoleDescription(): string
     {
         return <<<HELP
 <fg=green>  -p, --path=PATH</>       Path to scan for PHP files to profile (required)

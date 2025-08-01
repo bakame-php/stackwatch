@@ -16,6 +16,7 @@ use function unlink;
 
 #[CoversClass(StackwatchInput::class)]
 #[CoversClass(Stackwatch::class)]
+#[CoversClass(Target::class)]
 final class StackwatchTest extends TestCase
 {
     private BufferedOutput $stdout;

@@ -23,7 +23,7 @@ final class ConsoleTableProcessor implements Processor
     public function process(iterable $targetList): void
     {
         foreach ($targetList as $target) {
-            $this->exporter->output->writeln($target->banner());
+            $this->exporter->output->writeln($target->toConsoleString());
             $stats = $target->generate();
             $stats instanceof Metrics ? $this->exporter->exportMetrics($stats) : $this->exporter->exportReport($stats);
         }

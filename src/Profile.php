@@ -52,7 +52,7 @@ final class Profile implements JsonSerializable
     }
 
     /**
-     * @return array{type:string, iterations: int, warmup:int}
+     * @return array{type:string, iterations: int<1, max>, warmup:int<0, max>}
      */
     public function toArray(): array
     {

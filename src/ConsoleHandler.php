@@ -31,7 +31,7 @@ final class ConsoleHandler implements Handler
         }
 
         $profiler = PathProfiler::forConsole($output, $this->logger);
-        $output->writeln(Version::banner());
+        $output->writeln(Version::toConsoleString());
 
         if ($input->showInfo) {
             $processor = $profiler->processor;

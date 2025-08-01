@@ -31,7 +31,7 @@ final class Stackwatch
     public function execute(StackwatchInput $options): int
     {
         if ($options->showHelp) {
-            $this->stdout->writeln(Version::banner());
+            $this->stdout->writeln(Version::toConsoleString());
             $this->stdout->writeln($this->helpText());
 
             return self::SUCCESS;
@@ -78,7 +78,7 @@ final class Stackwatch
         $name = Version::name();
         $description = self::DESCRIPTION;
         $optionsUsage = StackwatchInput::usage();
-        $optionsDescription = StackwatchInput::description();
+        $optionsDescription = StackwatchInput::consoleDescription();
 
         return <<<HELP
 <fg=yellow>Description:</>

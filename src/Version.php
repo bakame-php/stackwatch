@@ -38,14 +38,14 @@ final class Version implements Stringable
         return self::AUTHOR;
     }
 
-    public static function copyrights(): string
+    public static function toPlainString(): string
     {
         return self::NAME.' '.self::full().' by '.self::AUTHOR.' and contributors.';
     }
 
-    public static function banner(): string
+    public static function toConsoleString(): string
     {
-        $text = self::copyrights();
+        $text = self::toPlainString();
         $before = strstr($text, ' by', true);
         $after = strstr($text, 'by ');
 
@@ -54,6 +54,6 @@ final class Version implements Stringable
 
     public function __toString(): string
     {
-        return self::copyrights();
+        return self::toPlainString();
     }
 }
