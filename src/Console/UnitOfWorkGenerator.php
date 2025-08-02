@@ -12,6 +12,7 @@ use ReflectionEnum;
 use ReflectionException;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
+use SplFileInfo;
 use UnitEnum;
 
 use function array_merge;
@@ -20,49 +21,52 @@ use function class_exists;
 use function count;
 use function function_exists;
 
-final class TargetGenerator
+final class UnitOfWorkGenerator
 {
-    public function __construct(public readonly LoggerInterface $logger)
-    {
+    public function __construct(
+        public readonly PathInspector $pathInspector,
+        public readonly LoggerInterface $logger
+    ) {
     }
 
     /**
-     * @param list<array{0:string, 1:string}> $tuples
-     *
      * @throws ReflectionException|LogicException
      *
-     * @return iterable<Target>
+     * @return iterable<UnitOfWork>
      */
-    public function generate(string $realPath, array $tuples): iterable
+    public function generate(string|SplFileInfo $realPath): iterable
     {
+        $splFileInfo = $this->filterPath($realPath);
+        $realPath = $splFileInfo->getRealPath();
+        $tuples = $this->pathInspector->inspect($splFileInfo);
         if ([] === $tuples) {
             return [];
         }
 
         require_once $realPath;
 
-        /** @var array<Target> $targets */
-        $targets = array_reduce($tuples, function (array $targets, array $tuple) use ($realPath): array {
-            $target = match ($tuple[0]) {
+        /** @var array<UnitOfWork> $unitOfWorks */
+        $unitOfWorks = array_reduce($tuples, function (array $unitOfWorks, array $tuple) use ($realPath): array {
+            $unitOfWork = match ($tuple[0]) {
                 'function' => $this->prepareFunctionProcess($tuple[1]),
                 'class' => $this->prepareMethodsProcess($tuple[1]),
                 default => throw new LogicException("Unable to prepare process for target type $tuple[1] in $realPath"),
             };
 
-            if ([] === $target || null === $target) {
-                return $targets;
+            if ([] === $unitOfWork || null === $unitOfWork) {
+                return $unitOfWorks;
             }
 
-            if ($target instanceof Target) {
-                $targets[] = $target;
+            if ($unitOfWork instanceof UnitOfWork) {
+                $unitOfWorks[] = $unitOfWork;
 
-                return $targets;
+                return $unitOfWorks;
             }
 
-            return array_merge($targets, $target);
+            return array_merge($unitOfWorks, $unitOfWork);
         }, []);
 
-        return $targets;
+        return $unitOfWorks;
     }
 
     /**
@@ -78,7 +82,7 @@ final class TargetGenerator
     /**
      * @throws ReflectionException
      *
-     * @return list<Target>
+     * @return list<UnitOfWork>
      */
     private function prepareMethodsProcess(string $className): array
     {
@@ -136,7 +140,7 @@ final class TargetGenerator
                 }
             }
 
-            $results[] = new Target(
+            $results[] = new UnitOfWork(
                 callback: fn () => $method->invoke($method->isStatic() ? null : $instance),
                 profile: $profile,
                 source: $method,
@@ -146,7 +150,7 @@ final class TargetGenerator
         return $results;
     }
 
-    private function prepareFunctionProcess(string $functionName): ?Target
+    private function prepareFunctionProcess(string $functionName): ?UnitOfWork
     {
         if (!function_exists($functionName)) {
             return null;
@@ -162,11 +166,17 @@ final class TargetGenerator
             $this->logger->notice('The function '.$functionName.' located in '.$method->getFileName().' can not be profiled because it has arguments.', [
                 'profile' => $profile,
                 'method' => $functionName,
+                'class' => null,
                 'path' => $method->getFileName(),
             ]);
             return null;
         }
 
-        return new Target(callback: $method->invoke(...), profile: $profile, source: $method);
+        return new UnitOfWork(callback: $method->invoke(...), profile: $profile, source: $method);
+    }
+
+    private function filterPath(SplFileInfo|string $path): SplFileInfo
+    {
+        return $path instanceof SplFileInfo ? $path : new SplFileInfo($path);
     }
 }

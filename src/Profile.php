@@ -10,6 +10,9 @@ use JsonSerializable;
 use function in_array;
 use function json_encode;
 
+/**
+ * @phpstan-type ProfileMap array{type: 'detailed'|'summary', iterations: int<1, max>, warmup:int<0, max>}
+ */
 #[Attribute(Attribute::TARGET_FUNCTION | Attribute::TARGET_METHOD | Attribute::TARGET_CLASS)]
 final class Profile implements JsonSerializable
 {
@@ -29,6 +32,18 @@ final class Profile implements JsonSerializable
         self::isValidReport($type);
         self::isValidIterations($iterations);
         self::isValidWarmup($warmup);
+    }
+
+    /**
+     * @param ProfileMap $data
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            type: $data['type'],
+            iterations: $data['iterations'],
+            warmup: $data['warmup'],
+        );
     }
 
     public static function isValidReport(string $type): void
@@ -52,7 +67,7 @@ final class Profile implements JsonSerializable
     }
 
     /**
-     * @return array{type: 'detailed'|'summary', iterations: int<1, max>, warmup:int<0, max>}
+     * @return ProfileMap
      */
     public function toArray(): array
     {
@@ -64,19 +79,7 @@ final class Profile implements JsonSerializable
     }
 
     /**
-     * @param array{type: 'detailed'|'summary', iterations: int<1, max>, warmup:int<0, max>} $data
-     */
-    public static function fromArray(array $data): self
-    {
-        return new self(
-            type: $data['type'],
-            iterations: $data['iterations'],
-            warmup: $data['warmup'],
-        );
-    }
-
-    /**
-     * @return array{type:string, iterations: int, warmup:int}
+     * @return ProfileMap
      */
     public function jsonSerialize(): array
     {

@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch\Console;
 
 use Attribute;
+use Bakame\Stackwatch\InvalidArgument;
 use PhpToken;
 use ReflectionClass;
+use RuntimeException;
+use SplFileInfo;
 use ValueError;
 
 use function array_pop;
@@ -50,7 +53,22 @@ final class PathInspector
     }
 
     /**
-     * Returns a list of top level functions and of class contained in a file content.
+     * Returns a list of top level functions and classes contained in a PHP file.
+     *
+     * @return list<array{0:string, 1:string}>
+     */
+    public function inspect(SplFileInfo $path): array
+    {
+        $path->isFile() || throw new InvalidArgument('The path "'.$path->getRealPath().'" is not a file.');
+        $path->isReadable() || throw new InvalidArgument('The file "'.$path->getRealPath().'" is not readable.');
+        $code = $path->openFile()->fread($path->getSize());
+        false !== $code || throw new RuntimeException('The file '.$path->getRealPath().' is not readable.');
+
+        return $this->extract($code);
+    }
+
+    /**
+     * Returns a list of top level functions and classes contained in a PHP file.
      *
      * @return list<array{0:string, 1:string}>
      */
@@ -73,6 +91,8 @@ final class PathInspector
             return [];
         }
 
+        //We return a list of tuple with the name of the toplevel functions
+        //or classes contained in the file
         return $this->extractFunctionAndClassNames($tokens, $tokenCount);
     }
 

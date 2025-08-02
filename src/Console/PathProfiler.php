@@ -28,8 +28,7 @@ use function strtolower;
 final class PathProfiler
 {
     public function __construct(
-        public readonly PathInspector $pathInspector,
-        public readonly TargetGenerator $targetGenerator,
+        public readonly UnitOfWorkGenerator $unitOfWorkGenerator,
         public readonly Processor $processor,
         public readonly LoggerInterface $logger = new NullLogger(),
     ) {
@@ -38,8 +37,7 @@ final class PathProfiler
     public static function forConsole(OutputInterface $output = new ConsoleOutput(), LoggerInterface $logger = new NullLogger()): self
     {
         return new self(
-            new PathInspector(Profile::class),
-            new TargetGenerator($logger),
+            new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
             new ConsoleTableProcessor(new ConsoleTableExporter($output)),
             $logger,
         );
@@ -51,8 +49,7 @@ final class PathProfiler
     public static function forJson(mixed $path, int $jsonOptions = 0, LoggerInterface $logger = new NullLogger()): self
     {
         return new self(
-            new PathInspector(Profile::class),
-            new TargetGenerator($logger),
+            new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
             new JsonProcessor(new JsonExporter($path, $jsonOptions)),
             $logger,
         );
@@ -94,15 +91,14 @@ final class PathProfiler
             return;
         }
 
-        $code = $path->openFile()->fread($filesize);
-        if (false === $code) {
-            $this->logger->notice('The file '.$realPath.' can not be profiled because it is not readable.', ['path' => $realPath]);
+        try {
+            $unitOfWorks = $this->unitOfWorkGenerator->generate($realPath);
+        } catch (Throwable $exception) {
+            $this->logger->notice('The file '.$realPath.' can not be profiled.', ['path' => $realPath, 'exception' => $exception]);
 
             return;
         }
 
-        $tuples = $this->pathInspector->extract($code);
-        $targets = $this->targetGenerator->generate($realPath, $tuples);
-        $this->processor->process($targets);
+        $this->processor->process($unitOfWorks);
     }
 }

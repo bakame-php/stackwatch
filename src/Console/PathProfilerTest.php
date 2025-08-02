@@ -20,7 +20,7 @@ use function tempnam;
 #[CoversClass(PathInspector::class)]
 #[CoversClass(JsonProcessor::class)]
 #[CoversClass(ConsoleTableProcessor::class)]
-#[CoversClass(TargetGenerator::class)]
+#[CoversClass(UnitOfWorkGenerator::class)]
 final class PathProfilerTest extends TestCase
 {
     private string $tmpFile;
@@ -35,8 +35,7 @@ final class PathProfilerTest extends TestCase
         $this->stderr = new BufferedOutput();
         $logger = new Logger($this->stderr);
         $this->command = new PathProfiler(
-            new PathInspector(Profile::class),
-            new TargetGenerator($logger),
+            new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
             new ConsoleTableProcessor(new ConsoleTableExporter($this->stdout)),
             $logger
         );
