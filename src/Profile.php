@@ -23,7 +23,7 @@ final class Profile implements JsonSerializable
      */
     public function __construct(
         public readonly string $type = self::SUMMARY,
-        public readonly int $iterations = 1,
+        public readonly int $iterations = 3,
         public readonly int $warmup = 0,
     ) {
         self::isValidReport($type);
