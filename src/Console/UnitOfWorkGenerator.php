@@ -20,7 +20,7 @@ use function class_exists;
 use function count;
 use function function_exists;
 
-final class TargetGenerator
+final class UnitOfWorkGenerator
 {
     public function __construct(public readonly LoggerInterface $logger)
     {
@@ -31,7 +31,7 @@ final class TargetGenerator
      *
      * @throws ReflectionException|LogicException
      *
-     * @return iterable<Target>
+     * @return iterable<UnitOfWork>
      */
     public function generate(string $realPath, array $tuples): iterable
     {
@@ -41,7 +41,7 @@ final class TargetGenerator
 
         require_once $realPath;
 
-        /** @var array<Target> $targets */
+        /** @var array<UnitOfWork> $targets */
         $targets = array_reduce($tuples, function (array $targets, array $tuple) use ($realPath): array {
             $target = match ($tuple[0]) {
                 'function' => $this->prepareFunctionProcess($tuple[1]),
@@ -53,7 +53,7 @@ final class TargetGenerator
                 return $targets;
             }
 
-            if ($target instanceof Target) {
+            if ($target instanceof UnitOfWork) {
                 $targets[] = $target;
 
                 return $targets;
@@ -78,7 +78,7 @@ final class TargetGenerator
     /**
      * @throws ReflectionException
      *
-     * @return list<Target>
+     * @return list<UnitOfWork>
      */
     private function prepareMethodsProcess(string $className): array
     {
@@ -136,7 +136,7 @@ final class TargetGenerator
                 }
             }
 
-            $results[] = new Target(
+            $results[] = new UnitOfWork(
                 callback: fn () => $method->invoke($method->isStatic() ? null : $instance),
                 profile: $profile,
                 source: $method,
@@ -146,7 +146,7 @@ final class TargetGenerator
         return $results;
     }
 
-    private function prepareFunctionProcess(string $functionName): ?Target
+    private function prepareFunctionProcess(string $functionName): ?UnitOfWork
     {
         if (!function_exists($functionName)) {
             return null;
@@ -167,6 +167,6 @@ final class TargetGenerator
             return null;
         }
 
-        return new Target(callback: $method->invoke(...), profile: $profile, source: $method);
+        return new UnitOfWork(callback: $method->invoke(...), profile: $profile, source: $method);
     }
 }

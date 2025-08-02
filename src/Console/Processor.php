@@ -6,6 +6,6 @@ namespace Bakame\Stackwatch\Console;
 
 interface Processor
 {
-    /** @param iterable<Target> $targets */
-    public function process(iterable $targets): void;
+    /** @param iterable<UnitOfWork> $unitOfWorks */
+    public function process(iterable $unitOfWorks): void;
 }

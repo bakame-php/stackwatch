@@ -15,15 +15,17 @@ final class ConsoleTableProcessor implements Processor
     }
 
     /**
-     * @param iterable<Target> $targets
+     * @param iterable<UnitOfWork> $unitOfWorks
      *
      * @throws Throwable
      */
-    public function process(iterable $targets): void
+    public function process(iterable $unitOfWorks): void
     {
-        foreach ($targets as $target) {
-            $this->exporter->output->writeln($target->toConsoleString());
-            $stats = $target->generate();
+        foreach ($unitOfWorks as $unitOfWork) {
+            $unitOfWork->run();
+
+            $stats = $unitOfWork->result();
+            $this->exporter->output->writeln($unitOfWork->toConsoleString());
             $stats instanceof Metrics ? $this->exporter->exportMetrics($stats) : $this->exporter->exportReport($stats);
         }
     }

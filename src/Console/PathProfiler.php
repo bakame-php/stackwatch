@@ -29,7 +29,7 @@ final class PathProfiler
 {
     public function __construct(
         public readonly PathInspector $pathInspector,
-        public readonly TargetGenerator $targetGenerator,
+        public readonly UnitOfWorkGenerator $targetGenerator,
         public readonly Processor $processor,
         public readonly LoggerInterface $logger = new NullLogger(),
     ) {
@@ -39,7 +39,7 @@ final class PathProfiler
     {
         return new self(
             new PathInspector(Profile::class),
-            new TargetGenerator($logger),
+            new UnitOfWorkGenerator($logger),
             new ConsoleTableProcessor(new ConsoleTableExporter($output)),
             $logger,
         );
@@ -52,7 +52,7 @@ final class PathProfiler
     {
         return new self(
             new PathInspector(Profile::class),
-            new TargetGenerator($logger),
+            new UnitOfWorkGenerator($logger),
             new JsonProcessor(new JsonExporter($path, $jsonOptions)),
             $logger,
         );

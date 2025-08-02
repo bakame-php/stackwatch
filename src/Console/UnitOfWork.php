@@ -9,7 +9,10 @@ use Bakame\Stackwatch\Metrics;
 use Bakame\Stackwatch\Profile;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Report;
+use Bakame\Stackwatch\UnableToProfile;
 use Closure;
+use DateTimeImmutable;
+use DateTimeZone;
 use ReflectionClass;
 use ReflectionEnum;
 use ReflectionFunction;
@@ -20,19 +23,25 @@ use Throwable;
 use function strtr;
 
 /**
- * @phpstan-type TargetMap array{
+ * @phpstan-import-type MetricsStat from Metrics
+ * @phpstan-import-type ReportMap from Report
+ * @phpstan-type UnitOfWorkMap array{
  *      type: 'detailed'|'summary',
  *      iterations: int<1, max>,
  *      warmup: int<0, max>,
  *      class?: class-string,
  *      method?: non-empty-string,
  *      function?: non-empty-string,
+ *      run_at: ?string,
+ *      attributes: MetricsStat|ReportMap|array{}
  *  }
  */
-final class Target
+final class UnitOfWork
 {
     private ?string $name = null;
     private ?string $template = null;
+    private Report|Metrics|null $result = null;
+    private ?DateTimeImmutable $runAt = null;
 
     public function __construct(
         public readonly Closure $callback,
@@ -42,7 +51,7 @@ final class Target
     }
 
     /**
-     * @param TargetMap $data
+     * @param UnitOfWorkMap $data
      *
      * @throws InvalidArgument
      */
@@ -55,15 +64,15 @@ final class Target
             $profile = Profile::fromArray($data);
             if (isset($data['function'])) {
                 $source = new ReflectionFunction($data['function']);
-                0 === $source->getNumberOfParameters() || throw new InvalidArgument('The ' . $source->getName() . ' function cannot be profiled because it has arguments.');
+                0 === $source->getNumberOfParameters() || throw new InvalidArgument('The '.$source->getName().' function cannot be profiled because it has arguments.');
 
                 return new self(callback: $source->invoke(...), profile: $profile, source: $source);
             }
 
             $refClass = new ReflectionClass($data['class']);
             $method = $refClass->getMethod($data['method']);
-            ! $method->isAbstract() || throw new InvalidArgument('The ' . $refClass->getName().'::'.$method->getName() . ' method cannot be profiled because it is abstract.');
-            0 === $method->getNumberOfParameters() || throw new InvalidArgument('The ' . $refClass->getName().'::'.$method->getName() . ' method cannot be profiled because it has arguments.');
+            ! $method->isAbstract() || throw new InvalidArgument('The '.$refClass->getName().'::'.$method->getName().' method cannot be profiled because it is abstract.');
+            0 === $method->getNumberOfParameters() || throw new InvalidArgument('The '.$refClass->getName().'::'.$method->getName().' method cannot be profiled because it has arguments.');
 
             $instance = null;
             if (!$method->isStatic()) {
@@ -88,15 +97,35 @@ final class Target
         }
     }
 
-    public function generate(): Report|Metrics
+    public function run(): void
     {
-        return Profile::DETAILED === $this->profile->type
-            ? Profiler::report($this->callback, $this->profile->iterations, $this->profile->warmup)
-            : Profiler::metrics($this->callback, $this->profile->iterations, $this->profile->warmup);
+        if (null === $this->result) {
+            $this->runAt = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+            $this->result = Profile::DETAILED === $this->profile->type
+                ? Profiler::report($this->callback, $this->profile->iterations, $this->profile->warmup)
+                : Profiler::metrics($this->callback, $this->profile->iterations, $this->profile->warmup);
+        }
+    }
+
+    public function hasRun(): bool
+    {
+        return null !== $this->result;
+    }
+
+    public function result(): Report|Metrics
+    {
+        null !== $this->result || throw new UnableToProfile('The Unit of Work `'.$this->toPlainString().'` has not be run.');
+
+        return $this->result;
+    }
+
+    public function runAt(): ?DateTimeImmutable
+    {
+        return $this->runAt;
     }
 
     /**
-     * @return TargetMap
+     * @return UnitOfWorkMap
      */
     public function toArray(): array
     {
@@ -104,11 +133,12 @@ final class Target
         if ($this->source instanceof ReflectionMethod) {
             $data['class'] = $this->source->class;
             $data['method'] = $this->source->getName();
-
-            return $data;
+        } else {
+            $data['function'] = $this->source->getName();
         }
 
-        $data['function'] = $this->source->getName();
+        $data['run_at'] = $this->runAt?->format("Y-m-d\TH:i:s.uP");
+        $data['attributes'] = null !== $this->result ? $this->result->toArray() : [];
 
         return $data;
     }
