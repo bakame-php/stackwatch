@@ -55,14 +55,22 @@ final class Target
             $profile = Profile::fromArray($data);
             if (isset($data['function'])) {
                 $source = new ReflectionFunction($data['function']);
+                0 === $source->getNumberOfParameters() || throw new InvalidArgument('The ' . $source->getName() . ' function cannot be profiled because it has arguments.');
 
                 return new self(callback: $source->invoke(...), profile: $profile, source: $source);
             }
 
             $refClass = new ReflectionClass($data['class']);
             $method = $refClass->getMethod($data['method']);
+            ! $method->isAbstract() || throw new InvalidArgument('The ' . $refClass->getName().'::'.$method->getName() . ' method cannot be profiled because it is abstract.');
+            0 === $method->getNumberOfParameters() || throw new InvalidArgument('The ' . $refClass->getName().'::'.$method->getName() . ' method cannot be profiled because it has arguments.');
+
             $instance = null;
             if (!$method->isStatic()) {
+                $refClass instanceof ReflectionEnum
+                || (0 === ($refClass->getConstructor()?->getNumberOfRequiredParameters() ?? 0))
+                || throw new InvalidArgument('The non-static method '.$refClass->getName().'::'.$method->getName().' located in '.$method->getFileName().' can not be profiled because the class requires constructor arguments.');
+
                 $instance = $refClass instanceof ReflectionEnum ? ($refClass->getCases()[0]->getValue() ?? throw new InvalidArgument('Enum '.$data['class'].' has no cases')) : $refClass->newInstance();
             }
 
