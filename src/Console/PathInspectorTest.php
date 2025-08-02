@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Console;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\CoversClass;

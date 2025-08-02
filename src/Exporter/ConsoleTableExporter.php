@@ -2,8 +2,19 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Exporter;
 
+use Bakame\Stackwatch\Console\Exporter;
+use Bakame\Stackwatch\Environment;
+use Bakame\Stackwatch\Marker;
+use Bakame\Stackwatch\MemoryUnit;
+use Bakame\Stackwatch\Metrics;
+use Bakame\Stackwatch\Profiler;
+use Bakame\Stackwatch\Report;
+use Bakame\Stackwatch\Result;
+use Bakame\Stackwatch\Snapshot;
+use Bakame\Stackwatch\Statistics;
+use Bakame\Stackwatch\Summary;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
 use Symfony\Component\Console\Helper\TableSeparator;
@@ -15,7 +26,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * @phpstan-import-type SnapshotHumanReadable from Snapshot
  * @phpstan-import-type StatsHumanReadable from Statistics
  */
-final class ConsoleTableExporter implements ExtendedExporter
+final class ConsoleTableExporter implements Exporter
 {
     public function __construct(public readonly OutputInterface $output = new ConsoleOutput())
     {

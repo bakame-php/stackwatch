@@ -52,7 +52,7 @@ final class Profile implements JsonSerializable
     }
 
     /**
-     * @return array{type:string, iterations: int<1, max>, warmup:int<0, max>}
+     * @return array{type: 'detailed'|'summary', iterations: int<1, max>, warmup:int<0, max>}
      */
     public function toArray(): array
     {
@@ -61,6 +61,18 @@ final class Profile implements JsonSerializable
             'iterations' => $this->iterations,
             'warmup' => $this->warmup,
         ];
+    }
+
+    /**
+     * @param array{type: 'detailed'|'summary', iterations: int<1, max>, warmup:int<0, max>} $data
+     */
+    public static function fromArray(array $data): self
+    {
+        return new self(
+            type: $data['type'],
+            iterations: $data['iterations'],
+            warmup: $data['warmup'],
+        );
     }
 
     /**

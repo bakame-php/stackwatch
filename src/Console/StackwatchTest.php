@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Console;
 
+use Bakame\Stackwatch\Environment;
+use Bakame\Stackwatch\InvalidArgument;
+use Bakame\Stackwatch\Version;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -14,7 +17,7 @@ use function sys_get_temp_dir;
 use function tempnam;
 use function unlink;
 
-#[CoversClass(StackwatchInput::class)]
+#[CoversClass(Input::class)]
 #[CoversClass(Stackwatch::class)]
 #[CoversClass(Target::class)]
 final class StackwatchTest extends TestCase
@@ -27,27 +30,27 @@ final class StackwatchTest extends TestCase
     {
         $this->stdout = new BufferedOutput();
         $this->stderr = new BufferedOutput();
-        $this->cli = new Stackwatch($this->stdout, $this->stderr, new ConsoleLogger($this->stderr), Environment::current());
+        $this->cli = new Stackwatch($this->stdout, $this->stderr, new Logger($this->stderr), Environment::current());
     }
 
     #[Test]
     public function it_can_show_the_version_message(): void
     {
-        self::assertSame(Stackwatch::SUCCESS, $this->cli->execute(StackwatchInput::fromInput(['version' => false])));
+        self::assertSame(Stackwatch::SUCCESS, $this->cli->execute(Input::fromInput(['version' => false])));
         self::assertStringContainsString(Version::full(), $this->stdout->fetch());
     }
 
     #[Test]
     public function it_can_show_the_help_message(): void
     {
-        self::assertSame(Stackwatch::SUCCESS, $this->cli->execute(StackwatchInput::fromInput(['help' => false])));
+        self::assertSame(Stackwatch::SUCCESS, $this->cli->execute(Input::fromInput(['help' => false])));
         self::assertStringContainsString('Profiles functions and methods in a PHP codebase using #[Profile] attributes.', $this->stdout->fetch());
     }
 
     #[Test]
     public function it_can_show_the_info_message_even_without_the_path_provided(): void
     {
-        self::assertSame(Stackwatch::SUCCESS, $this->cli->execute(StackwatchInput::fromInput(['i' => false])));
+        self::assertSame(Stackwatch::SUCCESS, $this->cli->execute(Input::fromInput(['i' => false])));
     }
 
     #[Test]
@@ -55,13 +58,13 @@ final class StackwatchTest extends TestCase
     {
         $this->expectExceptionObject(new InvalidArgument('Missing required option: --path'));
 
-        $this->cli->execute(StackwatchInput::fromInput(['path' => false]));
+        $this->cli->execute(Input::fromInput(['path' => false]));
     }
 
     #[Test]
     public function it_fails_if_the_path_is_invalid(): void
     {
-        self::assertSame(Stackwatch::ERROR, $this->cli->execute(StackwatchInput::fromInput(['path' => 'foobar.php'])));
+        self::assertSame(Stackwatch::ERROR, $this->cli->execute(Input::fromInput(['path' => 'foobar.php'])));
         self::assertStringContainsString('Execution Error', $this->stderr->fetch());
     }
 
@@ -92,7 +95,7 @@ class TestCommandLineClass
 PHP;
         file_put_contents($tmpFile, $content);
 
-        self::assertSame(Stackwatch::SUCCESS, $this->cli->execute(StackwatchInput::fromInput(['path' => $tmpFile])));
+        self::assertSame(Stackwatch::SUCCESS, $this->cli->execute(Input::fromInput(['path' => $tmpFile])));
         unlink($tmpFile);
 
         $output = $this->stdout->fetch();

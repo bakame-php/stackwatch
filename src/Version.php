@@ -40,16 +40,27 @@ final class Version implements Stringable
 
     public static function toPlainString(): string
     {
-        return self::NAME.' '.self::full().' by '.self::AUTHOR.' and contributors.';
+        return strtr(self::template(), [
+            '{name}' => self::NAME,
+            '{version}' => self::VERSION_ID,
+            '{codename}' => self::VERSION_NAME,
+            '{author}' => self::AUTHOR,
+        ]);
     }
 
     public static function toConsoleString(): string
     {
-        $text = self::toPlainString();
-        $before = strstr($text, ' by', true);
-        $after = strstr($text, 'by ');
+        return '<fg=green>'.strtr(self::template(), [
+            '{name}' => self::NAME,
+            '{version}' => self::VERSION_ID,
+            '{codename}' => self::VERSION_NAME.'</>',
+            '{author}' => '<fg=yellow>'.self::AUTHOR,
+        ]).'</>'."\n";
+    }
 
-        return '<fg=green>'.$before.'</> <fg=yellow>'.$after.'</>'."\n";
+    private static function template(): string
+    {
+        return '{name} v{version} ({codename}) by {author} and contributors.';
     }
 
     public function __toString(): string

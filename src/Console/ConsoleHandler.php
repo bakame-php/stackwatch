@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Console;
 
+use Bakame\Stackwatch\Environment;
+use Bakame\Stackwatch\Version;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -18,7 +20,7 @@ final class ConsoleHandler implements Handler
     ) {
     }
 
-    public function handle(StackwatchInput $input): void
+    public function handle(Input $input): void
     {
         $output = $this->stdout;
 

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Bakame\Stackwatch\ConsoleLogger;
+use Bakame\Stackwatch\Console\Logger;
 use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\Stackwatch;
+use Bakame\Stackwatch\Console\Stackwatch;
 use Symfony\Component\Console\Output\StreamOutput;
 
 if (is_file(__DIR__ . '/../vendor/autoload.php')) {
@@ -37,6 +37,6 @@ $stderr = new StreamOutput(STDERR);
 return new Stackwatch(
     stdout: new StreamOutput(STDOUT),
     stderr: $stderr,
-    logger: new ConsoleLogger($stderr),
+    logger: new Logger($stderr),
     environment: Environment::current()
 );

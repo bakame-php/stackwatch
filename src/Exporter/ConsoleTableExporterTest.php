@@ -2,8 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Exporter;
 
+use Bakame\Stackwatch\DurationUnit;
+use Bakame\Stackwatch\Environment;
+use Bakame\Stackwatch\Marker;
+use Bakame\Stackwatch\MemoryUnit;
+use Bakame\Stackwatch\Profiler;
+use Bakame\Stackwatch\Snapshot;
+use Bakame\Stackwatch\Statistics;
+use Bakame\Stackwatch\Unit;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;

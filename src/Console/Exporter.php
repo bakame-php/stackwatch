@@ -2,9 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Console;
 
-interface ExtendedExporter extends Exporter
+use Bakame\Stackwatch\Environment;
+use Bakame\Stackwatch\Exporter\Exporter as BasicExporter;
+use Bakame\Stackwatch\Metrics;
+use Bakame\Stackwatch\Report;
+use Bakame\Stackwatch\Statistics;
+
+interface Exporter extends BasicExporter
 {
     public function exportMetrics(Metrics $metrics): void;
 

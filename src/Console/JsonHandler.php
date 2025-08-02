@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Console;
 
+use Bakame\Stackwatch\Environment;
 use Psr\Log\LoggerInterface;
 
 use const JSON_BIGINT_AS_STRING;
@@ -18,7 +19,7 @@ final class JsonHandler implements Handler
     ) {
     }
 
-    public function handle(StackwatchInput $input): void
+    public function handle(Input $input): void
     {
         $jsonOptions = $input->pretty
             ? JSON_PRETTY_PRINT | JSON_BIGINT_AS_STRING

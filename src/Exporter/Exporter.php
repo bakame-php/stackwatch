@@ -2,7 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Exporter;
+
+use Bakame\Stackwatch\Marker;
+use Bakame\Stackwatch\Profiler;
+use Bakame\Stackwatch\Result;
+use Bakame\Stackwatch\Snapshot;
+use Bakame\Stackwatch\Summary;
 
 interface Exporter
 {

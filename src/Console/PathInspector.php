@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Console;
 
 use Attribute;
 use PhpToken;

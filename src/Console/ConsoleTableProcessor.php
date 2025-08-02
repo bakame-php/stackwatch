@@ -2,13 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Console;
 
+use Bakame\Stackwatch\Exporter\ConsoleTableExporter;
+use Bakame\Stackwatch\Metrics;
 use Throwable;
 
-/**
- * @phpstan-import-type TargetList from PathProfiler
- */
 final class ConsoleTableProcessor implements Processor
 {
     public function __construct(public readonly ConsoleTableExporter $exporter)
@@ -16,13 +15,13 @@ final class ConsoleTableProcessor implements Processor
     }
 
     /**
-     * @param iterable<Target> $targetList
+     * @param iterable<Target> $targets
      *
      * @throws Throwable
      */
-    public function process(iterable $targetList): void
+    public function process(iterable $targets): void
     {
-        foreach ($targetList as $target) {
+        foreach ($targets as $target) {
             $this->exporter->output->writeln($target->toConsoleString());
             $stats = $target->generate();
             $stats instanceof Metrics ? $this->exporter->exportMetrics($stats) : $this->exporter->exportReport($stats);

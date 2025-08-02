@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Console;
 
 use Psr\Log\AbstractLogger;
 use Stringable;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
-final class ConsoleLogger extends AbstractLogger
+final class Logger extends AbstractLogger
 {
     public function __construct(private readonly OutputInterface $output = new ConsoleOutput())
     {

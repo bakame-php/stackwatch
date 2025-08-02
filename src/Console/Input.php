@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Console;
 
+use Bakame\Stackwatch\InvalidArgument;
 use Symfony\Component\Console\Input\InputInterface;
 
 use function getopt;
@@ -30,7 +31,7 @@ use function trim;
  *     V?: string|false,
  * }
  */
-final class StackwatchInput
+final class Input
 {
     public const JSON_FORMAT = 'json';
     public const CLI_FORMAT = 'cli';

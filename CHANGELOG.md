@@ -12,7 +12,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - `ConsoleTableExporter::exportStatistics`
 - `ConsoleTableExporter::exportMetrics`
 - `JsonExporter`
-- `Profile` attribute, the `PathProfiler` class and the `phpProfiler` command to ease profiling
+- The`Stackwatcher command to ease profiling
 
 ### Fixed
 

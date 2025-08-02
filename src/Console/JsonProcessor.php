@@ -2,13 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Console;
 
+use Bakame\Stackwatch\Exporter\JsonExporter;
 use Throwable;
 
-/**
- * @phpstan-import-type TargetList from PathProfiler
- */
 final class JsonProcessor implements Processor
 {
     public function __construct(public readonly JsonExporter $exporter)
@@ -16,15 +14,15 @@ final class JsonProcessor implements Processor
     }
 
     /**
-     * @param iterable<Target> $targetList
+     * @param iterable<Target> $targets
      *
      * @throws Throwable
      */
-    public function process(iterable $targetList): void
+    public function process(iterable $targets): void
     {
         $json = [];
         $path = null;
-        foreach ($targetList as $target) {
+        foreach ($targets as $target) {
             $path ??= $target->source->getFileName();
             $json[] = array_merge($target->toArray(), ['attributes' => $target->generate()]);
         }

@@ -2,126 +2,46 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Console;
 
-use CallbackFilterIterator;
-use FilesystemIterator;
+use Bakame\Stackwatch\Profile;
 use LogicException;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use ReflectionClass;
 use ReflectionEnum;
 use ReflectionException;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
-use RuntimeException;
-use SplFileInfo;
-use Symfony\Component\Console\Output\ConsoleOutput;
-use Symfony\Component\Console\Output\OutputInterface;
-use Throwable;
 use UnitEnum;
 
 use function array_merge;
 use function array_reduce;
 use function class_exists;
 use function count;
-use function enum_exists;
 use function function_exists;
-use function in_array;
-use function strtolower;
 
-/**
- * Scans and Profile functions and methods defined in a specific path
- * using the Profile attribute.
- *
- * @phpstan-import-type TargetList from Processor
- */
-final class PathProfiler
+final class TargetGenerator
 {
-    public function __construct(
-        public readonly PathInspector $pathInspector,
-        public readonly Processor $processor,
-        public readonly LoggerInterface $logger = new NullLogger(),
-    ) {
-    }
-
-    public static function forConsole(OutputInterface $output = new ConsoleOutput(), LoggerInterface $logger = new NullLogger()): self
+    public function __construct(public readonly LoggerInterface $logger)
     {
-        return new self(
-            new PathInspector(Profile::class),
-            new ConsoleTableProcessor(new ConsoleTableExporter($output)),
-            $logger,
-        );
     }
 
     /**
-     * @param SplFileInfo|resource|string $path
+     * @param list<array{0:string, 1:string}> $tuples
+     *
+     * @throws ReflectionException|LogicException
+     *
+     * @return iterable<Target>
      */
-    public static function forJson(mixed $path, int $jsonOptions = 0, LoggerInterface $logger = new NullLogger()): self
+    public function generate(string $realPath, array $tuples): iterable
     {
-        return new self(
-            new PathInspector(Profile::class),
-            new JsonProcessor(new JsonExporter($path, $jsonOptions)),
-            $logger,
-        );
-    }
-
-    public function handle(string $path): void
-    {
-        $filePath = new SplFileInfo($path);
-        $filePath->isFile() || $filePath->isDir() || throw new RuntimeException("Unable to locate the path $path");
-        $filePath->isReadable() || throw new RuntimeException("Unable to access for read the path $path");
-
-        $files = [$filePath];
-        if ($filePath->isDir()) {
-            /** @var iterable<SplFileInfo> $files */
-            $files = new CallbackFilterIterator(
-                new RecursiveIteratorIterator(new RecursiveDirectoryIterator($filePath->getPathname(), FilesystemIterator::SKIP_DOTS)),
-                fn (SplFileInfo $file) => $file->isFile() && $file->isReadable() && 'php' === strtolower($file->getExtension())
-            );
-        }
-
-        foreach ($files as $file) {
-            $this->handleFile($file);
-        }
-    }
-
-    /**
-     * @throws Throwable
-     */
-    public function handleFile(SplFileInfo $path): void
-    {
-        $realPath = $path->getRealPath();
-        if (!$path->isReadable()) {
-            $this->logger->notice('The file '.$realPath.' can not be profiled because it not readable.', ['path' => $realPath]);
-
-            return;
-        };
-
-        $filesize = $path->getSize();
-        if (in_array($filesize, [false, 0], true)) {
-            $this->logger->notice('The file '.$realPath.' can not be profiled because it is empty.', ['path' => $realPath]);
-
-            return;
-        }
-
-        $code = $path->openFile()->fread($filesize);
-        if (false === $code) {
-            $this->logger->notice('The file '.$realPath.' can not be profiled because it is not readable.', ['path' => $realPath]);
-
-            return;
-        }
-
-        $tuples = $this->pathInspector->extract($code);
         if ([] === $tuples) {
-            return;
+            return [];
         }
 
         require_once $realPath;
 
-        /** @var iterable<Target> $targets */
+        /** @var array<Target> $targets */
         $targets = array_reduce($tuples, function (array $targets, array $tuple) use ($realPath): array {
             $target = match ($tuple[0]) {
                 'function' => $this->prepareFunctionProcess($tuple[1]),
@@ -142,7 +62,7 @@ final class PathProfiler
             return array_merge($targets, $target);
         }, []);
 
-        $this->processor->process($targets);
+        return $targets;
     }
 
     /**
@@ -155,36 +75,12 @@ final class PathProfiler
         return 1 === count($attributes) ? $attributes[0]->newInstance() : null;
     }
 
-    public function prepareFunctionProcess(string $functionName): ?Target
-    {
-        if (!function_exists($functionName)) {
-            return null;
-        }
-
-        $method = new ReflectionFunction($functionName);
-        $profile = $this->findProfile($method);
-        if (null === $profile) {
-            return null;
-        }
-
-        if (0 !== $method->getNumberOfParameters()) {
-            $this->logger->notice('The function '.$functionName.' located in '.$method->getFileName().' can not be profiled because it has arguments.', [
-                'profile' => $profile,
-                'method' => $functionName,
-                'path' => $method->getFileName(),
-            ]);
-            return null;
-        }
-
-        return new Target(callback: $method->invoke(...), profile: $profile, source: $method);
-    }
-
     /**
      * @throws ReflectionException
      *
-     * @return TargetList
+     * @return list<Target>
      */
-    public function prepareMethodsProcess(string $className): array
+    private function prepareMethodsProcess(string $className): array
     {
         if (!class_exists($className)) {
             return [];
@@ -248,5 +144,29 @@ final class PathProfiler
         }
 
         return $results;
+    }
+
+    private function prepareFunctionProcess(string $functionName): ?Target
+    {
+        if (!function_exists($functionName)) {
+            return null;
+        }
+
+        $method = new ReflectionFunction($functionName);
+        $profile = $this->findProfile($method);
+        if (null === $profile) {
+            return null;
+        }
+
+        if (0 !== $method->getNumberOfParameters()) {
+            $this->logger->notice('The function '.$functionName.' located in '.$method->getFileName().' can not be profiled because it has arguments.', [
+                'profile' => $profile,
+                'method' => $functionName,
+                'path' => $method->getFileName(),
+            ]);
+            return null;
+        }
+
+        return new Target(callback: $method->invoke(...), profile: $profile, source: $method);
     }
 }

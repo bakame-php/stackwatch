@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Console;
 
+use Bakame\Stackwatch\Environment;
+use Bakame\Stackwatch\Version;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -25,25 +27,25 @@ final class Stackwatch
 
     public function handle(): never
     {
-        exit($this->execute(StackwatchInput::fromCli()));
+        exit($this->execute(Input::fromCli()));
     }
 
-    public function execute(StackwatchInput $options): int
+    public function execute(Input $input): int
     {
-        if ($options->showHelp) {
+        if ($input->showHelp) {
             $this->stdout->writeln(Version::toConsoleString());
             $this->stdout->writeln($this->helpText());
 
             return self::SUCCESS;
         }
 
-        if ($options->showVersion) {
+        if ($input->showVersion) {
             $this->stdout->writeln('<info>'.Version::full().'</info>');
 
             return self::SUCCESS;
         }
 
-        if (null === $options->path && !$options->showInfo) {
+        if (null === $input->path && !$input->showInfo) {
             $this->stderr->writeln('<error> Please specify a valid path. </error>');
             $this->stdout->writeln($this->helpText());
 
@@ -51,7 +53,7 @@ final class Stackwatch
         }
 
         try {
-            $this->resolveHandler($options)->handle($options);
+            $this->resolveHandler($input)->handle($input);
 
             return self::SUCCESS;
         } catch (Throwable $exception) {
@@ -64,11 +66,11 @@ final class Stackwatch
     /**
      * @throws RuntimeException If no handler is found
      */
-    private function resolveHandler(StackwatchInput $options): Handler
+    private function resolveHandler(Input $options): Handler
     {
         return match ($options->format) {
-            StackwatchInput::CLI_FORMAT => new ConsoleHandler($this->stdout, $this->logger, $this->environment),
-            StackwatchInput::JSON_FORMAT => new JsonHandler($this->logger, $this->environment),
+            Input::CLI_FORMAT => new ConsoleHandler($this->stdout, $this->logger, $this->environment),
+            Input::JSON_FORMAT => new JsonHandler($this->logger, $this->environment),
             default => throw new RuntimeException('Unknown output format: '.$options->format),
         };
     }
@@ -77,8 +79,8 @@ final class Stackwatch
     {
         $name = Version::name();
         $description = self::DESCRIPTION;
-        $optionsUsage = StackwatchInput::usage();
-        $optionsDescription = StackwatchInput::consoleDescription();
+        $optionsUsage = Input::usage();
+        $optionsDescription = Input::consoleDescription();
 
         return <<<HELP
 <fg=yellow>Description:</>

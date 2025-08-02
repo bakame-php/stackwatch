@@ -2,17 +2,26 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Console;
 
+use Bakame\Stackwatch\InvalidArgument;
+use Bakame\Stackwatch\Metrics;
+use Bakame\Stackwatch\Profile;
+use Bakame\Stackwatch\Profiler;
+use Bakame\Stackwatch\Report;
 use Closure;
+use ReflectionClass;
+use ReflectionEnum;
+use ReflectionFunction;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
+use Throwable;
 
 use function strtr;
 
 /**
  * @phpstan-type TargetMap array{
- *      type: string,
+ *      type: 'detailed'|'summary',
  *      iterations: int<1, max>,
  *      warmup: int<0, max>,
  *      class?: class-string,
@@ -30,6 +39,45 @@ final class Target
         public readonly Profile $profile,
         public readonly ReflectionFunctionAbstract $source,
     ) {
+    }
+
+    /**
+     * @param TargetMap $data
+     *
+     * @throws InvalidArgument
+     */
+    public static function fromArray(array $data): self
+    {
+        isset($data['class']) || isset($data['function']) || throw new InvalidArgument('The data is missing "class" or "function" key');
+        (isset($data['class']) && !isset($data['method'])) || throw new InvalidArgument('The data is missing "method" key');
+
+        try {
+            $profile = Profile::fromArray($data);
+            if (isset($data['function'])) {
+                $source = new ReflectionFunction($data['function']);
+
+                return new self(callback: $source->invoke(...), profile: $profile, source: $source);
+            }
+
+            $refClass = new ReflectionClass($data['class']);
+            $method = $refClass->getMethod($data['method']);
+            $instance = null;
+            if (!$method->isStatic()) {
+                $instance = $refClass instanceof ReflectionEnum ? ($refClass->getCases()[0]->getValue() ?? throw new InvalidArgument('Enum '.$data['class'].' has no cases')) : $refClass->newInstance();
+            }
+
+            return new self(
+                callback: fn () => $method->invoke($instance),
+                profile: $profile,
+                source: $method,
+            );
+        } catch (Throwable $exception) {
+            if ($exception instanceof InvalidArgument) {
+                throw $exception;
+            }
+
+            throw new InvalidArgument('Unable to generate target for the submitted data', previous: $exception);
+        }
     }
 
     public function generate(): Report|Metrics

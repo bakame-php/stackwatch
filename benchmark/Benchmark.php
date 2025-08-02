@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Bakame\Stackwatch\ConsoleTableExporter;
 use Bakame\Stackwatch\DurationUnit;
 use Bakame\Stackwatch\Environment;
+use Bakame\Stackwatch\Exporter\ConsoleTableExporter;
 use Bakame\Stackwatch\Marker;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Statistics;

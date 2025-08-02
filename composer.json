@@ -39,7 +39,8 @@
         "phpstan/phpstan-strict-rules": "^2.0.6",
         "phpunit/phpunit": "^10.5.15 || ^11.5.25 || ^12.2.9",
         "symfony/http-client": "^v6.4.19 || ^7.3.2",
-        "symfony/var-dumper": "^6.4.21 || ^7.3.2"
+        "symfony/var-dumper": "^6.4.21 || ^7.3.2",
+        "ext-dom": "*"
     },
     "autoload": {
         "psr-4": {

@@ -2,8 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Exporter;
 
+use Bakame\Stackwatch\Console\Exporter;
+use Bakame\Stackwatch\Environment;
+use Bakame\Stackwatch\Marker;
+use Bakame\Stackwatch\Metrics;
+use Bakame\Stackwatch\Profiler;
+use Bakame\Stackwatch\Report;
+use Bakame\Stackwatch\Result;
+use Bakame\Stackwatch\Snapshot;
+use Bakame\Stackwatch\Statistics;
+use Bakame\Stackwatch\Summary;
 use JsonException;
 use RuntimeException;
 use SplFileInfo;
@@ -20,7 +30,7 @@ use function stream_get_meta_data;
 
 use const JSON_THROW_ON_ERROR;
 
-final class JsonExporter implements ExtendedExporter
+final class JsonExporter implements Exporter
 {
     /** @var resource|SplFileObject */
     private mixed $path;
