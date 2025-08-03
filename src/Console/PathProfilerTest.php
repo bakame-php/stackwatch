@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
-use Bakame\Stackwatch\Exporter\ConsoleTableExporter;
+use Bakame\Stackwatch\Exporter\ConsoleExporter;
 use Bakame\Stackwatch\Profile;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -19,7 +19,7 @@ use function tempnam;
 #[CoversClass(Profile::class)]
 #[CoversClass(PathInspector::class)]
 #[CoversClass(JsonProcessor::class)]
-#[CoversClass(ConsoleTableProcessor::class)]
+#[CoversClass(ConsoleProcessor::class)]
 #[CoversClass(UnitOfWorkGenerator::class)]
 final class PathProfilerTest extends TestCase
 {
@@ -36,7 +36,7 @@ final class PathProfilerTest extends TestCase
         $logger = new Logger($this->stderr);
         $this->command = new PathProfiler(
             new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
-            new ConsoleTableProcessor(new ConsoleTableExporter($this->stdout)),
+            new ConsoleProcessor(new ConsoleExporter($this->stdout)),
             $logger
         );
     }

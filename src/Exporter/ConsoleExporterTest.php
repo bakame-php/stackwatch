@@ -19,7 +19,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
 
 use function usleep;
 
-#[CoversClass(ConsoleTableExporter::class)]
+#[CoversClass(ConsoleExporter::class)]
 #[CoversClass(DurationUnit::class)]
 #[CoversClass(MemoryUnit::class)]
 #[CoversClass(Environment::class)]
@@ -28,13 +28,13 @@ use function usleep;
 #[CoversClass(Profiler::class)]
 #[CoversClass(Unit::class)]
 #[CoversClass(Statistics::class)]
-final class ConsoleTableExporterTest extends TestCase
+final class ConsoleExporterTest extends TestCase
 {
     #[Test]
     public function it_can_output_a_cli_table_for_the_profiler(): void
     {
         $output = new BufferedOutput();
-        $renderer = new ConsoleTableExporter($output);
+        $renderer = new ConsoleExporter($output);
 
         $profiler = new Profiler(fn () => usleep(1000));
         $profiler->profile('cli_test');
@@ -53,7 +53,7 @@ final class ConsoleTableExporterTest extends TestCase
     public function it_can_output_a_cli_table_for_the_profiling_data(): void
     {
         $output = new BufferedOutput();
-        $renderer = new ConsoleTableExporter($output);
+        $renderer = new ConsoleExporter($output);
 
         $summary = Profiler::execute(fn () => usleep(1000));
         $renderer->exportSummary($summary);
@@ -71,7 +71,7 @@ final class ConsoleTableExporterTest extends TestCase
     public function it_can_output_a_cli_table_for_a_snapshot(): void
     {
         $output = new BufferedOutput();
-        $renderer = new ConsoleTableExporter($output);
+        $renderer = new ConsoleExporter($output);
 
         $profilled = Profiler::execute(fn () => usleep(1000));
         $renderer->exportSnapshot($profilled->summary->start);
@@ -86,7 +86,7 @@ final class ConsoleTableExporterTest extends TestCase
     public function it_can_output_a_cli_table_for_the_current_system(): void
     {
         $output = new BufferedOutput();
-        $renderer = new ConsoleTableExporter($output);
+        $renderer = new ConsoleExporter($output);
 
         $renderer->exportEnvironment(Environment::current());
         $content = $output->fetch();
@@ -102,7 +102,7 @@ final class ConsoleTableExporterTest extends TestCase
     public function it_can_export_an_empty_marker(): void
     {
         $output = new BufferedOutput();
-        $renderer = new ConsoleTableExporter($output);
+        $renderer = new ConsoleExporter($output);
 
         $renderer->exportMarker(new Marker());
         $content = $output->fetch();
@@ -114,7 +114,7 @@ final class ConsoleTableExporterTest extends TestCase
     public function it_can_export_a_finished_marker(): void
     {
         $output = new BufferedOutput();
-        $renderer = new ConsoleTableExporter($output);
+        $renderer = new ConsoleExporter($output);
 
         $marker = Marker::start();
         usleep(1_000);
@@ -136,7 +136,7 @@ final class ConsoleTableExporterTest extends TestCase
     public function it_can_output_a_cli_table_for_the_a_statistic(): void
     {
         $output = new BufferedOutput();
-        $renderer = new ConsoleTableExporter($output);
+        $renderer = new ConsoleExporter($output);
 
         $callback = function (): string {
             usleep(1000);
@@ -158,7 +158,7 @@ final class ConsoleTableExporterTest extends TestCase
     public function it_can_output_a_cli_table_for_the_a_report(): void
     {
         $output = new BufferedOutput();
-        $renderer = new ConsoleTableExporter($output);
+        $renderer = new ConsoleExporter($output);
 
         $callback = function (): string {
             usleep(1000);
@@ -181,7 +181,7 @@ final class ConsoleTableExporterTest extends TestCase
     public function it_can_output_a_cli_table_for_some_metrics(): void
     {
         $output = new BufferedOutput();
-        $renderer = new ConsoleTableExporter($output);
+        $renderer = new ConsoleExporter($output);
 
         $summary = Profiler::execute(fn () => usleep(1000));
         $renderer->exportMetrics($summary);

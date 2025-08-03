@@ -37,7 +37,7 @@ final class ConsoleHandler implements Handler
 
         if ($input->showInfo) {
             $processor = $profiler->processor;
-            if ($processor instanceof ConsoleTableProcessor) {
+            if ($processor instanceof ConsoleProcessor) {
                 $processor->exporter->exportEnvironment($this->environment);
             }
         } else {

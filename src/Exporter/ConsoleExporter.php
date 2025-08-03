@@ -26,7 +26,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * @phpstan-import-type SnapshotHumanReadable from Snapshot
  * @phpstan-import-type StatsHumanReadable from Statistics
  */
-final class ConsoleTableExporter implements Exporter
+final class ConsoleExporter implements Exporter
 {
     public function __construct(public readonly OutputInterface $output = new ConsoleOutput())
     {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Bakame\Stackwatch\DurationUnit;
 use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\Exporter\ConsoleTableExporter;
+use Bakame\Stackwatch\Exporter\ConsoleExporter;
 use Bakame\Stackwatch\Marker;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Statistics;
@@ -122,7 +122,7 @@ final class Benchmark
     {
         extract($benchmark);
 
-        (new ConsoleTableExporter($output))->exportEnvironment(Environment::current());
+        (new ConsoleExporter($output))->exportEnvironment(Environment::current());
 
         (new Table($output))
             ->setHeaderTitle("Execution time on $iterations iterations (warmup $warmup)")

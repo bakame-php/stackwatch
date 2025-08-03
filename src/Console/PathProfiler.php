@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
-use Bakame\Stackwatch\Exporter\ConsoleTableExporter;
+use Bakame\Stackwatch\Exporter\ConsoleExporter;
 use Bakame\Stackwatch\Exporter\JsonExporter;
 use Bakame\Stackwatch\Profile;
 use CallbackFilterIterator;
@@ -38,7 +38,7 @@ final class PathProfiler
     {
         return new self(
             new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
-            new ConsoleTableProcessor(new ConsoleTableExporter($output)),
+            new ConsoleProcessor(new ConsoleExporter($output)),
             $logger,
         );
     }

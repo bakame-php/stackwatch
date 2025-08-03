@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
-use Bakame\Stackwatch\Exporter\ConsoleTableExporter;
+use Bakame\Stackwatch\Exporter\ConsoleExporter;
 use Bakame\Stackwatch\Metrics;
 use Throwable;
 
-final class ConsoleTableProcessor implements Processor
+final class ConsoleProcessor implements Processor
 {
-    public function __construct(public readonly ConsoleTableExporter $exporter)
+    public function __construct(public readonly ConsoleExporter $exporter)
     {
     }
 
