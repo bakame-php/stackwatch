@@ -7,9 +7,21 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/bakame/stackwatch.svg?style=flat-square)](https://packagist.org/packages/bakame/stackwatch)
 [![Sponsor development of this project](https://img.shields.io/badge/sponsor%20this%20package-%E2%9D%A4-ff69b4.svg?style=flat-square)](https://github.com/sponsors/nyamsprod)
 
-A minimalist profiler for PHP. The profiler is embeddable, multi-metric, and framework-agnostic 
-It fills the gap between a basic timer and full-blown profilers like: [PHPBench](https://phpbench.readthedocs.io/en/latest/), 
-[Xdebug](https://xdebug.org/), [Blackfire](https://www.blackfire.io/).
+**Stackwatcher** is a lightweight profiler for PHP 8.1+.  It helps you measure performance with precision—without
+unnecessary complexity. It features:
+
+- Marker-Based Profiling – segment code with named checkpoints (zero-dependency)
+- Scoped Execution Profiling – profile any block using closures (zero-dependency)
+- Attribute-Driven CLI Profiling – run code marked with #[Profile] via a CLI command (uses symfony/console + PSR-3)
+
+**Stackwatcher**  bridges the gap between basic timers and heavy profiling tools like [PHPBench](https://phpbench.readthedocs.io/en/latest/), [Xdebug](https://xdebug.org/) or [Blackfire](https://www.blackfire.io/).
+It is perfect for:
+
+- Isolated performance testing
+- Annotated profiling of large codebases
+- Lightweight integration into dev workflows
+
+> Zero-dependency core. Optional CLI with familiar Symfony Console integration.
 
 ## Installation
 
