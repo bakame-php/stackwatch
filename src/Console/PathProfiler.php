@@ -78,7 +78,17 @@ final class PathProfiler
     /**
      * @throws Throwable
      */
-    private function handleFile(SplFileInfo $path): void
+    public function handleFile(SplFileInfo $path): void
+    {
+        $this->processor->process($this->createUnitOfWorks($path));
+    }
+
+    /**
+     * @throws RuntimeException
+     *
+     * @return iterable<UnitOfWork>
+     */
+    public function createUnitOfWorks(SplFileInfo $path): iterable
     {
         $realPath = $path->getRealPath();
         $path->isFile() ||  throw new RuntimeException("The path $realPath can not be profiled because it not a file.");
@@ -88,17 +98,15 @@ final class PathProfiler
         if (in_array($filesize, [false, 0], true)) {
             $this->logger->notice('The file '.$realPath.' can not be profiled because it is empty.', ['path' => $realPath]);
 
-            return;
+            return [];
         }
 
         try {
-            $unitOfWorks = $this->unitOfWorkGenerator->generate($realPath);
+            return $this->unitOfWorkGenerator->generate($realPath);
         } catch (Throwable $exception) {
             $this->logger->notice('The file '.$realPath.' can not be profiled.', ['path' => $realPath, 'exception' => $exception]);
 
-            return;
+            return [];
         }
-
-        $this->processor->process($unitOfWorks);
     }
 }

@@ -2,17 +2,18 @@
 
 All Notable changes to `bakame/stackwatch` will be documented in this file.
 
-## [Next - African City](https://github.com/bakame-php/stackwatch/compare/0.10.0...main) - TBD
+## [0.11.0 - Kampala](https://github.com/bakame-php/stackwatch/compare/0.10.0...0.11.0) - 2025-08-03
 
 ### Added
 
+- **BC BREAK:** Changed namespace from `Bakame\Aide\Profiler` to `Bakama\Stachwatcher`
 - `Statistics` class
 - `Report` class and the `Profiler::report` method.
-- `ConsoleTableExporter::exportReport`
-- `ConsoleTableExporter::exportStatistics`
-- `ConsoleTableExporter::exportMetrics`
+- `ConsoleExporter::exportMetrics`
+- `ConsoleExporter::exportStatistics`
+- `ConsoleExporter::exportReport`
 - `JsonExporter`
-- The`Stackwatcher command to ease profiling
+- The `Stackwatcher` command to ease profiling using command line
 
 ### Fixed
 
@@ -24,6 +25,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Removed
 
+- **BC BREAK:** `ConsoleTableExporter` renamed `ConsoleExporter` and moved under the `Exporter` namespace
 - **BC BREAK:** `Profiler::executionTime` removed use `Profiler::metrics` instead
 - **BC BREAK:** `Profiler::cpuTime` removed use `Profiler::metrics` instead
 - **BC BREAK:** `Profiler::memoryUsage` removed use `Profiler::metrics` instead

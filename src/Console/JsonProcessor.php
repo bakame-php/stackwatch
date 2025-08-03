@@ -20,14 +20,12 @@ final class JsonProcessor implements Processor
      */
     public function process(iterable $unitOfWorks): void
     {
-        $json = [];
         $path = null;
         foreach ($unitOfWorks as $unitOfWork) {
             $unitOfWork->run();
             $path ??= $unitOfWork->source->getFileName();
-            $json[] = array_merge($unitOfWork->toArray(), ['attributes' => $unitOfWork->result()]);
         }
 
-        $this->exporter->writeln(null === $path ? [] : ['path' => $path, 'data' => $json]);
+        $this->exporter->writeln(null === $path ? [] : ['path' => $path, 'data' => $unitOfWorks]);
     }
 }
