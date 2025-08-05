@@ -61,19 +61,19 @@ This is especially useful for:
 #### Usage
 
 ```bash
-php bin/stackwatch --path=PATH [--output=OUTPUT] [--format=FORMAT] [--pretty] [--info] [--help]
+php bin/stackwatch --path=PATH [--output=OUTPUT] [--format=FORMAT] [--no-recursion] [--pretty] [--info] [--help]
 ```
 
-| Option                | Description                                      |
-|-----------------------|--------------------------------------------------|
-| `-p, --path=PATH`     | Path to scan for PHP files to profile (required) |
-| `-o, --output=OUTPUT` | Path to store the profiling output (optional)    |
-| `-f, --format=FORMAT` | Output format: 'cli' or 'json' (default: 'cli')  |
-| `-P, --pretty`        | Pretty-print the JSON/NDJSON output (json only)  |
-| `-i, --info`          | Show additional system/environment information   |
-| `-h, --help`          | Display the help message                         |
-| `-V, --version`       | Display the version and exit                     |
-
+| Option                | Description                                         |
+|-----------------------|-----------------------------------------------------|
+| `-p, --path=PATH`     | Path to scan for PHP files to profile (required)    |
+| `-o, --output=OUTPUT` | Path to store the profiling output (optional)       |
+| `-f, --format=FORMAT` | Output format: 'table' or 'json' (default: 'table') |
+| `-n, --no-recursion`  | To disable directory recursion                      |
+| `-P, --pretty`        | Pretty-print the JSON/NDJSON output (json only)     |
+| `-i, --info`          | Show additional system/environment information      |
+| `-h, --help`          | Display the help message                            |
+| `-V, --version`       | Display the version and exit                        |
 
 #### Example
 

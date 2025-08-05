@@ -29,23 +29,26 @@ use function trim;
  *     h?: string|false,
  *     version?: string|false,
  *     V?: string|false,
+ *     no-recursion?: string|false,
+ *     n?: string|false
  * }
  */
 final class Input
 {
     public const JSON_FORMAT = 'json';
-    public const CLI_FORMAT = 'cli';
+    public const TABLE_FORMAT = 'table';
 
     public function __construct(
         public readonly ?string $path,
         public readonly bool $showHelp,
         public readonly bool $showInfo,
         public readonly bool $showVersion,
+        public readonly bool $recursive,
         public readonly string $format,
         public readonly ?string $output = null,
         public readonly bool $pretty = false,
     ) {
-        in_array($this->format, [self::JSON_FORMAT, self::CLI_FORMAT], true) || throw new InvalidArgument('Output format is not supported');
+        in_array($this->format, [self::JSON_FORMAT, self::TABLE_FORMAT], true) || throw new InvalidArgument('Output format is not supported');
         null === $this->path || '' !== trim($this->path) || throw new InvalidArgument('path format is not valid');
         ($this->showHelp || $this->showInfo || $this->showVersion || null !== $this->path) || throw new InvalidArgument('Missing required option: --path');
     }
@@ -60,7 +63,8 @@ final class Input
             showHelp: self::hasFlag($input, 'help', 'h'),
             showInfo: self::hasFlag($input, 'info', 'i'),
             showVersion: self::hasFlag($input, 'version', 'V'),
-            format: self::normalizeFormat(self::getFirstValue($input, 'format', 'f') ?? self::CLI_FORMAT),
+            recursive: ! self::hasFlag($input, 'no-recursion', 'n'),
+            format: self::normalizeFormat(self::getFirstValue($input, 'format', 'f') ?? self::TABLE_FORMAT),
             output: self::getFirstValue($input, 'output', 'o'),
             pretty: self::hasFlag($input, 'pretty', 'P'),
         );
@@ -116,26 +120,27 @@ final class Input
 
         return match ($format) {
             self::JSON_FORMAT => self::JSON_FORMAT,
-            self::CLI_FORMAT => self::CLI_FORMAT,
+            self::TABLE_FORMAT => self::TABLE_FORMAT,
             default => throw new InvalidArgument("Unsupported format: $format"),
         };
     }
 
     public static function usage(): string
     {
-        return '--path=PATH [--output=OUTPUT] [--format=FORMAT] [--pretty] [--info] [--help] [--version]';
+        return '--path=PATH [--no-recursion] [--output=OUTPUT] [--format=FORMAT] [--pretty] [--info] [--help] [--version]';
     }
 
     public static function consoleDescription(): string
     {
         return <<<HELP
 <fg=green>  -p, --path=PATH</>       Path to scan for PHP files to profile (required)
+<fg=green>  -n, --no-recursion</>    Disable default recursion fo directories (optional)
 <fg=green>  -f, --format=FORMAT</>   Output format: 'cli' or 'json' (default: 'cli')
 <fg=green>  -o, --output=OUTPUT</>   Path to store the profiling output (optional)
-<fg=green>  -P, --pretty</>          Pretty-print the JSON/NDJSON output (json only)
-<fg=green>  -i, --info</>            Show additional system/environment information
-<fg=green>  -h, --help</>            Display this help message
-<fg=green>  -V, --version</>         Display the version and exit
+<fg=green>  -P, --pretty</>          Pretty-print the JSON/NDJSON output (json only; optional)
+<fg=green>  -i, --info</>            Show additional system/environment information (optional)
+<fg=green>  -h, --help</>            Display this help message (optional)
+<fg=green>  -V, --version</>         Display the version and exit (optional)
 HELP;
     }
 }

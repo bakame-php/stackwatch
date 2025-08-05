@@ -69,7 +69,7 @@ final class Stackwatch
     private function resolveHandler(Input $options): Handler
     {
         return match ($options->format) {
-            Input::CLI_FORMAT => new ConsoleHandler($this->stdout, $this->logger, $this->environment),
+            Input::TABLE_FORMAT => new ConsoleHandler($this->stdout, $this->logger, $this->environment),
             Input::JSON_FORMAT => new JsonHandler($this->logger, $this->environment),
             default => throw new RuntimeException('Unknown output format: '.$options->format),
         };

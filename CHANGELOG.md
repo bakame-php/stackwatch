@@ -6,10 +6,11 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Added
 
-- None
+- `--no-recursion` flag to disable recursion on directories.
 
 ### Fixed
 
+- **BC BREAK:** command line format options `table` replace the default option `cli`
 - **BC BREAK:** Changed `Bakama\Stachwatcher\Marker::summary` method name to `Bakama\Stachwatcher\Marker::summarize`
 - Internal improvement, Lazy evaluation is now done in the `UnitOfWork`
 

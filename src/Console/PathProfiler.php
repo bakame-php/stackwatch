@@ -27,6 +27,8 @@ use function strtolower;
  */
 final class PathProfiler
 {
+    private bool $recursive = true;
+
     public function __construct(
         public readonly UnitOfWorkGenerator $unitOfWorkGenerator,
         public readonly Processor $processor,
@@ -41,6 +43,21 @@ final class PathProfiler
             new ConsoleProcessor(new ConsoleExporter($output)),
             $logger,
         );
+    }
+
+    public function disableRecursive(): void
+    {
+        $this->recursive = false;
+    }
+
+    public function enableRecursive(): void
+    {
+        $this->recursive = true;
+    }
+
+    public function isRecursive(): bool
+    {
+        return $this->recursive;
     }
 
     /**
@@ -64,10 +81,16 @@ final class PathProfiler
         $files = [$filePath];
         if ($filePath->isDir()) {
             /** @var iterable<SplFileInfo> $files */
-            $files = new CallbackFilterIterator(
-                new RecursiveIteratorIterator(new RecursiveDirectoryIterator($filePath->getPathname(), FilesystemIterator::SKIP_DOTS)),
-                fn (SplFileInfo $file) => $file->isFile() && $file->isReadable() && 'php' === strtolower($file->getExtension())
-            );
+            $files = match ($this->recursive) {
+                false => new CallbackFilterIterator(
+                    new FilesystemIterator($filePath->getPathname()),
+                    fn (SplFileInfo $file) => $file->isFile() && $file->isReadable() && 'php' === strtolower($file->getExtension())
+                ),
+                true => new CallbackFilterIterator(
+                    new RecursiveIteratorIterator(new RecursiveDirectoryIterator($filePath->getPathname(), FilesystemIterator::SKIP_DOTS)),
+                    fn (SplFileInfo $file) => $file->isFile() && $file->isReadable() && 'php' === strtolower($file->getExtension())
+                ),
+            };
         }
 
         foreach ($files as $file) {

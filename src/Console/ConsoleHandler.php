@@ -33,6 +33,9 @@ final class ConsoleHandler implements Handler
         }
 
         $profiler = PathProfiler::forConsole($output, $this->logger);
+        if (!$input->recursive) {
+            $profiler->disableRecursive();
+        }
         $output->writeln(Version::toConsoleString());
 
         if ($input->showInfo) {
