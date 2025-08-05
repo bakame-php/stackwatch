@@ -94,7 +94,7 @@ final class MarkerTest extends TestCase
         $this->marker->mark('only');
 
 
-        self::assertEquals(Metrics::none(), $this->marker->summary()->metrics);
+        self::assertEquals(Metrics::none(), $this->marker->summarize()->metrics);
     }
 
     #[Test]
@@ -175,10 +175,10 @@ final class MarkerTest extends TestCase
         usleep(100);
         $marker->mark('shutdown');
         self::assertFalse($marker->isComplete());
-        $summary = $marker->summary();
+        $summary = $marker->summarize();
         $marker->complete();
         self::assertTrue($marker->isComplete());
-        self::assertEquals($summary, $marker->summary());
+        self::assertEquals($summary, $marker->summarize());
 
         $this->expectException(UnableToProfile::class);
         $marker->take('boot', 'boot_shutdown');
@@ -191,10 +191,10 @@ final class MarkerTest extends TestCase
         usleep(100);
         $marker->mark('shutdown');
         self::assertFalse($marker->isComplete());
-        $summary = $marker->summary();
+        $summary = $marker->summarize();
         $marker->complete();
         self::assertTrue($marker->isComplete());
-        self::assertEquals($summary, $marker->summary());
+        self::assertEquals($summary, $marker->summarize());
 
         $marker->reset();
         self::assertFalse($marker->isComplete());

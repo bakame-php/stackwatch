@@ -71,7 +71,7 @@ php bin/stackwatch --path=PATH [--output=OUTPUT] [--format=FORMAT] [--pretty] [-
 | `-f, --format=FORMAT` | Output format: 'cli' or 'json' (default: 'cli')  |
 | `-P, --pretty`        | Pretty-print the JSON/NDJSON output (json only)  |
 | `-i, --info`          | Show additional system/environment information   |
-| `-h, --help`          | Display this help message                        |
+| `-h, --help`          | Display the help message                         |
 | `-V, --version`       | Display the version and exit                     |
 
 
@@ -691,7 +691,7 @@ which will be able to store the generated json in the specified location. It sup
 streams, string path and `SplFileInfo` objects.
 
 ```php
-use Bakame\Stackwatch\JsonExporter;
+use Bakame\Stackwatch\Exporter\JsonExporter;
 use Bakame\Stackwatch\Profiler;
 
 $report = Profiler::report($service->calculateHeavyStuff(...), 500);
@@ -708,11 +708,11 @@ The report will be stored in the designated location.
 #### CLI
 
 If you have the `symfony\console` package installed in your application, you can display
-the `Profiler` or the `Marker` recorded data recorded using the `ConsoleTableExporter` class.
+the `Profiler` or the `Marker` recorded data recorded using the `ConsoleExporter` class.
 
 ```php
+use Bakame\Stackwatch\Exporter\ConsoleExporter;
 use Bakame\Stackwatch\Profiler;
-use Bakame\Stackwatch\ConsoleTableExporter;
 
 $callback = function (int ...$args): int|float => {
     usleep(100)
@@ -725,7 +725,7 @@ $profiler->profile('first_run', 1, 2);
 $profiler->profile('last_run', 1, 2);
 $profiler(1, 2);
 
-$renderer = new ConsoleTableExporter();
+$renderer = new ConsoleExporter();
 $renderer->exportProfiler($profiler);
 ```
 the following table will be outputted in your terminal.
@@ -750,7 +750,7 @@ server using the `open-telemetry/exporter-otlp` package.
 To do so, first install the package if it is not yet the case, then do the following:
 
 ```php
-use Bakame\Stackwatch\OpenTelemetryExporter;
+use Bakame\Stackwatch\Expoter\OpenTelemetryExporter;
 use Bakame\Stackwatch\Profiler;
 use Monolog\Level;
 use Monolog\Logger;
@@ -820,13 +820,13 @@ $system->isMac();           // returns true if the OS is a Mac
 $system->isUnixLike();      // returns true if the OS is a Unix like
 ````
 
-The `ConsoleTableExporter` also provides an exporter for the class:
+The `ConsoleExporter` also provides an exporter for the class:
 
 ```php
-use Bakame\Stackwatch\ConsoleTableExporter;
+use Bakame\Stackwatch\Exporter\ConsoleExporter;
 use Bakame\Stackwatch\Environment;
 
-(new ConsoleTableExporter())->exportEnvironment($system);
+(new ConsoleExporter())->exportEnvironment($system);
 ```
 
 Will return

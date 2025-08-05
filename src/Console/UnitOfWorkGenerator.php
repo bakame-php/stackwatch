@@ -92,12 +92,11 @@ final class UnitOfWorkGenerator
 
         $refClass = enum_exists($className) ? new ReflectionEnum($className) : new ReflectionClass($className);
         $targetRequiresConstructorArgs = !$refClass instanceof ReflectionEnum && (($refClass->getConstructor()?->getNumberOfRequiredParameters() ?? 0) !== 0);
-        $isTargetInstantiated = false;
-        $instance = null;
         $parentProfile = $this->findProfile($refClass);
 
         $results = [];
         foreach ($refClass->getMethods() as $method) {
+
             $profile = $this->findProfile($method) ?? $parentProfile;
             if (null === $profile) {
                 continue;
@@ -133,18 +132,9 @@ final class UnitOfWorkGenerator
                     ]);
                     continue;
                 }
-
-                if (!$isTargetInstantiated) {
-                    $instance = $refClass instanceof ReflectionEnum ? $refClass->getCases()[0]->getValue() : $refClass->newInstance();
-                    $isTargetInstantiated = true;
-                }
             }
 
-            $results[] = new UnitOfWork(
-                callback: fn () => $method->invoke($method->isStatic() ? null : $instance),
-                profile: $profile,
-                source: $method,
-            );
+            $results[] = new UnitOfWork(profile: $profile, target: $method);
         }
 
         return $results;
@@ -157,6 +147,14 @@ final class UnitOfWorkGenerator
         }
 
         $method = new ReflectionFunction($functionName);
+        if (false === $method->getFileName()) {
+            $this->logger->notice('The function '.$functionName.' is an internal function which can not be profiled.', [
+                'method' => $functionName,
+            ]);
+
+            return null;
+        }
+
         $profile = $this->findProfile($method);
         if (null === $profile) {
             return null;
@@ -172,7 +170,7 @@ final class UnitOfWorkGenerator
             return null;
         }
 
-        return new UnitOfWork(callback: $method->invoke(...), profile: $profile, source: $method);
+        return new UnitOfWork(profile: $profile, target: $method);
     }
 
     private function filterPath(SplFileInfo|string $path): SplFileInfo

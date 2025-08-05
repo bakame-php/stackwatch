@@ -66,7 +66,7 @@ final class ConsoleExporter implements Exporter
         }
 
         /** @var Summary $summary */
-        $summary = $marker->summary();
+        $summary = $marker->summarize();
 
         $this
             ->createSummaryTable($marker->deltas())

@@ -55,6 +55,7 @@ final class UnitOfWorkTest extends TestCase
         require_once $this->tmpFile;
 
         $data = [
+            'path' => $this->tmpFile,
             'function' => 'Test\\testCommandLineFunction2',
             'type' => 'detailed',
             'iterations' => 5,
@@ -90,6 +91,7 @@ PHP;
         require_once $this->tmpFile;
 
         $arr = [
+            'path' => $this->tmpFile,
             'class' => 'Temp\\SampleClass',
             'method' => 'sampleMethod',
             'type' => 'summary',
@@ -128,6 +130,7 @@ PHP;
         require_once $this->tmpFile;
 
         $data = [
+            'path' => $this->tmpFile,
             'class' => 'Temp\\SampleEnum',
             'method' => 'run',
             'type' => 'summary',

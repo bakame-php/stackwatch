@@ -17,11 +17,15 @@ use JsonException;
 use JsonSerializable;
 use ReflectionClass;
 use ReflectionEnum;
+use ReflectionException;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
 use Throwable;
 
+use function file_exists;
+use function function_exists;
+use function is_readable;
 use function json_decode;
 use function strtr;
 
@@ -34,9 +38,10 @@ use const JSON_THROW_ON_ERROR;
  *      type: 'detailed'|'summary',
  *      iterations: int<1, max>,
  *      warmup: int<0, max>,
- *      class?: class-string,
- *      method?: non-empty-string,
- *      function?: non-empty-string,
+ *      path: string,
+ *      class?: class-string|null,
+ *      method?: non-empty-string|null,
+ *      function?: non-empty-string|null,
  *      run_at: ?string,
  *      attributes: MetricsStat|ReportMap|array{}
  *  }
@@ -45,16 +50,33 @@ final class UnitOfWork implements JsonSerializable
 {
     private const DATE_FORMAT = 'Y-m-d\TH:i:s.uP';
 
+    public readonly Profile $profile;
+    public readonly string $path;
+    public readonly ?string $class;
+    public readonly ?string $method;
+    public readonly ?string $function;
+
     private ?string $name = null;
     private ?string $template = null;
     private Report|Metrics|null $result = null;
     private ?DateTimeImmutable $runAt = null;
 
-    public function __construct(
-        public readonly Closure $callback,
-        public readonly Profile $profile,
-        public readonly ReflectionFunctionAbstract $source,
-    ) {
+    public function __construct(Profile $profile, ReflectionFunctionAbstract $target)
+    {
+        $path = $target->getFileName();
+        false !== $path || throw new InvalidArgument('Target profile must not be an internal function or method.');
+
+        $this->profile = $profile;
+        $this->path = $path;
+        if ($target instanceof ReflectionMethod) {
+            $this->class = $target->getDeclaringClass()->getName();
+            $this->method = $target->getName();
+            $this->function = null;
+        } else {
+            $this->class = null;
+            $this->method = null;
+            $this->function = $target->getName();
+        }
     }
 
     /**
@@ -81,29 +103,30 @@ final class UnitOfWork implements JsonSerializable
      */
     public static function fromArray(array $data): self
     {
-        isset($data['class']) || isset($data['function']) || throw new InvalidArgument('The data is missing "class" or "function" key');
-        if (
-            isset($data['class']) && !isset($data['method']) ||
-            isset($data['metjod']) && !isset($data['class'])
-        ) {
-            throw new InvalidArgument('The data is missing "method" key');
-        }
+        isset($data['path']) || throw new InvalidArgument('The data is missing "path" key');
+        (file_exists($data['path']) && is_readable($data['path'])) || throw new InvalidArgument('The path '.$data['path'].' does not exist or is not readable.');
 
         try {
+
+            require_once $data['path'];
+
             $profile = Profile::fromArray($data);
             if (isset($data['function'])) {
                 $source = new ReflectionFunction($data['function']);
-                0 === $source->getNumberOfParameters() || throw new InvalidArgument('The '.$source->getName().' function cannot be profiled because it has arguments.');
+                0 === $source->getNumberOfRequiredParameters() || throw new InvalidArgument('The '.$source->getName().' function cannot be profiled because it has arguments.');
 
-                return new self(callback: $source->invoke(...), profile: $profile, source: $source);
+                return new self(profile: $profile, target: $source);
             }
 
+            isset($data['class']) || throw new InvalidArgument('The data is missing the "class" key');
             $refClass = enum_exists($data['class']) ? new ReflectionEnum($data['class']) : new ReflectionClass($data['class']);
+
+            isset($data['method']) || throw new InvalidArgument('The data is missing the "method" key');
             $method = $refClass->getMethod($data['method']);
+
             ! $method->isAbstract() || throw new InvalidArgument('The '.$refClass->getName().'::'.$method->getName().' method cannot be profiled because it is abstract.');
             0 === $method->getNumberOfParameters() || throw new InvalidArgument('The '.$refClass->getName().'::'.$method->getName().' method cannot be profiled because it has arguments.');
 
-            $instance = null;
             if (!$method->isStatic()) {
                 $refClass instanceof ReflectionEnum
                 || (0 === ($refClass->getConstructor()?->getNumberOfRequiredParameters() ?? 0))
@@ -112,16 +135,12 @@ final class UnitOfWork implements JsonSerializable
                 if ($refClass instanceof ReflectionEnum) {
                     $cases = $refClass->getCases();
                     [] !== $cases || throw new InvalidArgument('Enum '.$data['class'].' has no cases');
-                    $instance = $cases[0]->getValue();
-                } else {
-                    if (($refClass->getConstructor()?->getNumberOfRequiredParameters() ?? 0) > 0) {
-                        throw new InvalidArgument('The non-static method '.$refClass->getName().'::'.$method->getName().' located in '.$method->getFileName().' cannot be profiled because the class requires constructor arguments.');
-                    }
-                    $instance = $refClass->newInstance();
+                } elseif (($refClass->getConstructor()?->getNumberOfRequiredParameters() ?? 0) > 0) {
+                    throw new InvalidArgument('The non-static method '.$refClass->getName().'::'.$method->getName().' located in '.$method->getFileName().' cannot be profiled because the class requires constructor arguments.');
                 }
             }
 
-            $unitOfWork = new self(callback: fn () => $method->invoke($instance), profile: $profile, source: $method);
+            $unitOfWork = new self(profile: $profile, target: $method);
             if ([] === $data['attributes'] && null === $data['run_at']) {
                 return $unitOfWork;
             }
@@ -133,7 +152,7 @@ final class UnitOfWork implements JsonSerializable
                 $unitOfWork->result = match ($unitOfWork->profile->type) {
                     Profile::DETAILED => Report::fromArray($data['attributes']), /* @phpstan-ignore-line */
                     Profile::SUMMARY => Metrics::fromArray($data['attributes']), /* @phpstan-ignore-line */
-                    default => throw new InvalidArgument('The profile type `'.$unitOfWork->profile->type.'` is not valid.'),
+                    default => throw new InvalidArgument('The profile type '.$unitOfWork->profile->type.' is not valid.'),
                 };
 
                 return $unitOfWork;
@@ -150,13 +169,48 @@ final class UnitOfWork implements JsonSerializable
         }
     }
 
+    private function callback(): Closure
+    {
+        (file_exists($this->path) && is_readable($this->path)) || throw new UnableToProfile('The path '.$this->path.' does not exist or is not readable.');
+
+        require_once $this->path;
+
+        if (null !== $this->function) {
+            function_exists($this->function) || throw new UnableToProfile('The function '.$this->function.' is not available.');
+            $ref = new ReflectionFunction($this->function);
+            0 === $ref->getNumberOfRequiredParameters() || throw new UnableToProfile('The '.$this->function.' function cannot be profiled because it has required parameters.');
+
+            return fn () => $ref->invoke();
+        }
+
+        (null !== $this->class && null !== $this->method) || throw new UnableToProfile('The '.$this->class.'::'.$this->function.' method cannot be profiled because it was not found.');
+        $refClass = enum_exists($this->class) ? new ReflectionEnum($this->class) : new ReflectionClass($this->class);
+        try {
+            $refMethod = $refClass->getMethod($this->method);
+        } catch (ReflectionException $exception) {
+            throw new UnableToProfile('The method '.$this->class.'::'.$this->method.' was not found.', previous: $exception);
+        }
+
+        !$refMethod->isAbstract() || throw new UnableToProfile('The method '.$this->class.'::'.$this->method.' is abstract.');
+        0 === $refMethod->getNumberOfRequiredParameters() || throw new UnableToProfile('The method '.$this->class.'::'.$this->method.' cannot be profiled because it has required parameters.');
+
+        if ($refMethod->isStatic()) {
+            return fn () => $refMethod->invoke(null);
+        }
+
+        $instance = $refClass instanceof ReflectionEnum ? $refClass->getCases()[0]->getValue() : $refClass->newInstance();
+
+        return fn () => $refMethod->invoke($instance);
+    }
+
     public function run(): void
     {
         if (!$this->hasRun()) {
+            $callback = $this->callback();
             $this->runAt = new DateTimeImmutable('now', new DateTimeZone('UTC'));
             $this->result = Profile::DETAILED === $this->profile->type
-                ? Profiler::report($this->callback, $this->profile->iterations, $this->profile->warmup)
-                : Profiler::metrics($this->callback, $this->profile->iterations, $this->profile->warmup);
+                ? Profiler::report($callback, $this->profile->iterations, $this->profile->warmup)
+                : Profiler::metrics($callback, $this->profile->iterations, $this->profile->warmup);
         }
     }
 
@@ -168,14 +222,14 @@ final class UnitOfWork implements JsonSerializable
 
     public function result(): Report|Metrics
     {
-        null !== $this->result || throw new UnableToProfile('The Unit of Work `'.$this->toPlainString().'` has not run yet.');
+        null !== $this->result || throw new UnableToProfile('The Unit of Work '.$this->toPlainString().' has not run yet.');
 
         return $this->result;
     }
 
     public function runAt(): DateTimeImmutable
     {
-        null !== $this->runAt || throw new UnableToProfile('The Unit of Work `'.$this->toPlainString().'` has not run yet.');
+        null !== $this->runAt || throw new UnableToProfile('The Unit of Work '.$this->toPlainString().' has not run yet.');
 
         return $this->runAt;
     }
@@ -194,11 +248,12 @@ final class UnitOfWork implements JsonSerializable
     public function toArray(): array
     {
         $data = $this->profile->toArray();
-        if ($this->source instanceof ReflectionMethod) {
-            $data['class'] = $this->source->class;
-            $data['method'] = $this->source->getName();
+        $data['path'] = $this->path;
+        if (null !== $this->class && null !== $this->method) {
+            $data['class'] = $this->class;
+            $data['method'] = $this->method;
         } else {
-            $data['function'] = $this->source->getName();
+            $data['function'] = $this->function;
         }
 
         $data['run_at'] = $this->runAt?->format(self::DATE_FORMAT);
@@ -211,7 +266,7 @@ final class UnitOfWork implements JsonSerializable
     {
         return strtr($this->template(), [
             '{name}' => '<fg=green>'.$this->name().'</>',
-            '{file}' => '<fg=green>'.$this->source->getFileName().'</>',
+            '{file}' => '<fg=green>'.$this->path.'</>',
             '{iterations}' => '<fg=yellow>'.$this->profile->iterations.'</>',
             '{warmup}' => '<fg=yellow>'.$this->profile->warmup.'</>',
         ]);
@@ -221,7 +276,7 @@ final class UnitOfWork implements JsonSerializable
     {
         return strtr($this->template(), [
             '{name}' => $this->name(),
-            '{file}' => $this->source->getFileName(),
+            '{file}' => $this->path,
             '{iterations}' => $this->profile->iterations,
             '{warmup}' => $this->profile->warmup,
         ]);
@@ -238,9 +293,7 @@ final class UnitOfWork implements JsonSerializable
 
     private function name(): string
     {
-        $this->name ??= $this->source instanceof ReflectionMethod
-            ? $this->source->class.'::'.$this->source->getName()
-            : $this->source->getName();
+        $this->name ??= $this->function ?? $this->class.'::'.$this->method;
 
         return $this->name;
     }

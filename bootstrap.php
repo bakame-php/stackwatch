@@ -7,12 +7,10 @@ use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\Console\Stackwatch;
 use Symfony\Component\Console\Output\StreamOutput;
 
-if (is_file(__DIR__ . '/../vendor/autoload.php')) {
-    require __DIR__ . '/../vendor/autoload.php';
-} elseif (is_file(__DIR__ . '/../../../autoload.php')) {
-    require __DIR__ . '/../../../autoload.php';
-}elseif ( is_file(__DIR__ . '/vendor/autoload.php')) {
+if (is_file(__DIR__ . '/vendor/autoload.php')) {
     require __DIR__ . '/vendor/autoload.php';
+} elseif (is_file(__DIR__ . '/../../autoload.php')) {
+    require __DIR__ . '/../../autoload.php';
 } else {
     fwrite(STDERR, 'Cannot find the vendor directory, have you executed composer install?' . PHP_EOL);
     fwrite(STDERR,'See https://getcomposer.org to get Composer.' . PHP_EOL);

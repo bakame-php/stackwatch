@@ -247,7 +247,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
      *
      * @param ?non-empty-string $label
      */
-    public function summary(?string $label = null): Summary
+    public function summarize(?string $label = null): Summary
     {
         $from = array_key_first($this->snapshots);
         $to = array_key_last($this->snapshots);
@@ -282,7 +282,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     {
         $this->mark($label);
 
-        return $this->summary($summaryLabel);
+        return $this->summarize($summaryLabel);
     }
 
     /**
