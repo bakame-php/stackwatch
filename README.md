@@ -61,7 +61,7 @@ This is especially useful for:
 #### Usage
 
 ```bash
-php bin/stackwatch --path=PATH [--output=OUTPUT] [--format=FORMAT] [--no-recursion] [--pretty] [--info] [--help]
+php bin/stackwatch --path=PATH [--output=OUTPUT] [--format=FORMAT] [--no-recursion] [--isolation] [--pretty] [--info] [--help]
 ```
 
 | Option                | Description                                         |
@@ -70,6 +70,7 @@ php bin/stackwatch --path=PATH [--output=OUTPUT] [--format=FORMAT] [--no-recursi
 | `-o, --output=OUTPUT` | Path to store the profiling output (optional)       |
 | `-f, --format=FORMAT` | Output format: 'table' or 'json' (default: 'table') |
 | `-n, --no-recursion`  | To disable directory recursion                      |
+| `-x, --isolation`     | To profile by isolation each file                   |
 | `-P, --pretty`        | Pretty-print the JSON/NDJSON output (json only)     |
 | `-i, --info`          | Show additional system/environment information      |
 | `-h, --help`          | Display the help message                            |

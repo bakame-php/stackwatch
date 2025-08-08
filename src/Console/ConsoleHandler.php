@@ -36,6 +36,11 @@ final class ConsoleHandler implements Handler
         if (!$input->recursive) {
             $profiler->disableRecursive();
         }
+
+        if ($input->isInIsolation) {
+            $profiler->enableIsolation();
+        }
+
         $output->writeln(Version::toConsoleString());
 
         if ($input->showInfo) {

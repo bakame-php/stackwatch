@@ -30,7 +30,9 @@ use function trim;
  *     version?: string|false,
  *     V?: string|false,
  *     no-recursion?: string|false,
- *     n?: string|false
+ *     n?: string|false,
+ *     isolation?: string|false,
+ *     x?: string|false
  * }
  */
 final class Input
@@ -47,6 +49,7 @@ final class Input
         public readonly string $format,
         public readonly ?string $output = null,
         public readonly bool $pretty = false,
+        public readonly bool $isInIsolation = false,
     ) {
         in_array($this->format, [self::JSON_FORMAT, self::TABLE_FORMAT], true) || throw new InvalidArgument('Output format is not supported');
         null === $this->path || '' !== trim($this->path) || throw new InvalidArgument('path format is not valid');
@@ -67,13 +70,14 @@ final class Input
             format: self::normalizeFormat(self::getFirstValue($input, 'format', 'f') ?? self::TABLE_FORMAT),
             output: self::getFirstValue($input, 'output', 'o'),
             pretty: self::hasFlag($input, 'pretty', 'P'),
+            isInIsolation: self::hasFlag($input, 'isolation', 'x'),
         );
     }
 
     public static function fromCli(): self
     {
         /** @var OptionMap $options */
-        $options = getopt('ihVPp:f:o:', ['path:', 'format:', 'output:', 'info', 'help', 'version', 'pretty']);
+        $options = getopt('ihVPxp:f:o:', ['path:', 'format:', 'output:', 'info', 'help', 'version', 'pretty', 'isolation']);
 
         return self::fromInput($options);
     }

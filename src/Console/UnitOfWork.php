@@ -50,15 +50,14 @@ final class UnitOfWork implements JsonSerializable
 {
     private const DATE_FORMAT = 'Y-m-d\TH:i:s.uP';
 
-    public readonly Profile $profile;
-    public readonly string $path;
+    private Profile $profile;
+    private string $path;
     /** @var ?class-string  */
-    public readonly ?string $class;
+    private ?string $class;
     /** @var ?non-empty-string */
-    public readonly ?string $method;
+    private ?string $method;
     /** @var ?non-empty-string */
-    public readonly ?string $function;
-
+    private ?string $function;
     private ?string $name = null;
     private ?string $template = null;
     private Report|Metrics|null $result = null;
@@ -128,10 +127,31 @@ final class UnitOfWork implements JsonSerializable
         (file_exists($data['path']) && is_readable($data['path'])) || throw new InvalidArgument('The path '.$data['path'].' does not exist or is not readable.');
 
         try {
+            $profile = Profile::fromArray($data);
+            if ([] !== $data['attributes'] && isset($data['run_at'])) {
+                $runAt = DateTimeImmutable::createFromFormat(self::DATE_FORMAT, $data['run_at']);
+                false !== $runAt || throw new InvalidArgument('The run_at must be a valid date.');
+
+                $reflection = new ReflectionClass(UnitOfWork::class);
+                $unitOfWork = $reflection->newInstanceWithoutConstructor();
+                $unitOfWork->runAt = $runAt;
+                $unitOfWork->result = match ($profile->type) {
+                    Profile::DETAILED => Report::fromArray($data['attributes']), /* @phpstan-ignore-line */
+                    Profile::SUMMARY => Metrics::fromArray($data['attributes']), /* @phpstan-ignore-line */
+                    default => throw new InvalidArgument('The profile type '.$profile->type.' is not valid.'),
+                };
+
+                $unitOfWork->path = $data['path'];
+                $unitOfWork->profile = $profile;
+                $unitOfWork->function = $data['function'] ?? null;
+                $unitOfWork->method = $data['method'] ?? null;
+                $unitOfWork->class = $data['class'] ?? null;
+
+                return $unitOfWork;
+            }
 
             require_once $data['path'];
 
-            $profile = Profile::fromArray($data);
             if (isset($data['function'])) {
                 $source = new ReflectionFunction($data['function']);
                 0 === $source->getNumberOfRequiredParameters() || throw new InvalidArgument('The '.$source->getName().' function cannot be profiled because it has arguments.');
@@ -166,21 +186,7 @@ final class UnitOfWork implements JsonSerializable
                 return $unitOfWork;
             }
 
-            if ([] !== $data['attributes'] && isset($data['run_at'])) {
-                $runAt = DateTimeImmutable::createFromFormat(self::DATE_FORMAT, $data['run_at']);
-                false !== $runAt || throw new InvalidArgument('The run_at must be a valid date.');
-                $unitOfWork->runAt = $runAt;
-                $unitOfWork->result = match ($unitOfWork->profile->type) {
-                    Profile::DETAILED => Report::fromArray($data['attributes']), /* @phpstan-ignore-line */
-                    Profile::SUMMARY => Metrics::fromArray($data['attributes']), /* @phpstan-ignore-line */
-                    default => throw new InvalidArgument('The profile type '.$unitOfWork->profile->type.' is not valid.'),
-                };
-
-                return $unitOfWork;
-            }
-
             throw new InvalidArgument('The data is missing "attributes" or "run_at" key');
-
         } catch (Throwable $exception) {
             if ($exception instanceof InvalidArgument) {
                 throw $exception;
@@ -222,6 +228,40 @@ final class UnitOfWork implements JsonSerializable
         $instance = $refClass instanceof ReflectionEnum ? $refClass->getCases()[0]->getValue() : $refClass->newInstance();
 
         return fn () => $refMethod->invoke($instance);
+    }
+
+    public function path(): string
+    {
+        return $this->path;
+    }
+
+    public function profile(): Profile
+    {
+        return $this->profile;
+    }
+
+    /**
+     * @return ?class-string
+     */
+    public function class(): ?string
+    {
+        return $this->class;
+    }
+
+    /**
+     * @return ?non-empty-string
+     */
+    public function method(): ?string
+    {
+        return $this->method;
+    }
+
+    /**
+     * @return ?non-empty-string
+     */
+    public function function(): ?string
+    {
+        return $this->function;
     }
 
     public function run(): void

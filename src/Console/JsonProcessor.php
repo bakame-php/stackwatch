@@ -23,7 +23,7 @@ final class JsonProcessor implements Processor
         $path = null;
         foreach ($unitOfWorks as $unitOfWork) {
             $unitOfWork->run();
-            $path ??= $unitOfWork->path;
+            $path ??= $unitOfWork->path();
         }
 
         $this->exporter->writeln(null === $path ? [] : ['path' => $path, 'data' => $unitOfWorks]);
