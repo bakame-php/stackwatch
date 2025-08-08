@@ -140,7 +140,7 @@ final class Snapshot implements JsonSerializable, Stringable
     /**
      * @return CpuStat
      */
-    public static function getRawCpuData(): array
+    private static function getRawCpuData(): array
     {
         /** @var CpuStat|false $cpu */
         $cpu = getrusage();

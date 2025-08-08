@@ -42,7 +42,6 @@ final class UnitOfWorkGenerator
         if ([] === $tuples) {
             return [];
         }
-
         require_once $realPath;
 
         /** @var array<UnitOfWork> $unitOfWorks */

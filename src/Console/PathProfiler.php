@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
+use ArrayIterator;
 use Bakame\Stackwatch\Exporter\ConsoleExporter;
 use Bakame\Stackwatch\Exporter\JsonExporter;
 use Bakame\Stackwatch\Profile;
 use Bakame\Stackwatch\UnableToProfile;
-use Bakame\Stackwatch\Unit;
 use CallbackFilterIterator;
 use FilesystemIterator;
 use Psr\Log\LoggerInterface;
@@ -23,8 +23,6 @@ use Symfony\Component\Process\Process;
 use Throwable;
 
 use function array_map;
-use function dd;
-use function dump;
 use function in_array;
 use function is_array;
 use function strtolower;
@@ -103,35 +101,42 @@ final class PathProfiler
         $filePath->isFile() || $filePath->isDir() || throw new RuntimeException("Unable to locate the path $path");
         $filePath->isReadable() || throw new RuntimeException("Unable to access for read the path $path");
 
-        $files = [$filePath];
+        $files = new ArrayIterator([$filePath]);
         if ($filePath->isDir()) {
-            /** @var iterable<SplFileInfo> $files */
             $files = match (!$this->recursive) {
-                false => new CallbackFilterIterator(
-                    new FilesystemIterator($filePath->getPathname()),
-                    fn (SplFileInfo $file) => $file->isFile() && $file->isReadable() && 'php' === strtolower($file->getExtension())
-                ),
-                true => new CallbackFilterIterator(
-                    new RecursiveIteratorIterator(new RecursiveDirectoryIterator($filePath->getPathname(), FilesystemIterator::SKIP_DOTS)),
-                    fn (SplFileInfo $file) => $file->isFile() && $file->isReadable() && 'php' === strtolower($file->getExtension())
-                ),
+                false => new FilesystemIterator($filePath->getPathname()),
+                true => new RecursiveIteratorIterator(new RecursiveDirectoryIterator($filePath->getPathname(), FilesystemIterator::SKIP_DOTS)),
             };
         }
 
-        foreach ($files as $file) {
-            if (!$file->isFile() || !$file->isReadable()) {
-                continue;
+        /** @var iterable<SplFileInfo> $phpFiles */
+        $phpFiles = new CallbackFilterIterator(
+            $files,
+            function (SplFileInfo $file) {
+                $filesize = $file->getSize();
+                if (!$file->isFile()) {
+                    return false;
+                }
+
+                if (!$file->isReadable()) {
+                    return false;
+                }
+
+                if ('php' !== strtolower($file->getExtension())) {
+                    return false;
+                }
+
+                if (in_array($filesize, [false, 0], true)) {
+                    return false;
+                }
+
+                return true;
             }
+        );
 
-            $filesize = $file->getSize();
-            if (in_array($filesize, [false, 0], true)) {
-                $realPath = $file->getRealPath();
-                $this->logger->notice('The file '.$realPath.' can not be profiled because it is empty.', ['path' => $realPath]);
 
-                continue;
-            }
-
-            $this->handleFile($file);
+        foreach ($phpFiles as $phpFile) {
+            $this->handleFile($phpFile);
         }
     }
 

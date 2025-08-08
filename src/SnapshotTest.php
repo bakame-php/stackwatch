@@ -82,7 +82,7 @@ final class SnapshotTest extends TestCase
     }
 
     #[Test]
-    public function it_will_thro_if_the_cpu_property_is_missing_keys(): void
+    public function it_will_throw_if_the_cpu_property_is_missing_keys(): void
     {
         $this->expectException(InvalidArgument::class);
 

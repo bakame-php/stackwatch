@@ -33,6 +33,7 @@ You need:
 
 - **PHP >= 8.1** but the latest stable version of PHP is recommended
 - `symfony/console` if you are going to use the CLI command
+- `symfony/process` if you are going to use the CLI command
 - `psr/log` if you are going to use the CLI command
 
 ## Usage
