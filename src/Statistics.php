@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch;
 
 use JsonSerializable;
+use Stringable;
 use Throwable;
 use ValueError;
 
@@ -13,9 +14,9 @@ use function array_keys;
 use function array_sum;
 use function implode;
 use function number_format;
+use function sprintf;
 
 /**
- *
  * Represents a detailed statistical summary of a numeric dataset.
  *
  * This class captures core statistical metrics like min, max, average, standard deviation,
@@ -23,7 +24,7 @@ use function number_format;
  *
  * Use `Statistics::fromValues()` to compute the statistics from a dataset.
  * Use `Statistics::none()`to generate an empty/default profile.
-
+ *
  * @phpstan-type StatsMap array{
  *     unit: string,
  *     count:int,
@@ -52,7 +53,7 @@ use function number_format;
  * }
  *
  */
-final class Statistics implements JsonSerializable
+final class Statistics implements JsonSerializable, Stringable
 {
     public function __construct(
         public readonly Unit $unit,
@@ -262,5 +263,19 @@ final class Statistics implements JsonSerializable
         }
 
         return $humans[$property] ?? throw new InvalidArgument('Unknown statistics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
+    }
+
+    public function __toString(): string
+    {
+        $human = $this->forHuman();
+
+        return sprintf(
+            'Count: %s, Average: %s, Min: %s, Max: %s, StdDev: %s',
+            $human['count'],
+            $human['average'],
+            $human['minimum'],
+            $human['maximum'],
+            $human['std_dev']
+        );
     }
 }

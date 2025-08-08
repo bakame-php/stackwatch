@@ -52,8 +52,11 @@ final class UnitOfWork implements JsonSerializable
 
     public readonly Profile $profile;
     public readonly string $path;
+    /** @var ?class-string  */
     public readonly ?string $class;
+    /** @var ?non-empty-string */
     public readonly ?string $method;
+    /** @var ?non-empty-string */
     public readonly ?string $function;
 
     private ?string $name = null;
@@ -68,15 +71,33 @@ final class UnitOfWork implements JsonSerializable
 
         $this->profile = $profile;
         $this->path = $path;
+        [
+            'class' => $this->class,
+            'method' => $this->method,
+            'function' => $this->function,
+        ] = $this->extractInfo($target);
+    }
+
+    /**
+     *
+     * @return array{class: ?class-string, method: ?non-empty-string, function: ?non-empty-string}
+     */
+    private function extractInfo(ReflectionFunctionAbstract $target): array
+    {
+        $class = null;
+        $method = null;
+        $function = $target->getName();
         if ($target instanceof ReflectionMethod) {
-            $this->class = $target->getDeclaringClass()->getName();
-            $this->method = $target->getName();
-            $this->function = null;
-        } else {
-            $this->class = null;
-            $this->method = null;
-            $this->function = $target->getName();
+            $class = $target->getDeclaringClass()->getName();
+            $method = $target->getName();
+            $function = null;
         }
+
+        return [
+            'class' => $class,
+            'method' => $method,
+            'function' => $function,
+        ];
     }
 
     /**
