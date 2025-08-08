@@ -27,7 +27,7 @@
         "php": "^8.1",
         "psr/log": "^3.0.2",
         "symfony/console": "^6.4 || ^7.3.2",
-        "symfony/process": "^7.3"
+        "symfony/process": "^6.4 || ^7.3"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.85.1",

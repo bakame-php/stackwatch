@@ -8,7 +8,6 @@ use Bakame\Stackwatch\Exporter\ConsoleExporter;
 use Bakame\Stackwatch\Exporter\JsonExporter;
 use Bakame\Stackwatch\Profile;
 use Bakame\Stackwatch\UnableToProfile;
-use Bakame\Stackwatch\Unit;
 use CallbackFilterIterator;
 use FilesystemIterator;
 use Psr\Log\LoggerInterface;
@@ -23,8 +22,6 @@ use Symfony\Component\Process\Process;
 use Throwable;
 
 use function array_map;
-use function dd;
-use function dump;
 use function in_array;
 use function is_array;
 use function strtolower;
