@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch;
 
 use Stringable;
+use function json_encode;
 
 final class Version implements Stringable
 {
@@ -66,5 +67,14 @@ final class Version implements Stringable
     public function __toString(): string
     {
         return self::toPlainString();
+    }
+
+    public static function toJson(): string
+    {
+        return json_encode([
+            'name' => self::NAME,
+            'version' => self::VERSION_ID,
+            'codename' => self::VERSION_NAME,
+        ]);
     }
 }
