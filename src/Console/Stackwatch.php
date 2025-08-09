@@ -40,7 +40,7 @@ final class Stackwatch
         }
 
         if ($input->showVersion) {
-            if ($input->format === 'json') {
+            if ('json' === $input->format) {
                 $this->stdout->writeln(Version::toJson());
             } else {
                 $this->stdout->writeln('<info>'.Version::name().' '.Version::full().'</info>');

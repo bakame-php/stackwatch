@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch;
 
 use Stringable;
+
 use function json_encode;
 
 final class Version implements Stringable
 {
     private const NAME = 'stackwatch';
-    private const VERSION_ID = '0.11.0';
-    private const VERSION_NAME = 'Kampala';
+    private const VERSION_ID = '0.12.0';
+    private const VERSION_NAME = 'Luanda';
     private const AUTHOR = 'Ignace Nyamagana Butera';
 
     public static function name(): string
@@ -71,7 +72,7 @@ final class Version implements Stringable
 
     public static function toJson(): string
     {
-        return json_encode([
+        return (string) json_encode([
             'name' => self::NAME,
             'version' => self::VERSION_ID,
             'codename' => self::VERSION_NAME,
