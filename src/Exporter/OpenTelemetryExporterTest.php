@@ -40,14 +40,25 @@ class OpenTelemetryExporterTest extends TestCase
      */
     private static function createSummary(string $label): Summary
     {
-        $start = new Snapshot('start', new DateTimeImmutable(), hrtime(true), [
+        $start = new Snapshot(
+            'start',
+            new DateTimeImmutable(),
+            'file',
+            1,
+            hrtime(true),
+            [
             'ru_utime.tv_sec' => 1,
             'ru_stime.tv_sec' => 1,
             'ru_utime.tv_usec' => 1,
             'ru_stime.tv_usec' => 1,
-        ], 1000, 2000, 3000, 4000);
+        ],
+            1000,
+            2000,
+            3000,
+            4000
+        );
         usleep(100);
-        $end = new Snapshot('end', new DateTimeImmutable(), hrtime(true) + 1, [
+        $end = new Snapshot('end', new DateTimeImmutable(), 'file', 1, hrtime(true) + 1, [
             'ru_utime.tv_sec' => 1,
             'ru_stime.tv_sec' => 1,
             'ru_utime.tv_usec' => 1,
@@ -156,21 +167,21 @@ class OpenTelemetryExporterTest extends TestCase
     public function it_can_export_a_marker(): void
     {
         $marker = new Marker('test-marker');
-        $start = new Snapshot('start', new DateTimeImmutable(), hrtime(true), [
+        $start = new Snapshot('start', new DateTimeImmutable(), 'file', 1, hrtime(true), [
             'ru_utime.tv_sec' => 1,
             'ru_stime.tv_sec' => 1,
             'ru_utime.tv_usec' => 1,
             'ru_stime.tv_usec' => 1,
         ], 1000, 2000, 3000, 4000);
         usleep(100);
-        $middle = new Snapshot('middle', new DateTimeImmutable(), hrtime(true), [
+        $middle = new Snapshot('middle', new DateTimeImmutable(), 'file', 1, hrtime(true), [
             'ru_utime.tv_sec' => 1,
             'ru_stime.tv_sec' => 1,
             'ru_utime.tv_usec' => 1,
             'ru_stime.tv_usec' => 1,
         ], 1000, 2000, 3000, 4000);
         usleep(100);
-        $end = new Snapshot('end', new DateTimeImmutable(), hrtime(true) + 1, [
+        $end = new Snapshot('end', new DateTimeImmutable(), 'file', 1, hrtime(true) + 1, [
             'ru_utime.tv_sec' => 1,
             'ru_stime.tv_sec' => 1,
             'ru_utime.tv_usec' => 1,

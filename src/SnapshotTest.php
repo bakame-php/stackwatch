@@ -41,6 +41,8 @@ final class SnapshotTest extends TestCase
         $snapshot2 = new Snapshot(
             $snapshot1->label,
             $snapshot1->timestamp,
+            $snapshot1->file,
+            $snapshot1->line,
             $snapshot1->hrtime,
             $snapshot1->cpu,
             $snapshot1->memoryUsage,
@@ -82,13 +84,15 @@ final class SnapshotTest extends TestCase
     }
 
     #[Test]
-    public function it_will_thro_if_the_cpu_property_is_missing_keys(): void
+    public function it_will_throw_if_the_cpu_property_is_missing_keys(): void
     {
         $this->expectException(InvalidArgument::class);
 
         new Snapshot(
             label: 'test',
             timestamp: new DateTimeImmutable(),
+            file: null,
+            line: null,
             hrtime: hrtime(true),
             cpu: [],  /* @phpstan-ignore-line */
             memoryUsage: 1,

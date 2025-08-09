@@ -13,6 +13,7 @@ use function array_diff_key;
 use function array_flip;
 use function array_intersect_key;
 use function array_keys;
+use function debug_backtrace;
 use function getrusage;
 use function hrtime;
 use function implode;
@@ -21,6 +22,7 @@ use function memory_get_peak_usage;
 use function memory_get_usage;
 use function sprintf;
 
+use const DEBUG_BACKTRACE_IGNORE_ARGS;
 use const JSON_PRETTY_PRINT;
 
 /**
@@ -33,6 +35,8 @@ use const JSON_PRETTY_PRINT;
  * @phpstan-type SnapshotStat array{
  *     label: non-empty-string,
  *     timestamp: string,
+ *     file: ?string,
+ *     line: ?int,
  *     hrtime: float,
  *     cpu: CpuStat,
  *     memory_usage: int,
@@ -43,6 +47,8 @@ use const JSON_PRETTY_PRINT;
  * @phpstan-type SnapshotHumanReadable array{
  *     label: non-empty-string,
  *     timestamp: string,
+ *     file: string,
+ *     line: string,
  *     memory_usage: string,
  *     real_memory_usage: string,
  *     peak_memory_usage: string,
@@ -68,6 +74,8 @@ final class Snapshot implements JsonSerializable, Stringable
     public function __construct(
         public readonly string $label,
         public readonly DateTimeImmutable $timestamp,
+        public readonly ?string $file,
+        public readonly ?int $line,
         public readonly float $hrtime,
         public readonly array $cpu,
         public readonly int $memoryUsage,
@@ -92,6 +100,8 @@ final class Snapshot implements JsonSerializable, Stringable
         $missingKeys = array_diff_key([
             'label' => 1,
             'timestamp' => 1,
+            'file' => 1,
+            'line' => 1,
             'hrtime' => 1,
             'cpu' => 1,
             'memory_usage' => 1,
@@ -106,6 +116,8 @@ final class Snapshot implements JsonSerializable, Stringable
             return new self(
                 $data['label'],
                 DateTimeImmutable::createFromFormat("Y-m-d\TH:i:s.uP", $data['timestamp']), /* @phpstan-ignore-line */
+                $data['file'],
+                $data['line'],
                 $data['hrtime'],
                 $data['cpu'],
                 $data['memory_usage'],
@@ -125,9 +137,13 @@ final class Snapshot implements JsonSerializable, Stringable
      */
     public static function now(?string $label = null): self
     {
+        ['file' => $file, 'line' => $line] = self::getSourceCallInfo();
+
         return new self(
             null === $label ? (new LabelGenerator())->generate() : LabelGenerator::sanitize($label),
             new DateTimeImmutable(),
+            $file,
+            $line,
             hrtime(true),
             self::getRawCpuData(),
             memory_get_usage(),
@@ -140,7 +156,7 @@ final class Snapshot implements JsonSerializable, Stringable
     /**
      * @return CpuStat
      */
-    public static function getRawCpuData(): array
+    private static function getRawCpuData(): array
     {
         /** @var CpuStat|false $cpu */
         $cpu = getrusage();
@@ -149,6 +165,22 @@ final class Snapshot implements JsonSerializable, Stringable
         }
 
         return self::CPU_STAT;
+    }
+
+    /**
+     * @return array{file: ?string, line: ?int}
+     */
+    private static function getSourceCallInfo(): array
+    {
+        $traces = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        $index = array_key_last($traces);
+        if (null === $index) {
+            return ['file' => null, 'line' => null];
+        }
+
+        $trace = $traces[$index];
+
+        return ['file' => $trace['file'] ?? null, 'line' => $trace['line'] ?? null];
     }
 
     /**
@@ -167,6 +199,8 @@ final class Snapshot implements JsonSerializable, Stringable
         return [
             'label' => $this->label,
             'timestamp' => $this->timestamp->format("Y-m-d\TH:i:s.uP"),
+            'file' => $this->file,
+            'line' => $this->line,
             'hrtime' => $this->hrtime,
             'cpu' => $this->cpu,
             'memory_usage' => $this->memoryUsage,
@@ -181,6 +215,8 @@ final class Snapshot implements JsonSerializable, Stringable
         return $other instanceof self
             && $other->label === $this->label
             && $this->hrtime === $other->hrtime
+            && $this->line === $other->line
+            && $this->file === $other->file
             && $this->cpu === $other->cpu
             && $this->memoryUsage === $other->memoryUsage
             && $this->peakMemoryUsage === $other->peakMemoryUsage
@@ -199,6 +235,8 @@ final class Snapshot implements JsonSerializable, Stringable
         $humans = [
             'label' => $this->label,
             'timestamp' => $this->timestamp->format('Y-m-d\TH:i:s.uP'),
+            'file' => (string) $this->file,
+            'line' => (string) $this->line,
             'memory_usage' => MemoryUnit::format($this->memoryUsage, 3),
             'real_memory_usage' => MemoryUnit::format($this->realMemoryUsage, 3),
             'peak_memory_usage' => MemoryUnit::format($this->peakMemoryUsage, 3),
@@ -217,9 +255,11 @@ final class Snapshot implements JsonSerializable, Stringable
     {
         $human = $this->forHuman();
         return sprintf(
-            "Snapshot '%s' at %s\nMemory: %s (real: %s), Peak: %s (real peak: %s)\nCPU Usage: %s",
+            "Snapshot '%s' at %s\nFile: %s, Line: %s\nMemory: %s (real: %s), Peak: %s (real peak: %s)\nCPU Usage: %s",
             $human['label'],
             $human['timestamp'],
+            $human['file'],
+            $human['line'],
             $human['memory_usage'],
             $human['real_memory_usage'],
             $human['peak_memory_usage'],
