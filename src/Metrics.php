@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch;
 
 use JsonSerializable;
-use Stringable;
 use Throwable;
 
 use function array_diff_key;
@@ -13,7 +12,6 @@ use function array_keys;
 use function array_reduce;
 use function count;
 use function implode;
-use function sprintf;
 
 /**
  * @phpstan-type MetricsStat array{
@@ -33,7 +31,7 @@ use function sprintf;
  *      real_peak_memory_usage: string,
  * }
  */
-final class Metrics implements JsonSerializable, Stringable
+final class Metrics implements JsonSerializable
 {
     /**
      * @param float $cpuTime expressed in nanoseconds
@@ -228,18 +226,6 @@ final class Metrics implements JsonSerializable, Stringable
             peakMemoryUsage: $this->peakMemoryUsage + $metric->peakMemoryUsage,
             realMemoryUsage: $this->realMemoryUsage + $metric->realMemoryUsage,
             realPeakMemoryUsage: $this->realPeakMemoryUsage + $metric->realPeakMemoryUsage,
-        );
-    }
-
-    public function __toString(): string
-    {
-        $human = $this->forHuman();
-
-        return sprintf(
-            'CPU: %s, Execution: %s, Memory: %s',
-            $human['cpu_time'],
-            $human['execution_time'],
-            $human['memory_usage']
         );
     }
 }

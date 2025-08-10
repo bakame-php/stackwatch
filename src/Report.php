@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch;
 
 use JsonSerializable;
-use Stringable;
 use Throwable;
 
 use function array_diff_key;
 use function array_keys;
 use function implode;
-use function sprintf;
 
 /**
  * @phpstan-import-type StatsMap from Statistics
@@ -24,7 +22,7 @@ use function sprintf;
  *      real_peak_memory_usage: StatsMap,
  *  }
  */
-final class Report implements JsonSerializable, Stringable
+final class Report implements JsonSerializable
 {
     public function __construct(
         public readonly Statistics $cpuTime,
@@ -154,18 +152,5 @@ final class Report implements JsonSerializable, Stringable
         } catch (Throwable $exception) {
             throw new InvalidArgument('Unable to create a report from the payload', previous: $exception);
         }
-    }
-
-    public function __toString(): string
-    {
-        return sprintf(
-            "CPU Time: %s\nExecution Time: %s\nMemory Usage: %s\nPeak Memory Usage: %s\nReal Memory Usage: %s\nReal Peak Memory Usage: %s",
-            $this->cpuTime,
-            $this->executionTime,
-            $this->memoryUsage,
-            $this->peakMemoryUsage,
-            $this->realMemoryUsage,
-            $this->realPeakMemoryUsage,
-        );
     }
 }

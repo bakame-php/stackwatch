@@ -8,7 +8,6 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 - `--no-recursion` flag to disable recursion on directories.
 - `--isolation` flag to handle in isolation each file.
-- `Stringable` interface to all Profile related objects.
 
 ### Fixed
 

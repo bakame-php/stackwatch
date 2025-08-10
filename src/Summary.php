@@ -5,13 +5,11 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch;
 
 use JsonSerializable;
-use Stringable;
 use Throwable;
 
 use function array_diff_key;
 use function array_keys;
 use function implode;
-use function sprintf;
 
 /**
  * @phpstan-import-type MetricsStat from Metrics
@@ -22,7 +20,7 @@ use function sprintf;
  *     metrics: MetricsStat
  * }
  */
-final class Summary implements JsonSerializable, Stringable
+final class Summary implements JsonSerializable
 {
     public readonly Metrics $metrics;
     public readonly Snapshot $start;
@@ -94,16 +92,5 @@ final class Summary implements JsonSerializable, Stringable
             ],
             'metrics' => $this->metrics,
         ];
-    }
-
-    public function __toString(): string
-    {
-        return sprintf(
-            "Summary '%s':\nStart Snapshot:\n%s\nEnd Snapshot:\n%s\nMetrics:\n%s",
-            $this->label,
-            $this->start,
-            $this->end,
-            $this->metrics
-        );
     }
 }

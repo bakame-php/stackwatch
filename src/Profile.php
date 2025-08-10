@@ -8,7 +8,6 @@ use Attribute;
 use JsonSerializable;
 
 use function in_array;
-use function json_encode;
 
 /**
  * @phpstan-type ProfileMap array{type: 'detailed'|'summary', iterations: int<1, max>, warmup:int<0, max>}
@@ -59,11 +58,6 @@ final class Profile implements JsonSerializable
     public static function isValidWarmup(int $warmup): void
     {
         0 <= $warmup || throw new InvalidArgument('The warmup must be a positive integer or zero.');
-    }
-
-    public function __toString(): string
-    {
-        return (string) json_encode($this->toArray());
     }
 
     /**

@@ -6,7 +6,6 @@ namespace Bakame\Stackwatch;
 
 use DateTimeImmutable;
 use JsonSerializable;
-use Stringable;
 use Throwable;
 
 use function array_diff_key;
@@ -19,7 +18,6 @@ use function implode;
 use function json_encode;
 use function memory_get_peak_usage;
 use function memory_get_usage;
-use function sprintf;
 
 use const JSON_PRETTY_PRINT;
 
@@ -51,7 +49,7 @@ use const JSON_PRETTY_PRINT;
  * }
  *
  */
-final class Snapshot implements JsonSerializable, Stringable
+final class Snapshot implements JsonSerializable
 {
     /** @var CpuStat $default */
     private const CPU_STAT = [
@@ -211,20 +209,5 @@ final class Snapshot implements JsonSerializable, Stringable
         }
 
         return $humans[$property] ?? throw new InvalidArgument('Unknown snapshot name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
-    }
-
-    public function __toString(): string
-    {
-        $human = $this->forHuman();
-        return sprintf(
-            "Snapshot '%s' at %s\nMemory: %s (real: %s), Peak: %s (real peak: %s)\nCPU Usage: %s",
-            $human['label'],
-            $human['timestamp'],
-            $human['memory_usage'],
-            $human['real_memory_usage'],
-            $human['peak_memory_usage'],
-            $human['real_peak_memory_usage'],
-            $human['cpu']
-        );
     }
 }

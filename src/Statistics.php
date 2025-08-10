@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch;
 
 use JsonSerializable;
-use Stringable;
 use Throwable;
 use ValueError;
 
@@ -14,7 +13,6 @@ use function array_keys;
 use function array_sum;
 use function implode;
 use function number_format;
-use function sprintf;
 
 /**
  * Represents a detailed statistical summary of a numeric dataset.
@@ -53,7 +51,7 @@ use function sprintf;
  * }
  *
  */
-final class Statistics implements JsonSerializable, Stringable
+final class Statistics implements JsonSerializable
 {
     public function __construct(
         public readonly Unit $unit,
@@ -263,19 +261,5 @@ final class Statistics implements JsonSerializable, Stringable
         }
 
         return $humans[$property] ?? throw new InvalidArgument('Unknown statistics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
-    }
-
-    public function __toString(): string
-    {
-        $human = $this->forHuman();
-
-        return sprintf(
-            'Count: %s, Average: %s, Min: %s, Max: %s, StdDev: %s',
-            $human['count'],
-            $human['average'],
-            $human['minimum'],
-            $human['maximum'],
-            $human['std_dev']
-        );
     }
 }
