@@ -32,8 +32,7 @@ composer require bakame/stackwatch
 You need:
 
 - **PHP >= 8.1** but the latest stable version of PHP is recommended
-- `symfony/console` if you are going to use the CLI command
-- `symfony/process` if you are going to use the CLI command
+- `symfony/console`  and `symfony/process` if you are going to use the CLI command
 - `psr/log` if you are going to use the CLI command
 
 ## Usage
@@ -49,146 +48,7 @@ echo microtime(true) - $start; // the execution time of your code
 `Stackwatch` streamlines this process by removing the need for manual
 timing and setup, making profiling more convenient and consistent.
 
-### CLI command
-
-A CLI Command is available to allow you to benchmark PHP **functions and methods** located in a
-specific file or directory using the custom `#[Bakame\Stackwatch\Profile]` attribute.
-
-This is especially useful for:
-
-- Automating performance regressions in CI pipelines
-- Profiling code outside the context of an application
-
-#### Usage
-
-```bash
-php bin/stackwatch --path=PATH [--output=OUTPUT] [--format=FORMAT] [--no-recursion] [--isolation] [--pretty] [--info] [--help]
-```
-
-| Option                | Description                                         |
-|-----------------------|-----------------------------------------------------|
-| `-p, --path=PATH`     | Path to scan for PHP files to profile (required)    |
-| `-o, --output=OUTPUT` | Path to store the profiling output (optional)       |
-| `-f, --format=FORMAT` | Output format: 'table' or 'json' (default: 'table') |
-| `-n, --no-recursion`  | To disable directory recursion                      |
-| `-x, --isolation`     | To profile by isolation each file                   |
-| `-P, --pretty`        | Pretty-print the JSON/NDJSON output (json only)     |
-| `-i, --info`          | Show additional system/environment information      |
-| `-h, --help`          | Display the help message                            |
-| `-V, --version`       | Display the version and exit                        |
-
-#### Example
-
-let's assume you have the following file located in `/path/profiler/test.php`.
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace Foobar\Baz;
-
-use Bakame\Stackwatch\Profile;
-use function random_int;
-use function usleep;
-
-require 'vendor/autoload.php';
-
-trait TimerTrait {
-    #[Profile(type: Profile::SUMMARY, iterations: 10)]
-    private function test() : int {
-        usleep(100);
-
-        return random_int(1, 100);
-    }
-}
-
-enum Foobar
-{
-    use TimerTrait;
-
-    case Foobar;
-}
-
-#[Profile(type: Profile::DETAILED, iterations: 20, warmup: 2)]
-function test() : int {
-    usleep(100);
-
-    return random_int(1, 100);
-}
-```
-If you run the following command:
-
-```bash
-php bin/stackwatch --path=/path/profiler/test.php
-```
-It will output the following:
-
-```bash
-stackwatch v0.11.0 (Kampala) by Ignace Nyamagana Butera and contributors.
-
-Runtime: PHP 8.3.23 OS: Linux Memory Limit: 128M
-
-Average metrics for the method Foobar\Baz\Foobar::test located in /path/to/test.php called 10 times
-+------------------------------------+
-|         Execution Time: 148.508 µs |
-|               CPU Time: 15.500 µs  |
-|           Memory Usage: 1.0 KB     |
-|      Real Memory Usage: 0.0 B      |
-|      Peak Memory Usage: 0.0 B      |
-| Real Peak Memory Usage: 0.0 B      |
-+------------------------------------+
-Report for the function Foobar\Baz\test located in /path/to/test.php called 20 times
-+------------------------+---------------+------------+------------+--------------+------------+-----------+------------+------------+----------+-----------+
-| Metric                 | Nb Iterations | Min Value  | Max Value  | Median Value | Sum        | Range     | Average    | Variance   | Std Dev  | Coef Var  |
-+------------------------+---------------+------------+------------+--------------+------------+-----------+------------+------------+----------+-----------+
-| CPU Time               | 20            | 9.000 µs   | 20.000 µs  | 12.000 µs    | 240.000 µs | 11.000 µs | 12.000 µs  | 6.300 μs²  | 2.510 µs | 20.9165 % |
-| Execution Time         | 20            | 135.166 µs | 169.833 µs | 149.979 µs   | 2.980 ms   | 34.667 µs | 149.021 µs | 65.499 μs² | 8.093 µs | 5.4309 %  |
-| Memory Usage           | 20            | 1.031 KB   | 1.031 KB   | 1.031 KB     | 20.625 KB  | 0.000 B   | 1.031 KB   | 0.000 B²   | 0.000 B  | 0.0000 %  |
-| Peak Memory Usage      | 20            | 0.000 B    | 0.000 B    | 0.000 B      | 0.000 B    | 0.000 B   | 0.000 B    | 0.000 B²   | 0.000 B  | 0.0000 %  |
-| Real Memory Usage      | 20            | 0.000 B    | 0.000 B    | 0.000 B      | 0.000 B    | 0.000 B   | 0.000 B    | 0.000 B²   | 0.000 B  | 0.0000 %  |
-| Real Peak Memory Usage | 20            | 0.000 B    | 0.000 B    | 0.000 B      | 0.000 B    | 0.000 B   | 0.000 B    | 0.000 B²   | 0.000 B  | 0.0000 %  |
-+------------------------+---------------+------------+------------+--------------+------------+-----------+------------+------------+----------+-----------+
-```
-
-- the first table shows the average metrics for the `Foobar::test` method.
-- the second table shows the fully detailed report on the function `test`.
-
-The `#[Profile]` attribute marks a function or method for performance profiling, with the following options:
-
-- `iterations`: (int, required) – Number of times to execute the target code for statistically meaningful results.
-- `warmup`: (int, optional) – Number of warmup iterations to perform before measurement begins. These iterations are excluded from the final statistics.
-- `type`: (`Profile::SUMMARY` or `Profile::DETAILED`, required) – Determines the level of detail in the output:
-    - `Profile::SUMMARY`: Outputs only core metrics (e.g., average execution time).
-    - `Profile::DETAILED`: Produces full statistics (min, max, average, standard deviation, etc.).
-
-#### Notes
-
-The command line supports **function-level** and **method-level** profiling, including methods defined
-via traits, even inside Enums.
-
-- Functions or methods without a `#[Profile]` attribute will be ignored.
-- Functions or methods with arguments will also be ignored.
-
-All required dependencies should be loaded in the target file (use `require`, `include` or Composer autoload).
-
-#### Integration into CI
-
-You can run the profiling command in your CI pipelines to detect regressions or performance anomalies.
-
-```yaml
-- name: Run Profiler
-  run: php bin/stackwatch --path=/path/profiler/test.php --format=json
-```
-
-> [!IMPORTANT]  
-> The command line requires `symfony\console` and the `psr\log` interfaces to work.
-
-> [!CAUTION]  
-> The command line can scan your full codebase if you specify a directory instead of a path. The
-> json output is a NDJSON each line representing the result of a successful file scan.
-
-Outside the CLI command you can use the package programmatically via two other features.
+The package offers three (3) complementary ways to profile your code.
 
 ### Profiler
 
@@ -651,6 +511,147 @@ $marker->take('render', 'server_cycle');
 > Logging can be done also on the `Profiler` static methods, they all optionally accept a `LoggerInterface` argument.
 > When logging marker or profiler instance their respective identifier is added to the log to ease identifying
 > which instance is generating the log entries.
+
+Outside the `Profiler` and the `Marker` you can use the package features through a CLI command.
+
+### CLI command
+
+A CLI Command is available to allow you to benchmark PHP **functions and methods** located in a
+specific file or directory using the custom `#[Bakame\Stackwatch\Profile]` attribute.
+
+This is especially useful for:
+
+- Automating performance regressions in CI pipelines
+- Profiling code outside the context of an application
+
+#### Usage
+
+```bash
+php bin/stackwatch --path=PATH [--output=OUTPUT] [--format=FORMAT] [--no-recursion] [--isolation] [--pretty] [--info] [--help]
+```
+
+| Option                | Description                                         |
+|-----------------------|-----------------------------------------------------|
+| `-p, --path=PATH`     | Path to scan for PHP files to profile (required)    |
+| `-o, --output=OUTPUT` | Path to store the profiling output (optional)       |
+| `-f, --format=FORMAT` | Output format: 'table' or 'json' (default: 'table') |
+| `-n, --no-recursion`  | To disable directory recursion                      |
+| `-x, --isolation`     | To profile by isolation each file                   |
+| `-P, --pretty`        | Pretty-print the JSON/NDJSON output (json only)     |
+| `-i, --info`          | Show additional system/environment information      |
+| `-h, --help`          | Display the help message                            |
+| `-V, --version`       | Display the version and exit                        |
+
+#### Example
+
+let's assume you have the following file located in `/path/profiler/test.php`.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Foobar\Baz;
+
+use Bakame\Stackwatch\Profile;
+use function random_int;
+use function usleep;
+
+require 'vendor/autoload.php';
+
+trait TimerTrait {
+    #[Profile(type: Profile::SUMMARY, iterations: 10)]
+    private function test() : int {
+        usleep(100);
+
+        return random_int(1, 100);
+    }
+}
+
+enum Foobar
+{
+    use TimerTrait;
+
+    case Foobar;
+}
+
+#[Profile(type: Profile::DETAILED, iterations: 20, warmup: 2)]
+function test() : int {
+    usleep(100);
+
+    return random_int(1, 100);
+}
+```
+If you run the following command:
+
+```bash
+php bin/stackwatch --path=/path/profiler/test.php
+```
+It will output the following:
+
+```bash
+stackwatch v0.11.0 (Kampala) by Ignace Nyamagana Butera and contributors.
+
+Runtime: PHP 8.3.23 OS: Linux Memory Limit: 128M
+
+Average metrics for the method Foobar\Baz\Foobar::test located in /path/to/test.php called 10 times
++------------------------------------+
+|         Execution Time: 148.508 µs |
+|               CPU Time: 15.500 µs  |
+|           Memory Usage: 1.0 KB     |
+|      Real Memory Usage: 0.0 B      |
+|      Peak Memory Usage: 0.0 B      |
+| Real Peak Memory Usage: 0.0 B      |
++------------------------------------+
+Report for the function Foobar\Baz\test located in /path/to/test.php called 20 times
++------------------------+---------------+------------+------------+--------------+------------+-----------+------------+------------+----------+-----------+
+| Metric                 | Nb Iterations | Min Value  | Max Value  | Median Value | Sum        | Range     | Average    | Variance   | Std Dev  | Coef Var  |
++------------------------+---------------+------------+------------+--------------+------------+-----------+------------+------------+----------+-----------+
+| CPU Time               | 20            | 9.000 µs   | 20.000 µs  | 12.000 µs    | 240.000 µs | 11.000 µs | 12.000 µs  | 6.300 μs²  | 2.510 µs | 20.9165 % |
+| Execution Time         | 20            | 135.166 µs | 169.833 µs | 149.979 µs   | 2.980 ms   | 34.667 µs | 149.021 µs | 65.499 μs² | 8.093 µs | 5.4309 %  |
+| Memory Usage           | 20            | 1.031 KB   | 1.031 KB   | 1.031 KB     | 20.625 KB  | 0.000 B   | 1.031 KB   | 0.000 B²   | 0.000 B  | 0.0000 %  |
+| Peak Memory Usage      | 20            | 0.000 B    | 0.000 B    | 0.000 B      | 0.000 B    | 0.000 B   | 0.000 B    | 0.000 B²   | 0.000 B  | 0.0000 %  |
+| Real Memory Usage      | 20            | 0.000 B    | 0.000 B    | 0.000 B      | 0.000 B    | 0.000 B   | 0.000 B    | 0.000 B²   | 0.000 B  | 0.0000 %  |
+| Real Peak Memory Usage | 20            | 0.000 B    | 0.000 B    | 0.000 B      | 0.000 B    | 0.000 B   | 0.000 B    | 0.000 B²   | 0.000 B  | 0.0000 %  |
++------------------------+---------------+------------+------------+--------------+------------+-----------+------------+------------+----------+-----------+
+```
+
+- the first table shows the average metrics for the `Foobar::test` method.
+- the second table shows the fully detailed report on the function `test`.
+
+The `#[Profile]` attribute marks a function or method for performance profiling, with the following options:
+
+- `iterations`: (int, required) – Number of times to execute the target code for statistically meaningful results.
+- `warmup`: (int, optional) – Number of warmup iterations to perform before measurement begins. These iterations are excluded from the final statistics.
+- `type`: (`Profile::SUMMARY` or `Profile::DETAILED`, required) – Determines the level of detail in the output:
+    - `Profile::SUMMARY`: Outputs only core metrics (e.g., average execution time).
+    - `Profile::DETAILED`: Produces full statistics (min, max, average, standard deviation, etc.).
+
+#### Notes
+
+The command line supports **function-level** and **method-level** profiling, including methods defined
+via traits, even inside Enums.
+
+- Functions or methods without a `#[Profile]` attribute will be ignored.
+- Functions or methods with arguments will also be ignored.
+
+All required dependencies should be loaded in the target file (use `require`, `include` or Composer autoload).
+
+#### Integration into CI
+
+You can run the profiling command in your CI pipelines to detect regressions or performance anomalies.
+
+```yaml
+- name: Run Profiler
+  run: php bin/stackwatch --path=/path/profiler/test.php --format=json
+```
+
+> [!IMPORTANT]  
+> The command line requires `symfony\console` and the `psr\log` interfaces to work.
+
+> [!CAUTION]  
+> The command line can scan your full codebase if you specify a directory instead of a path. The
+> json output is a NDJSON each line representing the result of a successful file scan.
 
 ### Exporters
 
