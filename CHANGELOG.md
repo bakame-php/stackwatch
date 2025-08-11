@@ -6,7 +6,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Added
 
-- `--no-recursion` flag to disable recursion on directories.
+- `--depth` argument and `--no-recursion` flag to control recursion on directories.
 - `--isolation` flag to handle in isolation each file.
 
 ### Fixed

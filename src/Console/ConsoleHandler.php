@@ -32,15 +32,7 @@ final class ConsoleHandler implements Handler
             $output = new StreamOutput($handler);
         }
 
-        $profiler = PathProfiler::forConsole($output, $this->logger);
-        if (!$input->recursive) {
-            $profiler->disableRecursive();
-        }
-
-        if ($input->isInIsolation) {
-            $profiler->enableIsolation();
-        }
-
+        $profiler = PathProfiler::forConsole($input, $output, $this->logger);
         $output->writeln(Version::toConsoleString());
 
         if ($input->showInfo) {

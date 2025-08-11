@@ -34,64 +34,44 @@ use function strtolower;
  */
 final class PathProfiler
 {
-    private bool $recursive = true;
-    private bool $isolated = false;
-
     public function __construct(
         public readonly UnitOfWorkGenerator $unitOfWorkGenerator,
         public readonly Processor $processor,
         public readonly LoggerInterface $logger = new NullLogger(),
+        public readonly int $depth = -1,
+        public readonly bool $isInIsolation = false,
     ) {
     }
 
-    public static function forConsole(OutputInterface $output = new ConsoleOutput(), LoggerInterface $logger = new NullLogger()): self
-    {
+    public static function forConsole(
+        Input $input,
+        OutputInterface $output = new ConsoleOutput(),
+        LoggerInterface $logger = new NullLogger(),
+    ): self {
         return new self(
             new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
             new ConsoleProcessor(new ConsoleExporter($output)),
             $logger,
+            $input->depth,
+            $input->inIsolation,
         );
-    }
-
-    public function disableRecursive(): void
-    {
-        $this->recursive = false;
-    }
-
-    public function enableRecursive(): void
-    {
-        $this->recursive = true;
-    }
-
-    public function isRecursive(): bool
-    {
-        return $this->recursive;
-    }
-
-    public function enableIsolation(): void
-    {
-        $this->isolated = true;
-    }
-
-    public function disableIsolation(): void
-    {
-        $this->isolated = false;
-    }
-
-    public function isInIsolation(): bool
-    {
-        return $this->isolated;
     }
 
     /**
      * @param SplFileInfo|resource|string $path
      */
-    public static function forJson(mixed $path, int $jsonOptions = 0, LoggerInterface $logger = new NullLogger()): self
-    {
+    public static function forJson(
+        Input $input,
+        mixed $path,
+        int $jsonOptions = 0,
+        LoggerInterface $logger = new NullLogger()
+    ): self {
         return new self(
             new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
             new JsonProcessor(new JsonExporter($path, $jsonOptions)),
             $logger,
+            $input->depth,
+            $input->inIsolation,
         );
     }
 
@@ -103,10 +83,8 @@ final class PathProfiler
 
         $files = new ArrayIterator([$filePath]);
         if ($filePath->isDir()) {
-            $files = match (!$this->recursive) {
-                false => new FilesystemIterator($filePath->getPathname()),
-                true => new RecursiveIteratorIterator(new RecursiveDirectoryIterator($filePath->getPathname(), FilesystemIterator::SKIP_DOTS)),
-            };
+            $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($filePath->getPathname(), FilesystemIterator::SKIP_DOTS));
+            $files->setMaxDepth($this->depth);
         }
 
         /** @var iterable<SplFileInfo> $phpFiles */
@@ -114,11 +92,7 @@ final class PathProfiler
             $files,
             function (SplFileInfo $file) {
                 $filesize = $file->getSize();
-                if (!$file->isFile()) {
-                    return false;
-                }
-
-                if (!$file->isReadable()) {
+                if (!$file->isFile() || !$file->isReadable()) {
                     return false;
                 }
 
@@ -126,11 +100,7 @@ final class PathProfiler
                     return false;
                 }
 
-                if (in_array($filesize, [false, 0], true)) {
-                    return false;
-                }
-
-                return true;
+                return !in_array($filesize, [false, 0], true);
             }
         );
 
@@ -145,7 +115,7 @@ final class PathProfiler
      */
     public function handleFile(SplFileInfo $path): void
     {
-        $units = match ($this->isolated) {
+        $units = match ($this->isInIsolation) {
             true => $this->createUnitOfWorksInIsolation($path),
             false => $this->createUnitOfWorks($path),
         };

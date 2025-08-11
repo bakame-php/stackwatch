@@ -25,15 +25,7 @@ final class JsonHandler implements Handler
             ? JSON_PRETTY_PRINT | JSON_BIGINT_AS_STRING
             : JSON_BIGINT_AS_STRING;
         $stream = $input->output ?? STDOUT;
-        $profiler = PathProfiler::forJson($stream, $jsonOptions, $this->logger);
-        if (!$input->recursive) {
-            $profiler->disableRecursive();
-        }
-
-        if ($input->isInIsolation) {
-            $profiler->enableIsolation();
-        }
-
+        $profiler = PathProfiler::forJson($input, $stream, $jsonOptions, $this->logger);
         if ($input->showInfo) {
             $processor = $profiler->processor;
             if ($processor instanceof JsonProcessor) {

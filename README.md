@@ -527,20 +527,21 @@ This is especially useful for:
 #### Usage
 
 ```bash
-php bin/stackwatch --path=PATH [--output=OUTPUT] [--format=FORMAT] [--no-recursion] [--isolation] [--pretty] [--info] [--help]
+php bin/stackwatch --path=PATH [--output=OUTPUT] [--format=FORMAT] [--depth=DEPTH] [--no-recursion] [--isolation] [--pretty] [--info] [--help]
 ```
 
-| Option                | Description                                         |
-|-----------------------|-----------------------------------------------------|
-| `-p, --path=PATH`     | Path to scan for PHP files to profile (required)    |
-| `-o, --output=OUTPUT` | Path to store the profiling output (optional)       |
-| `-f, --format=FORMAT` | Output format: 'table' or 'json' (default: 'table') |
-| `-n, --no-recursion`  | To disable directory recursion                      |
-| `-x, --isolation`     | To profile by isolation each file                   |
-| `-P, --pretty`        | Pretty-print the JSON/NDJSON output (json only)     |
-| `-i, --info`          | Show additional system/environment information      |
-| `-h, --help`          | Display the help message                            |
-| `-V, --version`       | Display the version and exit                        |
+| Option                | Description                                                           |
+|-----------------------|-----------------------------------------------------------------------|
+| `-p, --path=PATH`     | Path to scan for PHP files to profile (required)                      |
+| `-o, --output=OUTPUT` | Path to store the profiling output (optional)                         |
+| `-f, --format=FORMAT` | Output format: 'table' or 'json' (default: 'table')                   |
+| `-d, --depth=DEPTH`   | Recursion depth (0 = current dir only, default: unlimited) (optional) |
+| `-n, --no-recursion`  | Disable directory recursion (optional)                                |
+| `-x, --isolation`     | To profile by isolation each file                                     |
+| `-P, --pretty`        | Pretty-print the JSON/NDJSON output (json only)                       |
+| `-i, --info`          | Show additional system/environment information                        |
+| `-h, --help`          | Display the help message                                              |
+| `-V, --version`       | Display the version and exit                                          |
 
 #### Example
 
