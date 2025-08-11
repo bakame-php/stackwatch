@@ -2,7 +2,7 @@
 
 All Notable changes to `bakame/stackwatch` will be documented in this file.
 
-## [Next - African city](https://github.com/bakame-php/stackwatch/compare/0.11.0...main) - TBD
+## [0.12.0 - Luanda](https://github.com/bakame-php/stackwatch/compare/0.11.0...0.12.0) - 2025-08-11
 
 ### Added
 
@@ -22,7 +22,6 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 ### Removed
 
 - None
-
 
 ## [0.11.0 - Kampala](https://github.com/bakame-php/stackwatch/compare/0.10.0...0.11.0) - 2025-08-03
 
