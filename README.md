@@ -7,14 +7,10 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/bakame/stackwatch.svg?style=flat-square)](https://packagist.org/packages/bakame/stackwatch)
 [![Sponsor development of this project](https://img.shields.io/badge/sponsor%20this%20package-%E2%9D%A4-ff69b4.svg?style=flat-square)](https://github.com/sponsors/nyamsprod)
 
-**Stackwatcher** is a lightweight profiler for PHP 8.1+.  It helps you measure performance with precision—without
-unnecessary complexity. It features:
+**Stackwatch** is a lightweight profiler for PHP 8.1+.  It helps you measure performance with precision—without
+unnecessary complexity. 
 
-- Marker-Based Profiling – segment code with named checkpoints (zero-dependency)
-- Scoped Execution Profiling – profile any block using closures (zero-dependency)
-- Attribute-Driven CLI Profiling – run code marked with #[Profile] via a CLI command (uses symfony/console + PSR-3)
-
-**Stackwatcher**  bridges the gap between basic timers and heavy profiling tools like [PHPBench](https://phpbench.readthedocs.io/en/latest/), [Xdebug](https://xdebug.org/) or [Blackfire](https://www.blackfire.io/).
+**Stackwatch**  bridges the gap between basic timers and heavy profiling tools like [PHPBench](https://phpbench.readthedocs.io/en/latest/), [Xdebug](https://xdebug.org/) or [Blackfire](https://www.blackfire.io/).
 It is perfect for:
 
 - Isolated performance testing
@@ -32,8 +28,8 @@ composer require bakame/stackwatch
 You need:
 
 - **PHP >= 8.1** but the latest stable version of PHP is recommended
-- `symfony/console`  and `symfony/process` if you are going to use the CLI command
-- `psr/log` if you are going to use the CLI command
+- `symfony/console` and `symfony/process` if you are going to use the CLI command
+- `psr/log` is optional
 
 ## Usage
 
@@ -48,7 +44,11 @@ echo microtime(true) - $start; // the execution time of your code
 `Stackwatch` streamlines this process by removing the need for manual
 timing and setup, making profiling more convenient and consistent.
 
-The package offers three (3) complementary ways to profile your code.
+The package offers three (3) complementary ways to profile your code, it features:
+
+- [Scoped Execution Profiling](#profiler) – profile any block using closures
+- [Timeline-Based Profiling](#timeline) – segment code with named checkpoints
+- [Attribute-Driven CLI Profiling](#cli-command) – run code marked with #[Profile] via a CLI command
 
 ### Profiler
 
@@ -63,7 +63,7 @@ $duration = Profiler::metrics($service->calculateHeavyStuff(...))->executionTime
 // $duration is the execution time in nanosecond using hrtime instead of microtime
 ````
 
-The method returns a `Metrics` class with readonly methods for each metric.
+The method returns a `Metrics` class with readonly properties for each metric.
 
 ```php
 use Bakame\Stackwatch\Profiler;
@@ -81,7 +81,7 @@ $metrics->realPeakMemoryUsage;
 
 All duration values are expressed in nanoseconds, while memory-related metrics are measured in bytes.
 
-You can retrieve the `Metrics` statistics in a human-readable format using the `Metrics::forHuman()` method.
+You can retrieve the `Metrics` statistics in a human-readable format using the instance `forHuman()` method.
 
 You can either:
 
@@ -136,7 +136,7 @@ and formatted.
 ```php
 use Bakame\Stackwatch\Profiler;
 
-// you create a new Profiler by passing the callback you want to profile
+// Create a new Profiler by passing the callback to profile
 $report = Profiler::report($service->calculateHeavyStuff(...), 500);
 
 // Access the raw statistical metrics
@@ -190,7 +190,7 @@ To enable this, create a new `Profiler` instance by passing in the callback you 
 ```php
 use Bakame\Stackwatch\Profiler;
 
-// you create a new Profiler by passing the callback you want to profile
+// Create a new Profiler by passing the callback to profile
 $profiler = new Profiler($service->calculateHeavyStuff(...));
 
 //we invoke the `run` method of the Profiler which will execute the callback
@@ -233,7 +233,7 @@ integers to simplify access from the end of the list.
 
 #### Using labels
 
-To add a custom label to each run, use `Profiler::profile`. This method works like the 
+To add a custom label to each run, use the `profile` method. This method works like the 
 `run` method but allows you to assign a custom label to the returned `Summary` object
 via its first argument.
 
@@ -293,171 +293,174 @@ count($profiler); // returns 0
 $profiler->isEmpty(); // return true
 ```
 
-### Marker
+### Timeline
 
-In situation where you can't work with callbacks you can alternatively use the `Marker` class.
+In situation where you can't work with callbacks you can alternatively use the `Timeline` class.
 
-The `Marker` class profiles across labeled checkpoints ("snapshots") in your
-code. You can start a new `Marker` using the static method:
+The `Timeline` class profiles across labeled checkpoints ("snapshots") in your
+code. A `Timeline` class is a sequence of snapshots of your codebase.
+You can start a new `Timeline` using the static method `start`:
 
 ```php
-use App\Profiler\Marker;
+use App\Profiler\Timeline;
 
-$marker = Marker::start('boot');
+$timeline = Timeline::start('boot');
 ```
+
+When starting a timeline with the `start` method, you initiate a new `Timeline` class but you 
+also immediately capture a significant point in your code also known as a snapshot.
 
 #### Taking Snapshots
 
-Use `mark()` to mark significant points in your code:
+Use `capture()` to mark significant points in your code. Those points must each have a unique identifier
+called `label`. Labels are automatically normalized (e.g., trimmed, validated).
 
 ```php
-$marker->mark('init');
+$timeline->capture('init');
 // some code
-$marker->mark('load');
+$timeline->capture('load');
 // some code
-$marker->mark('render');
+$timeline->capture('render');
 ```
-
-Each label must be unique. Labels are automatically normalized (e.g., trimmed, validated).
 
 #### Getting profiling results
 
 To get a high-level profile between the **first and lastest** snapshot use the `summarize` method.
 
 ```php
-$summary = $marker->summary();         // Returns a Summary instance
+$summary = $timeline->summarize();     // Returns a Summary instance
 echo $summary->metrics->executionTime; // Access execution time, CPU time, memory, etc.
 ```
 You can provide a custom label for the summary:
 
 ```php
-$summary = $marker->summary('full_request'); // Returns a Summary instance
+$summary = $timeline->summarize('full_request'); // Returns a Summary instance
 ```
 
 If needed, you can measure the profiling data between two specific labels:
 
 ```php
-$delta = $marker->delta('init', 'render'); // Returns Summary
-$executionTime = $marker->metrics('init', 'render'); // Returns a Metrics object
+$delta = $timeline->delta('init', 'render'); // Returns Summary
+$executionTime = $timeline->metrics('init', 'render'); // Returns a Metrics object
 ```
 
 If you do not specify the second label, the method will default to using the latest snapshot
 as the second argument.
 
 ```php
-$marker->metrics('init', 'render');
+$timeline->metrics('init', 'render');
 //is equivalent to
-$marker->metrics('init');
+$timeline->metrics('init');
 ```
 
 You can iterate over each successive pair of snapshots to return the consecutive deltas:
 
 ```php
-foreach ($marker->deltas() as $summary) {
+foreach ($timeline->deltas() as $summary) {
     echo $summary->label . ': ' . $summary->metrics->forHuman('execution_time') . PHP_EOL;
 }
 ```
 
-You can also take a snapshot and directly return the calculated summary between the `Marker`
+You can also take a snapshot and directly return the calculated summary between the `Timeline`
 first snapshot and the one you just take using the `take` method
 
 ```php
-$summary = $marker->take('done'); // takes a snapshot labeled 'done' and returns a Summary instance
+$summary = $timeline->take('done'); // takes a snapshot labeled 'done' and returns a Summary instance
 ```
 
 Just like with the `summary` method you can provide an optional custom label for the summary report:
 
 ```php
-$summary = $marker->take(label: 'done', summaryLabel: 'total');
+$summary = $timeline->take(label: 'done', summaryLabel: 'total');
 ```
 
-#### Finalizing the marker
+#### Finalizing the Timeline
+
+While not mandatory or required, The `complete` method finalizes the profiling timeline, marking it
+as complete and preventing any further snapshots or operations that modify the state.
 
 ```php
-$marker->complete();
+$timeline->complete();
 ```
 
-The `complete` method finalizes the profiling marker, marking it as complete and preventing any
-further snapshots or operations that modify the state. 
-
-Before calling `complete`, the marker is **open** and can accept snapshots via `mark`
+Before calling `complete`, the timeline is **open** and can accept snapshots via `capture`
 or `take` methods. Once `complete` is called:
 
-- The marker becomes **complete and is closed to further modifications.**
-- Further calls to `mark` or `take` will throw an `UnableToProfile` exception.
+- The timeline becomes **complete and is closed to further modifications.**
+- Further calls to `capture` or `take` will throw an `UnableToProfile` exception.
 - Calling `complete` multiple times has no effects - it is **idempotent**.
-- The result of `summary` remains unchanged after completion and can be safely called multiple times.
+- The result of `summarize` remains unchanged after completion and can be safely called multiple times.
 
-At any given time you can check your `Marker` completion status using the `Marker::isComplete`
+At any given time you can check your `Timeline` completion status using the `Timeline::isComplete`
 method which returns `true` when it is complete; false otherwise.
 
-#### Marker utility methods
+#### Timeline utility methods
 
-The `Marker` instance also gives you access to other utility methods:
+The `Timeline` instance also gives you access to other utility methods:
 
 ```php
-$marker->labels();             // returns all the snapshot labels (in order)
-$marker->hasLabel($label);     // tells whether the label is used
-$marker->first();              // returns the first snapshot taken
-$marker->latest();             // returns the most recent snapshot
-$marker->isEmpty();            // returns true when no snapshot has been taken
-$marker->hasSnapshots();       // returns true when snapshots are available
-$marker->hasEnoughSnapshots(); // returns true if the marker can safely generate a report/summary
-$marker->toArray();            // returns all snapshots as structured arrays
-$marker->isComplete();         // tells whether the marker is complete
-$marker->reset();              // Reset the marker to its initial state open and with no snapshot
+$timeline->labels();             // returns all the snapshot labels (in order)
+$timeline->hasLabel($label);     // tells whether the label is used
+$timeline->first();              // returns the first snapshot taken
+$timeline->latest();             // returns the most recent snapshot
+$timeline->hasNoSnapshot();      // returns true when no snapshot has been taken
+$timeline->hasSnapshots();       // returns true when snapshots are available
+$timeline->hasEnoughSnapshots(); // returns true if the timeline can safely generate a report/summary
+$timeline->toArray();            // returns all snapshots as structured arrays
+$timeline->isComplete();         // tells whether the timeline is complete
+$timeline->reset();              // Reset the timeline to its initial state open and with no snapshot
 ```
 
 > [!IMPORTANT]  
-> The `reset()` method reopens the marker and clears all recorded snapshots,
+> The `reset()` method reopens the timeline and clears all recorded snapshots,
 > enabling it to be reused for a new profiling session.
 
 As an example, you can do the following:
 
 ```php
-$marker = Marker::start('request');
+$timeline = Timeline::start('request');
 
 doSomething();
-$marker->mark('step1');
+$timeline->capture('step1');
 
 sleep(1);
-$marker->mark('step2');
+$timeline->capture('step2');
 
-$result = $marker->take('response');
-$marker->complete();
+$result = $timeline->take('response');
+$timeline->complete();
 
 // Printing full report
-foreach ($marker->deltas() as $summary) {
+foreach ($timeline->deltas() as $summary) {
     echo "{$summary->label}: {$summary->metrics->forHuman('execution_time')}";
 }
 ```
 
-And we can adapt the first example using the `Marker` class this time.
+And we can adapt the first example using the `Timeline` class this time.
 
 ```php
-use Bakame\Stackwatch\Marker;
+use Bakame\Stackwatch\Timeline;
 
-$marker = Marker::start('start');
+$timeline = Timeline::start('start');
 $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'));
-$marker->mark('end');
-$duration = $marker->executionTime('start', 'end');
+$timeline->capture('end');
+$duration = $timeline->executionTime('start', 'end');
 // $duration is expressed in nanoseconds
 ````
 
 ### Identifier
 
-Every `Marker` and `Profiler` instance has a unique identifier accessible via the `identifier` method.
+Every `Timeline` and `Profiler` instance has a unique identifier accessible via the `identifier` method.
 
 ```php
-use Bakame\Stackwatch\Marker;
+use Bakame\Stackwatch\Timeline;
 use Bakame\Stackwatch\Profiler;
 
-$marker = Marker::start(label: 'start', identifier: 'user_import');
+$timeline = Timeline::start(label: 'start', identifier: 'user_import');
 // or 
-$marker = new Marker(identifier: 'user_import');
-$marker->mark(label: 'start');
+$timeline = new Timeline(identifier: 'user_import');
+$timeline->capture(label: 'start');
 
-echo $marker->identifier(); // 'user_import'
+echo $timeline->identifier(); // 'user_import'
 
 $profiler = new Profiler(function (): string {
     usleep(1_000);
@@ -469,19 +472,19 @@ echo $profiler->identifier(); // 'user_export
 
 If not provided, an internal label generator will assign a unique name to the property.
 The identifier can be used for logging, debugging or for correlation when
-multiple profilers and/or markers are running in parallel.
+multiple profilers and/or timelines are running in parallel.
 
 ### Logging
 
-The `Profiler` and `Marker` classes can optionally log profiling activity using any logger that
+The `Profiler` and `Timeline` classes can optionally log profiling activity using any logger that
 implements `Psr\Log\LoggerInterface`.
 
 To enable this feature, you must install and configure a `PSR-3`-compatible logger. Common
 implementations include `Monolog`, `Laminas\Log`, `Symfony’s or Laravel logger` component, and others.
 
 ```php
-use Bakame\Stackwatch\Marker;
 use Bakame\Stackwatch\Profiler;
+use Bakame\Stackwatch\Timeline;
 use Monolog\Level;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
@@ -500,19 +503,19 @@ $profiler = new Profiler(function () {
 $profiler->profile('toto');
 $profiler->profile('tata');
 
-//logging the marker process 
+//logging the timeline process 
 
-$marker = Marker::start('init', logger: $logger);
+$timeline = Timeline::start('init', logger: $logger);
 usleep(1_000);;
-$marker->take('render', 'server_cycle');
+$timeline->take('render', 'server_cycle');
 ```
 
 > [!TIP]  
 > Logging can be done also on the `Profiler` static methods, they all optionally accept a `LoggerInterface` argument.
-> When logging marker or profiler instance their respective identifier is added to the log to ease identifying
+> When logging timeline or profiler instances their respective identifier is added to the log to ease identifying
 > which instance is generating the log entries.
 
-Outside the `Profiler` and the `Marker` you can use the package features through a CLI command.
+Outside the `Profiler` and the `Timeline` you can use the package features through a CLI command.
 
 ### CLI command
 
@@ -660,7 +663,7 @@ The package can help with exporting its metrics using different mechanisms.
 
 #### JSON
 
-Both the `Profiler` and `Marker` classes support JSON export via PHP's `json_encode` function.
+Both the `Profiler` and `Timeline` classes support JSON export via PHP's `json_encode` function.
 This allows you to serialize profiling data for inspection, storage, or transmission.
 
 Calling `json_encode($profiler)` will produce a JSON object containing:
@@ -680,15 +683,15 @@ echo json_encode($profiler), PHP_EOL;
 
 See a [sample profiler JSON output](./examples/profiler-sample.json) for a complete structure.
 
-Calling `json_encode($marker)` will produce a JSON object containing:
+Calling `json_encode($timeline)` will produce a JSON object containing:
 
-- `identifier`: the marker's unique identifier
+- `identifier`: the timeline's unique identifier
 - `snapshots`: an array of snapshot entries, **ordered from oldest to latest**
 
 ```php
-echo json_encode($marker), PHP_EOL;
+echo json_encode($timeline), PHP_EOL;
 ```
-See a [sample marker JSON output](./examples/marker-sample.json) for a complete structure.
+See a [sample timeline JSON output](./examples/timeline-sample.json) for a complete structure.
 
 In order to facilitate JSON export, the package has a dedicated `JsonExporter` class
 which will be able to store the generated json in the specified location. It supports
@@ -712,7 +715,7 @@ The report will be stored in the designated location.
 #### CLI
 
 If you have the `symfony\console` package installed in your application, you can display
-the `Profiler` or the `Marker` recorded data recorded using the `ConsoleExporter` class.
+the `Profiler` or the `Timeline` recorded data recorded using the `ConsoleExporter` class.
 
 ```php
 use Bakame\Stackwatch\Exporter\ConsoleExporter;
@@ -748,7 +751,7 @@ the following table will be outputted in your terminal.
 
 #### Open Telemetry
 
-The `Profiler` and the `Marker` results can be exported to an Open telemetry compatible
+The `Profiler` and the `Timeline` results can be exported to an Open telemetry compatible
 server using the `open-telemetry/exporter-otlp` package.
 
 To do so, first install the package if it is not yet the case, then do the following:

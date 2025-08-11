@@ -6,7 +6,6 @@ namespace Bakame\Stackwatch\Exporter;
 
 use Bakame\Stackwatch\Console\Exporter;
 use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\Marker;
 use Bakame\Stackwatch\Metrics;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Report;
@@ -14,6 +13,7 @@ use Bakame\Stackwatch\Result;
 use Bakame\Stackwatch\Snapshot;
 use Bakame\Stackwatch\Statistics;
 use Bakame\Stackwatch\Summary;
+use Bakame\Stackwatch\Timeline;
 use JsonException;
 use RuntimeException;
 use SplFileInfo;
@@ -114,7 +114,7 @@ final class JsonExporter implements Exporter
         $this->write($metrics);
     }
 
-    public function exportSummary(Result|Summary $summary, Marker|Profiler|null $parent = null): void
+    public function exportSummary(Result|Summary $summary, Timeline|Profiler|null $parent = null): void
     {
         if ($summary instanceof Result) {
             $summary = $summary->summary;
@@ -130,9 +130,9 @@ final class JsonExporter implements Exporter
         $this->write($input);
     }
 
-    public function exportMarker(Marker $marker): void
+    public function exportTimeline(Timeline $timeline): void
     {
-        $this->write($marker);
+        $this->write($timeline);
     }
 
     public function exportReport(Report $report): void

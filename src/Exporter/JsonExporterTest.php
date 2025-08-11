@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch\Exporter;
 
 use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\Marker;
 use Bakame\Stackwatch\Metrics;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Result;
 use Bakame\Stackwatch\Snapshot;
 use Bakame\Stackwatch\Statistics;
 use Bakame\Stackwatch\Summary;
+use Bakame\Stackwatch\Timeline;
 use Bakame\Stackwatch\Unit;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -121,9 +121,9 @@ final class JsonExporterTest extends TestCase
     public function it_exports_all_supported_types(): void
     {
         $exporter = new JsonExporter($this->tmpFile, 0);
-        $marker = Marker::start('yo');
+        $timeline = Timeline::start('yo');
         usleep(100);
-        $marker->mark('mtv');
+        $timeline->capture('mtv');
         $profiler = new Profiler(function () {
             usleep(100);
         });
@@ -134,7 +134,7 @@ final class JsonExporterTest extends TestCase
         }, 10);
 
         $exporter->exportMetrics(Metrics::none());
-        $exporter->exportMarker($marker);
+        $exporter->exportTimeline($timeline);
         $exporter->exportProfiler($profiler);
         $exporter->exportReport($report);
 

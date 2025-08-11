@@ -6,7 +6,6 @@ namespace Bakame\Stackwatch\Exporter;
 
 use Bakame\Stackwatch\Console\Exporter;
 use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\Marker;
 use Bakame\Stackwatch\MemoryUnit;
 use Bakame\Stackwatch\Metrics;
 use Bakame\Stackwatch\Profiler;
@@ -15,6 +14,7 @@ use Bakame\Stackwatch\Result;
 use Bakame\Stackwatch\Snapshot;
 use Bakame\Stackwatch\Statistics;
 use Bakame\Stackwatch\Summary;
+use Bakame\Stackwatch\Timeline;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
 use Symfony\Component\Console\Helper\TableSeparator;
@@ -32,7 +32,7 @@ final class ConsoleExporter implements Exporter
     {
     }
 
-    public function exportSummary(Result|Summary $summary, Profiler|Marker|null $parent = null): void
+    public function exportSummary(Result|Summary $summary, Profiler|Timeline|null $parent = null): void
     {
         if ($summary instanceof Result) {
             $summary = $summary->summary;
@@ -53,12 +53,12 @@ final class ConsoleExporter implements Exporter
             ->render();
     }
 
-    public function exportMarker(Marker $marker): void
+    public function exportTimeline(Timeline $timeline): void
     {
-        if (! $marker->hasEnoughSnapshots()) {
+        if (! $timeline->hasEnoughSnapshots()) {
             $this
                 ->createTable()
-                ->setHeaderTitle($marker->identifier())
+                ->setHeaderTitle($timeline->identifier())
                 ->addRow([new TableCell('<fg=yellow>Not enough snapshot to generate an export</>', ['colspan' => 7])])
                 ->render();
 
@@ -66,11 +66,11 @@ final class ConsoleExporter implements Exporter
         }
 
         /** @var Summary $summary */
-        $summary = $marker->summarize();
+        $summary = $timeline->summarize();
 
         $this
-            ->createSummaryTable($marker->deltas())
-            ->setHeaderTitle(' '.$marker->identifier().' ')
+            ->createSummaryTable($timeline->deltas())
+            ->setHeaderTitle(' '.$timeline->identifier().' ')
             ->addRow(new TableSeparator())
             ->addRow($this->metricsToRow('<fg=green>Summary</>', $summary->metrics))
             ->render();
@@ -93,7 +93,7 @@ final class ConsoleExporter implements Exporter
     /**
      * @param iterable<Summary> $summaries
      */
-    private function createSummaryTable(iterable $summaries, Profiler|Marker|null $parent = null): Table
+    private function createSummaryTable(iterable $summaries, Profiler|Timeline|null $parent = null): Table
     {
         $table = $this->createTable();
         if (null !== $parent) {

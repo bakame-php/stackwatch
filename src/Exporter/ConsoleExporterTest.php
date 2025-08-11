@@ -6,11 +6,11 @@ namespace Bakame\Stackwatch\Exporter;
 
 use Bakame\Stackwatch\DurationUnit;
 use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\Marker;
 use Bakame\Stackwatch\MemoryUnit;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Snapshot;
 use Bakame\Stackwatch\Statistics;
+use Bakame\Stackwatch\Timeline;
 use Bakame\Stackwatch\Unit;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -24,7 +24,7 @@ use function usleep;
 #[CoversClass(MemoryUnit::class)]
 #[CoversClass(Environment::class)]
 #[CoversClass(Snapshot::class)]
-#[CoversClass(Marker::class)]
+#[CoversClass(Timeline::class)]
 #[CoversClass(Profiler::class)]
 #[CoversClass(Unit::class)]
 #[CoversClass(Statistics::class)]
@@ -99,28 +99,28 @@ final class ConsoleExporterTest extends TestCase
     }
 
     #[Test]
-    public function it_can_export_an_empty_marker(): void
+    public function it_can_export_an_empty_timeline(): void
     {
         $output = new BufferedOutput();
         $renderer = new ConsoleExporter($output);
 
-        $renderer->exportMarker(new Marker());
+        $renderer->exportTimeline(new Timeline());
         $content = $output->fetch();
 
         self::assertStringContainsString('Not enough snapshot to generate an export', $content);
     }
 
     #[Test]
-    public function it_can_export_a_finished_marker(): void
+    public function it_can_export_a_finished_timeline(): void
     {
         $output = new BufferedOutput();
         $renderer = new ConsoleExporter($output);
 
-        $marker = Marker::start();
+        $timeline = Timeline::start();
         usleep(1_000);
-        $marker->take('end');
+        $timeline->take('end');
 
-        $renderer->exportMarker($marker);
+        $renderer->exportTimeline($timeline);
         $content = $output->fetch();
 
         self::assertStringNotContainsString('Not enough snapshot to generate an export', $content);

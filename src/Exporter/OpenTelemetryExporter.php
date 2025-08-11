@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch\Exporter;
 
 use Bakame\Stackwatch\DurationUnit;
-use Bakame\Stackwatch\Marker;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Result;
 use Bakame\Stackwatch\Snapshot;
 use Bakame\Stackwatch\Summary;
+use Bakame\Stackwatch\Timeline;
 use DateTimeInterface;
 use OpenTelemetry\API\Trace\Span;
 use OpenTelemetry\API\Trace\SpanKind;
@@ -28,7 +28,7 @@ final class OpenTelemetryExporter implements Exporter
         $this->tracer = $this->tracerProvider->getTracer('profiler-exporter');
     }
 
-    public function exportSummary(Result|Summary $summary, Profiler|Marker|null $parent = null): void
+    public function exportSummary(Result|Summary $summary, Profiler|Timeline|null $parent = null): void
     {
         if ($summary instanceof Result) {
             $summary = $summary->summary;
@@ -105,20 +105,20 @@ final class OpenTelemetryExporter implements Exporter
         $activeSpan->addEvent('snapshot', $attributes, $timestampNs);
     }
 
-    public function exportMarker(Marker $marker): void
+    public function exportTimeline(Timeline $timeline): void
     {
-        if (! $marker->hasEnoughSnapshots()) {
+        if (! $timeline->hasEnoughSnapshots()) {
             return;
         }
 
-        $parent = $this->tracer->spanBuilder('marker-run')
-            ->setAttribute('profiler.identifier', $marker->identifier())
+        $parent = $this->tracer->spanBuilder('timeline-run')
+            ->setAttribute('profiler.identifier', $timeline->identifier())
             ->startSpan();
         $scope = $parent->activate();
 
         try {
-            foreach ($marker->deltas() as $summary) {
-                $this->exportSummary($summary, $marker);
+            foreach ($timeline->deltas() as $summary) {
+                $this->exportSummary($summary, $timeline);
             }
         } finally {
             $parent->end();

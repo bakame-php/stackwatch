@@ -2,6 +2,24 @@
 
 All Notable changes to `bakame/stackwatch` will be documented in this file.
 
+## [0.13.0 - Marrakesh](https://github.com/bakame-php/stackwatch/compare/0.12.0...main) - TBD
+
+### Added
+
+- None
+
+### Fixed
+
+- **BC BREAK:**  `Timeline::delta` default to creating the delta between the `from` and the next snapshot before it was with the last snapshot if no `to` label was given.
+
+### Deprecated
+
+- None
+
+### Removed
+
+- **BC BREAK:** `Marker` class renamed `Timeline`
+
 ## [0.12.0 - Luanda](https://github.com/bakame-php/stackwatch/compare/0.11.0...0.12.0) - 2025-08-11
 
 ### Added

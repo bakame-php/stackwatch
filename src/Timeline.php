@@ -16,6 +16,7 @@ use function array_key_first;
 use function array_key_last;
 use function array_keys;
 use function array_map;
+use function array_search;
 use function array_values;
 use function count;
 use function trim;
@@ -24,7 +25,7 @@ use function trim;
  * @implements IteratorAggregate<non-empty-string, Snapshot>
  * @phpstan-import-type SnapshotStat from Snapshot
  */
-final class Marker implements Countable, IteratorAggregate, JsonSerializable
+final class Timeline implements Countable, IteratorAggregate, JsonSerializable
 {
     /** @var non-empty-string */
     private readonly string $identifier;
@@ -72,14 +73,14 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
         return count($this->snapshots);
     }
 
-    public function isEmpty(): bool
+    public function hasNoSnapshots(): bool
     {
         return [] === $this->snapshots;
     }
 
     public function hasSnapshots(): bool
     {
-        return ! $this->isEmpty();
+        return ! $this->hasNoSnapshots();
     }
 
     /**
@@ -142,10 +143,10 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
     /**
      * @param non-empty-string $label
      *
-     * @throws UnableToProfile if the marker is in complete state
+     * @throws UnableToProfile if the timeline is in complete state
      * @throws InvalidArgument if the label is invalid
      */
-    public function mark(string $label): void
+    public function capture(string $label): void
     {
         !$this->isComplete || throw new UnableToProfile('The instance is complete no further snapshot can be taken.');
 
@@ -162,17 +163,26 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
      * If the second snapshot is not defined, the latest snapshot will be used.
      *
      * @param string $from the first snapshot label
-     * @param ?string $to the last snapshot to compare from if missing the latest snapshot will be used
+     * @param ?string $to the last snapshot to compare from if missing the next label after the from label if it exists or from itself
      *
      * @throws InvalidArgument If the labels could not be found
      */
     public function delta(string $from, ?string $to = null): Summary
     {
+        $this->hasLabel($from) || throw new InvalidArgument('The label "'.$from.'" do not exist.');
+        $keys = $this->labels();
         if (null === $to) {
-            $to = array_key_last($this->snapshots);
+            $pos = array_search($from, $keys, true);
+            if (false !== $pos) {
+                $to = $keys[(int) $pos + 1] ?? null;
+            }
+
+            if (null === $to) {
+                return new Summary($from.'_'.$from, $this->snapshots[$from], $this->snapshots[$from]);
+            }
         }
 
-        ($this->hasLabel($from) && null !== $to && $this->hasLabel($to)) || throw new InvalidArgument('The labels "'.$from.'" and/or "'.$to.'" do not exist.');
+        $this->hasLabel($to) || throw new InvalidArgument('The label "'.$to.'" do not exist.');
 
         return new Summary($from.'_'.$to, $this->snapshots[$from], $this->snapshots[$to]);
     }
@@ -263,10 +273,10 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
      */
     public static function start(string $label = 'start', ?string $identifier = null, ?LoggerInterface $logger = null): self
     {
-        $marker = new self($identifier, $logger);
-        $marker->mark($label);
+        $timeline = new self($identifier, $logger);
+        $timeline->capture($label);
 
-        return $marker;
+        return $timeline;
     }
 
     /**
@@ -275,12 +285,12 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
      * @param non-empty-string $label
      * @param ?non-empty-string $summaryLabel
      *
-     * @throws UnableToProfile if the marker is in complete state
+     * @throws UnableToProfile if the timeline is in complete state
      * @throws InvalidArgument if labels are invalid
      */
     public function take(string $label, ?string $summaryLabel = null): Summary
     {
-        $this->mark($label);
+        $this->capture($label);
 
         return $this->summarize($summaryLabel);
     }
@@ -290,7 +300,7 @@ final class Marker implements Countable, IteratorAggregate, JsonSerializable
      */
     private function log(string $message, array $context = []): void
     {
-        $this->logger?->info('Marker ['.$this->identifier.'] '.$message, [
+        $this->logger?->info('Timeline ['.$this->identifier.'] '.$message, [
             'identifier' => $this->identifier,
             ...$context,
         ]);

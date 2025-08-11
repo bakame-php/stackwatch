@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Bakame\Stackwatch\DurationUnit;
 use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\Exporter\ConsoleExporter;
-use Bakame\Stackwatch\Marker;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Statistics;
+use Bakame\Stackwatch\Timeline;
 use Bakame\Stackwatch\Unit;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -61,12 +61,12 @@ final class Benchmark
     private static function marker(callable $callback, int $iterations): Statistics
     {
         $times = [];
-        $marker = new Marker('test');
+        $timeline = new Timeline('test');
         for ($i = 0; $i < $iterations; $i++) {
-            $marker->mark('start');
+            $timeline->capture('start');
             $callback();
-            $times[] = $marker->take('end')->metrics->executionTime;
-            $marker->reset();
+            $times[] = $timeline->take('end')->metrics->executionTime;
+            $timeline->reset();
         }
 
         return Statistics::fromValues(Unit::Nanoseconds, $times);
@@ -131,7 +131,7 @@ final class Benchmark
                 'Microtime',
                 'Hrtime',
                 'Profiler',
-                'Marker',
+                'Timeline',
             ])
             ->addRow([
                 'Average',
@@ -183,8 +183,8 @@ final class Benchmark
                 '',
                 'Profiler vs microtime',
                 'Profiler vs hrtime',
-                'Marker vs microtime',
-                'Marker vs hrtime',
+                'Timeline vs microtime',
+                'Timeline vs hrtime',
             ])
             ->addRow([
                 'Overhead',

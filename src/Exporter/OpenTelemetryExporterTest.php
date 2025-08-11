@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch\Exporter;
 
 use Bakame\Stackwatch\DurationUnit;
-use Bakame\Stackwatch\Marker;
 use Bakame\Stackwatch\MemoryUnit;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Result;
 use Bakame\Stackwatch\Snapshot;
 use Bakame\Stackwatch\Summary;
+use Bakame\Stackwatch\Timeline;
 use DateTimeImmutable;
 use OpenTelemetry\SDK\Trace\ImmutableSpan;
 use OpenTelemetry\SDK\Trace\SpanExporter\InMemoryExporter;
@@ -28,7 +28,7 @@ use function usleep;
 #[CoversClass(OpenTelemetryExporter::class)]
 #[CoversClass(DurationUnit::class)]
 #[CoversClass(MemoryUnit::class)]
-#[CoversClass(Marker::class)]
+#[CoversClass(Timeline::class)]
 #[CoversClass(Profiler::class)]
 class OpenTelemetryExporterTest extends TestCase
 {
@@ -152,19 +152,17 @@ class OpenTelemetryExporterTest extends TestCase
     }
 
     #[Test]
-    public function it_can_export_nothing_if_the_marker_cannot_be_sumaarize(): void
+    public function it_can_export_nothing_if_the_timeline_cannot_be_sumaarize(): void
     {
-        $marker = Marker::start();
-
-        $this->exporter->exportMarker($marker);
+        $this->exporter->exportTimeline(Timeline::start());
         $spans = $this->otlExporter->getSpans();
         self::assertCount(0, $spans);
     }
 
     #[Test]
-    public function it_can_export_a_marker(): void
+    public function it_can_export_a_timeline(): void
     {
-        $marker = new Marker('test-marker');
+        $timeline = new Timeline('test-timeline');
         $start = new Snapshot('start', new DateTimeImmutable(), hrtime(true), [
             'ru_utime.tv_sec' => 1,
             'ru_stime.tv_sec' => 1,
@@ -186,10 +184,10 @@ class OpenTelemetryExporterTest extends TestCase
             'ru_stime.tv_usec' => 1,
         ], 1100, 2100, 3100, 4100);
 
-        $reflection = new ReflectionClass($marker);
-        $reflection->getProperty('snapshots')->setValue($marker, ['start' => $start, 'middle' => $middle, 'end' => $end]);
+        $reflection = new ReflectionClass($timeline);
+        $reflection->getProperty('snapshots')->setValue($timeline, ['start' => $start, 'middle' => $middle, 'end' => $end]);
 
-        $this->exporter->exportMarker($marker);
+        $this->exporter->exportTimeline($timeline);
         $spans = $this->otlExporter->getSpans();
         self::assertCount(3, $spans);
 
@@ -197,12 +195,12 @@ class OpenTelemetryExporterTest extends TestCase
         $span = $spans[0];
         $otlAttributes = $span->getAttributes()->toArray();
         self::assertSame($otlAttributes['profiler.label'], 'start_middle');
-        self::assertSame($otlAttributes['profiler.identifier'], $marker->identifier());
+        self::assertSame($otlAttributes['profiler.identifier'], $timeline->identifier());
 
         /** @var ImmutableSpan $span */
         $span = $spans[1];
         $otlAttributes = $span->getAttributes()->toArray();
         self::assertSame($otlAttributes['profiler.label'], 'middle_end');
-        self::assertSame($otlAttributes['profiler.identifier'], $marker->identifier());
+        self::assertSame($otlAttributes['profiler.identifier'], $timeline->identifier());
     }
 }
