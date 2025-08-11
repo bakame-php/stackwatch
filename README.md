@@ -344,11 +344,11 @@ $delta = $timeline->delta('init', 'render'); // Returns Summary
 $executionTime = $timeline->metrics('init', 'render'); // Returns a Metrics object
 ```
 
-If you do not specify the second label, the method will default to using the latest snapshot
-as the second argument.
+If you do not specify the second label, the method will default to using the next snapshot
+to the one specified as the second argument.
 
 ```php
-$timeline->metrics('init', 'render');
+$timeline->metrics('init', 'load');
 //is equivalent to
 $timeline->metrics('init');
 ```
