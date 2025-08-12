@@ -140,6 +140,7 @@ final class PathProfiler
         $process->run();
         $process->isSuccessful() || throw new UnableToProfile($process->getErrorOutput());
         $json = $process->getOutput();
+        /** @var array{path: string, data: array<UnitOfWorkMap>} $data */
         $data = json_decode($json, true);
         if (
             isset($data['path'], $data['data']) &&
@@ -147,7 +148,7 @@ final class PathProfiler
             is_array($data['data']) &&
             [] !== $data['data']
         ) {
-            return array_map(UnitOfWork::fromArray(...), $data['data']); /* @phpstan-ignore-line */
+            return array_map(UnitOfWork::fromArray(...), $data['data']);
         }
 
         return [];

@@ -305,10 +305,6 @@ final class PathInspector
                     $names[] = $name;
                     $collecting = false;
                 }
-
-                if (']' === $t->text) { /* @phpstan-ignore-line */
-                    break;
-                }
             }
         }
 

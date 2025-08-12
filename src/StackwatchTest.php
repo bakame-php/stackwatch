@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch\Console;
+namespace Bakame\Stackwatch;
 
-use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\InvalidArgument;
-use Bakame\Stackwatch\Version;
+use Bakame\Stackwatch\Console\Input;
+use Bakame\Stackwatch\Console\Logger;
+use Bakame\Stackwatch\Console\UnitOfWork;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;

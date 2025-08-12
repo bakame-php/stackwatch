@@ -131,7 +131,6 @@ final class UnitOfWork implements JsonSerializable
             if ([] !== $data['attributes'] && isset($data['run_at'])) {
                 $runAt = DateTimeImmutable::createFromFormat(self::DATE_FORMAT, $data['run_at']);
                 false !== $runAt || throw new InvalidArgument('The run_at must be a valid date.');
-
                 $reflection = new ReflectionClass(UnitOfWork::class);
                 $unitOfWork = $reflection->newInstanceWithoutConstructor();
                 $unitOfWork->runAt = $runAt;

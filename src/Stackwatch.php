@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch\Console;
+namespace Bakame\Stackwatch;
 
-use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\Version;
+use Bakame\Stackwatch\Console\ConsoleHandler;
+use Bakame\Stackwatch\Console\Input;
+use Bakame\Stackwatch\Console\JsonHandler;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -27,7 +28,17 @@ final class Stackwatch
 
     public function handle(): never
     {
-        exit($this->execute(Input::fromCli()));
+        try {
+            $input = Input::fromCli();
+        } catch (Throwable $exception) {
+            $this->stderr->writeln('<error> Input argument error: '.$exception->getMessage().' </error>');
+            $this->stdout->writeln('');
+            $this->stdout->writeln($this->helpText());
+
+            exit(self::ERROR);
+        }
+
+        exit($this->execute($input));
     }
 
     public function execute(Input $input): int
@@ -40,12 +51,11 @@ final class Stackwatch
         }
 
         if ($input->showVersion) {
-            if ('json' === $input->format) {
-                $this->stdout->writeln(Version::toJson());
-            } else {
-                $this->stdout->writeln('<info>'.Version::name().' '.Version::full().'</info>');
-            }
-
+            $this->stdout->writeln(
+                Input::JSON_FORMAT === $input->format
+                    ? Version::toJson()
+                    : '<info>'.Version::name().' '.Version::full().'</info>'
+            );
 
             return self::SUCCESS;
         }
@@ -58,7 +68,11 @@ final class Stackwatch
         }
 
         try {
-            $this->resolveHandler($input)->handle($input);
+            (match ($input->format) {
+                Input::TABLE_FORMAT => new ConsoleHandler($this->stdout, $this->logger, $this->environment),
+                Input::JSON_FORMAT => new JsonHandler($this->logger, $this->environment),
+                default => throw new RuntimeException('Unknown output format: '.$input->format),
+            })->handle($input);
 
             return self::SUCCESS;
         } catch (Throwable $exception) {
@@ -66,18 +80,6 @@ final class Stackwatch
 
             return self::ERROR;
         }
-    }
-
-    /**
-     * @throws RuntimeException If no handler is found
-     */
-    private function resolveHandler(Input $options): Handler
-    {
-        return match ($options->format) {
-            Input::TABLE_FORMAT => new ConsoleHandler($this->stdout, $this->logger, $this->environment),
-            Input::JSON_FORMAT => new JsonHandler($this->logger, $this->environment),
-            default => throw new RuntimeException('Unknown output format: '.$options->format),
-        };
     }
 
     private function helpText(): string

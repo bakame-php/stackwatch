@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Bakame\Stackwatch\Console\Logger;
 use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\Console\Stackwatch;
+use Bakame\Stackwatch\Stackwatch;
 use Symfony\Component\Console\Output\StreamOutput;
 
 if (is_file(__DIR__ . '/vendor/autoload.php')) {

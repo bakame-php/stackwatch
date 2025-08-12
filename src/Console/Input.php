@@ -179,7 +179,7 @@ final class Input
 
     public static function usage(): string
     {
-        return '--path=PATH  [--output=OUTPUT] [--format=FORMAT] [--depth=DEPTH] [--isolation] [--no-recursion] [--pretty] [--info] [--help] [--version]';
+        return '--path=PATH  [--output=OUTPUT] [--format=FORMAT] [--depth=DEPTH] [--no-recursion] [--isolation] [--pretty] [--info] [--help] [--version]';
     }
 
     public static function consoleDescription(): string
