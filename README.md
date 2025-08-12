@@ -442,8 +442,7 @@ use Bakame\Stackwatch\Timeline;
 
 $timeline = Timeline::start('start');
 $service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'));
-$timeline->capture('end');
-$duration = $timeline->executionTime('start', 'end');
+$duration = $timeline->take('end')->metrics->executionTime;
 // $duration is expressed in nanoseconds
 ````
 
