@@ -60,6 +60,7 @@ final class UnitOfWorkTest extends TestCase
             'type' => 'detailed',
             'iterations' => 5,
             'warmup' => 1,
+            'tags' => [],
             'run_at' => null,
             'attributes' => [],
         ];
@@ -97,6 +98,7 @@ PHP;
             'type' => 'summary',
             'iterations' => 3,
             'warmup' => 1,
+            'tags' => [],
             'run_at' => null,
             'attributes' => [],
         ];
@@ -136,6 +138,7 @@ PHP;
             'type' => 'summary',
             'iterations' => 2,
             'warmup' => 1,
+            'tags' => [],
             'run_at' => null,
             'attributes' => [],
         ];

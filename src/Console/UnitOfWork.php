@@ -38,6 +38,7 @@ use const JSON_THROW_ON_ERROR;
  *      type: 'detailed'|'summary',
  *      iterations: int<1, max>,
  *      warmup: int<0, max>,
+ *      tags: list<non-empty-string>,
  *      path: string,
  *      class?: class-string|null,
  *      method?: non-empty-string|null,

@@ -15,6 +15,7 @@ use ReflectionFunctionAbstract;
 use SplFileInfo;
 use UnitEnum;
 
+use function array_intersect;
 use function array_merge;
 use function array_reduce;
 use function class_exists;
@@ -30,11 +31,13 @@ final class UnitOfWorkGenerator
     }
 
     /**
+     * @param list<non-empty-string> $tags
+     *
      * @throws ReflectionException|LogicException
      *
      * @return iterable<UnitOfWork>
      */
-    public function generate(string|SplFileInfo $realPath): iterable
+    public function generate(string|SplFileInfo $realPath, array $tags = []): iterable
     {
         $splFileInfo = $this->filterPath($realPath);
         $realPath = $splFileInfo->getRealPath();
@@ -45,10 +48,10 @@ final class UnitOfWorkGenerator
         require_once $realPath;
 
         /** @var array<UnitOfWork> $unitOfWorks */
-        $unitOfWorks = array_reduce($tuples, function (array $unitOfWorks, array $tuple) use ($realPath): array {
+        $unitOfWorks = array_reduce($tuples, function (array $unitOfWorks, array $tuple) use ($realPath, $tags): array {
             $unitOfWork = match ($tuple[0]) {
-                'function' => $this->prepareFunctionProcess($tuple[1]),
-                'class' => $this->prepareMethodsProcess($tuple[1]),
+                'function' => $this->prepareFunctionProcess($tuple[1], $tags),
+                'class' => $this->prepareMethodsProcess($tuple[1], $tags),
                 default => throw new LogicException("Unable to prepare process for target type $tuple[1] in $realPath"),
             };
 
@@ -79,11 +82,13 @@ final class UnitOfWorkGenerator
     }
 
     /**
+     * @param list<non-empty-string> $tags
+     *
      * @throws ReflectionException
      *
      * @return list<UnitOfWork>
      */
-    private function prepareMethodsProcess(string $className): array
+    private function prepareMethodsProcess(string $className, array $tags = []): array
     {
         if (!class_exists($className)) {
             return [];
@@ -99,6 +104,17 @@ final class UnitOfWorkGenerator
             $profile = $this->findProfile($method) ?? $parentProfile;
             if (null === $profile) {
                 continue;
+            }
+
+            if ([] !== $tags) {
+                if ([] === $profile->tags) {
+                    continue;
+                }
+
+                $intersection = array_intersect($tags, $profile->tags);
+                if ([] === $intersection) {
+                    continue;
+                }
             }
 
             if ($method->isAbstract()) {
@@ -139,7 +155,10 @@ final class UnitOfWorkGenerator
         return $results;
     }
 
-    private function prepareFunctionProcess(string $functionName): ?UnitOfWork
+    /**
+     * @param list<non-empty-string> $tags
+     */
+    private function prepareFunctionProcess(string $functionName, array $tags = []): ?UnitOfWork
     {
         if (!function_exists($functionName)) {
             return null;
@@ -157,6 +176,17 @@ final class UnitOfWorkGenerator
         $profile = $this->findProfile($method);
         if (null === $profile) {
             return null;
+        }
+
+        if ([] !== $tags) {
+            if ([] === $profile->tags) {
+                return null;
+            }
+
+            $intersection = array_intersect($tags, $profile->tags);
+            if ([] === $intersection) {
+                return null;
+            }
         }
 
         if (0 !== $method->getNumberOfParameters()) {

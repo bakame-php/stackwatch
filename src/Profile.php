@@ -7,30 +7,42 @@ namespace Bakame\Stackwatch;
 use Attribute;
 use JsonSerializable;
 
+use function array_keys;
 use function in_array;
 
 /**
- * @phpstan-type ProfileMap array{type: 'detailed'|'summary', iterations: int<1, max>, warmup:int<0, max>}
+ * @phpstan-type ProfileMap array{
+ *     type: 'detailed'|'summary',
+ *     iterations: int<1, max>,
+ *     warmup:int<0, max>,
+ *     tags:list<non-empty-string>
+ *}
  */
 #[Attribute(Attribute::TARGET_FUNCTION | Attribute::TARGET_METHOD | Attribute::TARGET_CLASS)]
 final class Profile implements JsonSerializable
 {
     public const DETAILED = 'detailed';
     public const SUMMARY = 'summary';
+    /** @var list<non-empty-string> */
+    public readonly array $tags;
 
     /**
      * @param self::DETAILED|self::SUMMARY $type
      * @param int<1, max> $iterations
      * @param int<0, max> $warmup
+     * @param array<string> $tags
      */
     public function __construct(
         public readonly string $type = self::SUMMARY,
         public readonly int $iterations = 3,
         public readonly int $warmup = 0,
+        array $tags = [],
     ) {
         self::isValidReport($type);
         self::isValidIterations($iterations);
         self::isValidWarmup($warmup);
+
+        $this->tags = self::filterTags($tags);
     }
 
     /**
@@ -42,6 +54,7 @@ final class Profile implements JsonSerializable
             type: $data['type'],
             iterations: $data['iterations'],
             warmup: $data['warmup'],
+            tags: $data['tags']
         );
     }
 
@@ -69,6 +82,7 @@ final class Profile implements JsonSerializable
             'type' => $this->type,
             'iterations' => $this->iterations,
             'warmup' => $this->warmup,
+            'tags' => $this->tags,
         ];
     }
 
@@ -78,5 +92,29 @@ final class Profile implements JsonSerializable
     public function jsonSerialize(): array
     {
         return $this->toArray();
+    }
+
+    /**
+     * @param array<mixed> $tags
+     *
+     * @return list<non-empty-string>
+     */
+    private static function filterTags(array $tags): array
+    {
+        $res = [];
+        foreach ($tags as $tag) {
+            if (!is_string($tag)) {
+                continue;
+            }
+
+            $tag = trim(strtolower($tag));
+            if ('' === $tag) {
+                continue;
+            }
+
+            $res[$tag] = 1;
+        }
+
+        return array_keys($res);
     }
 }

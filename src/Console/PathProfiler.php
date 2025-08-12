@@ -27,6 +27,8 @@ use function in_array;
 use function is_array;
 use function strtolower;
 
+use const PHP_BINARY;
+
 /**
  * Scans and Profile functions and methods defined in a specific path using the Profile attribute.
  *
@@ -34,12 +36,16 @@ use function strtolower;
  */
 final class PathProfiler
 {
+    /**
+     * @param list<non-empty-string> $tags
+     */
     public function __construct(
         public readonly UnitOfWorkGenerator $unitOfWorkGenerator,
         public readonly Processor $processor,
         public readonly LoggerInterface $logger = new NullLogger(),
         public readonly int $depth = -1,
         public readonly bool $isInIsolation = false,
+        public readonly array $tags = [],
     ) {
     }
 
@@ -54,6 +60,7 @@ final class PathProfiler
             $logger,
             $input->depth,
             $input->inIsolation,
+            $input->tags,
         );
     }
 
@@ -72,6 +79,7 @@ final class PathProfiler
             $logger,
             $input->depth,
             $input->inIsolation,
+            $input->tags,
         );
     }
 
@@ -135,8 +143,14 @@ final class PathProfiler
         $realPath = $path->getRealPath();
         $stackwatchPath = realpath(__DIR__.'/../../bin/stackwatch');
         false !== $stackwatchPath || throw new RuntimeException('Could not resolve stackwatch path.');
-        $process = new Process([PHP_BINARY, $stackwatchPath, '-p', $realPath, '-f', 'json', '-n']);
 
+        $arguments = [PHP_BINARY, $stackwatchPath, '-p', $realPath, '-f', 'json', '-n'];
+        if ([] !== $this->tags) {
+            $arguments[] = '-t';
+            $arguments[] = implode(',', $this->tags);
+        }
+
+        $process = new Process($arguments);
         $process->run();
         $process->isSuccessful() || throw new UnableToProfile($process->getErrorOutput());
         $json = $process->getOutput();
@@ -154,7 +168,6 @@ final class PathProfiler
         return [];
     }
 
-
     /**
      * @throws RuntimeException
      *
@@ -164,7 +177,7 @@ final class PathProfiler
     {
         $realPath = $path->getRealPath();
         try {
-            return $this->unitOfWorkGenerator->generate($realPath);
+            return $this->unitOfWorkGenerator->generate($realPath, $this->tags);
         } catch (Throwable $exception) {
             $this->logger->notice('The file '.$realPath.' can not be profiled.', ['path' => $realPath, 'exception' => $exception]);
 

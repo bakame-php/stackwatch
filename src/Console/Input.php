@@ -7,6 +7,8 @@ namespace Bakame\Stackwatch\Console;
 use Bakame\Stackwatch\InvalidArgument;
 use Symfony\Component\Console\Input\InputInterface;
 
+use function array_keys;
+use function explode;
 use function filter_var;
 use function getopt;
 use function in_array;
@@ -35,7 +37,9 @@ use const FILTER_VALIDATE_INT;
  *     isolation?: string|false,
  *     x?: string|false,
  *     depth?: string|false,
- *     d?: string|false
+ *     d?: string|false,
+ *     tags?: string|false,
+ *     t?: string|false,
  * }
  */
 final class Input
@@ -43,6 +47,9 @@ final class Input
     public const JSON_FORMAT = 'json';
     public const TABLE_FORMAT = 'table';
 
+    /**
+     * @param list<non-empty-string> $tags
+     */
     public function __construct(
         public readonly ?string $path,
         public readonly bool $showHelp = false,
@@ -53,6 +60,7 @@ final class Input
         public readonly bool $pretty = false,
         public readonly bool $inIsolation = false,
         public readonly int $depth = -1,
+        public readonly array $tags = [],
     ) {
         in_array($this->format, [self::JSON_FORMAT, self::TABLE_FORMAT], true) || throw new InvalidArgument('Output format is not supported');
         null === $this->path || '' !== trim($this->path) || throw new InvalidArgument('path format is not valid');
@@ -65,8 +73,6 @@ final class Input
      */
     public static function fromInput(array|InputInterface $input): self
     {
-        $depth = self::resolveDepth($input);
-
         return new self(
             path: self::getFirstValue($input, 'path', 'p'),
             showHelp: self::hasFlag($input, 'help', 'h'),
@@ -76,7 +82,8 @@ final class Input
             output: self::getFirstValue($input, 'output', 'o'),
             pretty: self::hasFlag($input, 'pretty', 'P'),
             inIsolation: self::hasFlag($input, 'isolation', 'x'),
-            depth: $depth,
+            depth: self::resolveDepth($input),
+            tags: self::resolveTags($input),
         );
     }
 
@@ -112,12 +119,13 @@ final class Input
     {
         /** @var OptionMap $options */
         $options = getopt(
-            'p:f:o:d:ihVPxn',
+            'p:f:o:d:t:ihVPxn',
             [
                 'path:',
                 'format:',
                 'output:',
                 'depth:',
+                'tags:',
                 'info',
                 'help',
                 'version',
@@ -146,6 +154,37 @@ final class Input
         }
 
         return null;
+    }
+
+    /**
+     * @param array<string, string|false>|InputInterface $input
+     *
+     * @return list<non-empty-string>
+     */
+    private static function resolveTags(array|InputInterface $input): array
+    {
+        $tags = [];
+        $tagsInput = self::getFirstValue($input, 'tags', 't');
+        if (null === $tagsInput) {
+            return $tags;
+        }
+
+        $tags = explode(',', strtolower(trim($tagsInput)));
+        if ([] === $tags) {
+            return $tags;
+        }
+
+        $foundTags = [];
+        foreach ($tags as $tag) {
+            $tag = trim($tag);
+            if ('' === $tag) {
+                continue;
+            }
+
+            $foundTags[$tag] = 1;
+        }
+
+        return array_keys($foundTags);
     }
 
     /**
@@ -179,7 +218,7 @@ final class Input
 
     public static function usage(): string
     {
-        return '--path=PATH [--output=OUTPUT] [--format=FORMAT] [--depth=DEPTH] [--no-recursion] [--isolation] [--pretty] [--info] [--help] [--version]';
+        return '--path=PATH [--output=OUTPUT] [--format=FORMAT] [--depth=DEPTH] [--tags=TAG] [--no-recursion] [--isolation] [--pretty] [--info] [--help] [--version]';
     }
 
     public static function consoleDescription(): string
@@ -195,6 +234,7 @@ final class Input
 <fg=green>  -i, --info</>            Show additional system/environment information (optional)
 <fg=green>  -h, --help</>            Display this help message (optional)
 <fg=green>  -V, --version</>         Display the version and exit (optional)
+<fg=green>  -t, --tags</>            Only run the script when one of the listed tag is present in the attribute tag should be separated by a comma (optional)
 
 HELP;
     }
