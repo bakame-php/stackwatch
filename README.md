@@ -28,8 +28,11 @@ composer require bakame/stackwatch
 You need:
 
 - **PHP >= 8.1** but the latest stable version of PHP is recommended
-- `symfony/console` and `symfony/process` if you are going to use the CLI command
-- `psr/log` is optional
+- the `psr/log` package or any package implementing the PHP-FIG log contract
+
+To use the CLI command you will also need:
+
+- `symfony/console` and `symfony/process`
 
 ## Usage
 
@@ -441,7 +444,7 @@ And we can adapt the first example using the `Timeline` class this time.
 use Bakame\Stackwatch\Timeline;
 
 $timeline = Timeline::start('start');
-$service->calculateHeavyStuff(new DateTimeImmutable('2024-12-24'));
+$service->calculateHeavyStuff();
 $duration = $timeline->take('end')->metrics->executionTime;
 // $duration is expressed in nanoseconds
 ````
@@ -529,21 +532,23 @@ This is especially useful for:
 #### Usage
 
 ```bash
-php bin/stackwatch --path=PATH [--output=OUTPUT] [--format=FORMAT] [--depth=DEPTH] [--no-recursion] [--isolation] [--pretty] [--info] [--help]
+php bin/stackwatch --path=PATH [options]
 ```
 
-| Option                | Description                                                           |
-|-----------------------|-----------------------------------------------------------------------|
-| `-p, --path=PATH`     | Path to scan for PHP files to profile (required)                      |
-| `-o, --output=OUTPUT` | Path to store the profiling output (optional)                         |
-| `-f, --format=FORMAT` | Output format: 'table' or 'json' (default: 'table')                   |
-| `-d, --depth=DEPTH`   | Recursion depth (0 = current dir only, default: unlimited) (optional) |
-| `-n, --no-recursion`  | Disable directory recursion (optional)                                |
-| `-x, --isolation`     | To profile by isolation each file                                     |
-| `-P, --pretty`        | Pretty-print the JSON/NDJSON output (json only)                       |
-| `-i, --info`          | Show additional system/environment information                        |
-| `-h, --help`          | Display the help message                                              |
-| `-V, --version`       | Display the version and exit                                          |
+| Option                | Description                                                             |
+|-----------------------|-------------------------------------------------------------------------|
+| `-p, --path=PATH`     | Path to scan for PHP files to profile (required)                        |
+| `-o, --output=OUTPUT` | Path to store the profiling output (optional)                           |
+| `-f, --format=FORMAT` | Output format: `table` or `json` (default: `table`)                     |
+| `-d, --depth=DEPTH`   | Recursion depth (`0` = current dir only, default: unlimited) (optional) |
+| `-n, --no-recursion`  | Disable directory recursion (optional)                                  |
+| `-x, --isolation`     | Enable profiling each file in a separate process                        |
+| `-P, --pretty`        | Pretty-print the JSON/NDJSON output (json only)                         |
+| `-i, --info`          | Show additional system/environment information                          |
+| `-h, --help`          | Display the help message                                                |
+| `-V, --version`       | Display the version and exit                                            |
+| `-t, --tags`          | filter the target to profile using tags (ie --tags=web) (optional)      |
+| `--memory-limit`      | change the memory usage of the main process (optional)                  |
 
 #### Example
 
@@ -622,23 +627,74 @@ Report for the function Foobar\Baz\test located in /path/to/test.php called 20 t
 - the first table shows the average metrics for the `Foobar::test` method.
 - the second table shows the fully detailed report on the function `test`.
 
-The `#[Profile]` attribute marks a function or method for performance profiling, with the following options:
+#### The Profile attribute
 
-- `iterations`: (int, required) – Number of times to execute the target code for statistically meaningful results.
-- `warmup`: (int, optional) – Number of warmup iterations to perform before measurement begins. These iterations are excluded from the final statistics.
-- `type`: (`Profile::SUMMARY` or `Profile::DETAILED`, required) – Determines the level of detail in the output:
-    - `Profile::SUMMARY`: Outputs only core metrics (e.g., average execution time).
-    - `Profile::DETAILED`: Produces full statistics (min, max, average, standard deviation, etc.).
+The `#[Profile]` attribute marks a function, method, or class for performance profiling during execution.
+When applied, the profiler will repeatedly execute the target code to collect detailed runtime metrics,
+allowing developers to analyze and optimize code performance with statistically meaningful data.
 
-#### Notes
+The attribute can be applied to:
 
-The command line supports **function-level** and **method-level** profiling, including methods defined
-via traits, even inside Enums.
+- **Standalone functions**
+- **Class methods**, regardless of visibility (`public`, `protected`, or `private`)
+- **Classes** — When applied at the class level, all methods of that class will be profiled using the class-level attribute configuration.
 
-- Functions or methods without a `#[Profile]` attribute will be ignored.
-- Functions or methods with arguments will also be ignored.
+> [!NOTE]
+> If a method within a class is also marked with its own `#[Profile]` attribute, **the method-level 
+> attribute configuration overrides the class-level configuration** for that specific method.
 
-All required dependencies should be loaded in the target file (use `require`, `include` or Composer autoload).
+> [!IMPORTANT]
+> Functions or methods **that declare one or more arguments will not be profiled**. Only functions or methods 
+> without parameters can be profiled using this attribute.
+
+#### Attribute properties
+
+- `type`: (`string`) Level of detail in the profiling output, (default to: `Profile::SUMMARY` ).
+    - `Profile::SUMMARY`: Outputs core statistics such as average execution time.
+    - `Profile::DETAILED`: Tags enable grouping and filtering in profiling reports, helping users focus on specific categories or subsets of profiled code.
+- `iterations`: (`int`) Controls how many times the target will be executed during profiling to ensure statistical significance. Larger values provide more accurate metrics but increase profiling time. **Must be > 0** (default to `3`)
+- `warmup`: Allows the profiler to run the target code several times before recording metrics, which helps mitigate effects like JIT compilation or caching impacting the results. **Must be >= 0** (default to `0`)
+- `tags`: Tags enable grouping and filtering in profiling reports, helping users focus on specific categories or subsets of profiled code.  **Must be a list of non-emptu string** (default to an empty array)
+
+#### Attribute usage
+
+**On a function**
+
+```php
+#[Profile(iterations: 500, type: Profile::SUMMARY)]
+function calculateSomething(): void
+{
+    // ...
+}
+```
+
+**On a method**
+
+```php
+class Example {
+    #[Profile(iterations: 1000, warmup: 50, type: Profile::DETAILED, tags: ['api'])]
+    protected function fetchData(): array
+    {
+        // ...
+    }
+}
+```
+
+**On a class**
+
+```php
+#[Profile(iterations: 100, type: Profile::SUMMARY)]
+class MyService {
+    public function methodOne() { /* profiled with class-level config */ }
+    #[Profile(iterations: 50, type: Profile::DETAILED)]
+    private function methodTwo() { /* profiled using the method-level attribute */ }
+    public function methodThree(string $arg1) { /* not profiled due to parameter */ }
+}
+```
+
+> [!NOTE]
+> - Be mindful of the performance impact during profiling, especially with high iteration counts.
+> - All required dependencies should be loaded in the target file (use `require`, `include` or Composer autoload).
 
 #### Integration into CI
 
@@ -650,11 +706,10 @@ You can run the profiling command in your CI pipelines to detect regressions or 
 ```
 
 > [!IMPORTANT]  
-> The command line requires `symfony\console` and the `psr\log` interfaces to work.
+> The command line requires `symfony\console`, `symfony\process` and the `psr\log` packages to work.
 
 > [!CAUTION]  
-> The command line can scan your full codebase if you specify a directory instead of a path. The
-> json output is a NDJSON each line representing the result of a successful file scan.
+> The json output is a NDJSON each line representing the result of a successful file scan.
 
 ### Exporters
 
