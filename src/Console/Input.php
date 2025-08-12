@@ -179,7 +179,7 @@ final class Input
 
     public static function usage(): string
     {
-        return '--path=PATH  [--output=OUTPUT] [--format=FORMAT] [--depth=DEPTH] [--no-recursion] [--isolation] [--pretty] [--info] [--help] [--version]';
+        return '--path=PATH [--output=OUTPUT] [--format=FORMAT] [--depth=DEPTH] [--no-recursion] [--isolation] [--pretty] [--info] [--help] [--version]';
     }
 
     public static function consoleDescription(): string
@@ -195,6 +195,7 @@ final class Input
 <fg=green>  -i, --info</>            Show additional system/environment information (optional)
 <fg=green>  -h, --help</>            Display this help message (optional)
 <fg=green>  -V, --version</>         Display the version and exit (optional)
+
 HELP;
     }
 }

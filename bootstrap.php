@@ -30,6 +30,18 @@ if ('cli' !== PHP_SAPI) {
     exit(1);
 }
 
+function updateIniSettings(array $argv): void
+{
+    foreach ($argv as $arg) {
+        if (1 === preg_match('/^--memory-limit=(?<memory>.+)$/', $arg, $m)) {
+            ini_set('memory_limit', $m['memory']);
+            break;
+        }
+    }
+}
+
+updateIniSettings($argv);
+
 $stderr = new StreamOutput(STDERR);
 
 return new Stackwatch(

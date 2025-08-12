@@ -41,7 +41,7 @@ $service->calculateHeavyStuff();
 echo microtime(true) - $start; // the execution time of your code
 ```
 
-`Stackwatch` streamlines this process by removing the need for manual
+**Stackwatch**  streamlines this process by removing the need for manual
 timing and setup, making profiling more convenient and consistent.
 
 The package offers three (3) complementary ways to profile your code, it features:

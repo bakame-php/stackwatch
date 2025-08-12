@@ -98,6 +98,7 @@ final class Stackwatch
 
 <fg=yellow>Options:</>
 $optionsDescription
+
 HELP;
     }
 }
