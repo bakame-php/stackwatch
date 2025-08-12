@@ -345,7 +345,7 @@ $executionTime = $timeline->metrics('init', 'render'); // Returns a Metrics obje
 ```
 
 If you do not specify the second label, the method will default to using the next snapshot
-to the one specified as the second argument.
+to the one specified as the first argument.
 
 ```php
 $timeline->metrics('init', 'load');
