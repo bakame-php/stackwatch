@@ -13,6 +13,8 @@ use function array_keys;
 use function array_sum;
 use function implode;
 use function number_format;
+use function str_replace;
+use function strtolower;
 
 /**
  * Represents a detailed statistical summary of a numeric dataset.
@@ -260,6 +262,8 @@ final class Statistics implements JsonSerializable
             return $humans;
         }
 
-        return $humans[$property] ?? throw new InvalidArgument('Unknown statistics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
+        $propertyNormalized = str_replace(' ', '_', strtolower($property));
+
+        return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown statistics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
     }
 }

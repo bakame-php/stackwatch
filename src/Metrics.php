@@ -12,6 +12,8 @@ use function array_keys;
 use function array_reduce;
 use function count;
 use function implode;
+use function str_replace;
+use function strtolower;
 
 /**
  * @phpstan-type MetricsStat array{
@@ -214,7 +216,9 @@ final class Metrics implements JsonSerializable
             return $humans;
         }
 
-        return $humans[$property] ?? throw new InvalidArgument('Unknown metrics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
+        $propertyNormalized = str_replace(' ', '_', strtolower($property));
+
+        return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown metrics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
     }
 
     public function add(Metrics $metric): self

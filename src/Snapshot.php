@@ -18,6 +18,8 @@ use function implode;
 use function json_encode;
 use function memory_get_peak_usage;
 use function memory_get_usage;
+use function str_replace;
+use function strtolower;
 
 use const JSON_PRETTY_PRINT;
 
@@ -47,10 +49,11 @@ use const JSON_PRETTY_PRINT;
  *     real_peak_memory_usage: string,
  *     cpu:string
  * }
- *
  */
 final class Snapshot implements JsonSerializable
 {
+    public const DATE_FORMAT = "Y-m-d\TH:i:s.uP";
+
     /** @var CpuStat $default */
     private const CPU_STAT = [
         'ru_utime.tv_sec' => 0,
@@ -101,9 +104,16 @@ final class Snapshot implements JsonSerializable
         [] === $missingKeys || throw new InvalidArgument('The payload is missing the following keys: '.implode(', ', array_keys($missingKeys)));
 
         try {
+            $datetime = DateTimeImmutable::createFromFormat(self::DATE_FORMAT, $data['timestamp']);
+            false !== $datetime || throw new InvalidArgument('The timestamp uses an unsupported date format.');
+        } catch (Throwable $exception) {
+            throw new InvalidArgument('The "timestamp" is invalid.', previous: $exception);
+        }
+
+        try {
             return new self(
                 $data['label'],
-                DateTimeImmutable::createFromFormat("Y-m-d\TH:i:s.uP", $data['timestamp']), /* @phpstan-ignore-line */
+                $datetime,
                 $data['hrtime'],
                 $data['cpu'],
                 $data['memory_usage'],
@@ -164,7 +174,7 @@ final class Snapshot implements JsonSerializable
     {
         return [
             'label' => $this->label,
-            'timestamp' => $this->timestamp->format("Y-m-d\TH:i:s.uP"),
+            'timestamp' => $this->timestamp->format(self::DATE_FORMAT),
             'hrtime' => $this->hrtime,
             'cpu' => $this->cpu,
             'memory_usage' => $this->memoryUsage,
@@ -196,7 +206,7 @@ final class Snapshot implements JsonSerializable
     {
         $humans = [
             'label' => $this->label,
-            'timestamp' => $this->timestamp->format('Y-m-d\TH:i:s.uP'),
+            'timestamp' => $this->timestamp->format(self::DATE_FORMAT),
             'memory_usage' => MemoryUnit::format($this->memoryUsage, 3),
             'real_memory_usage' => MemoryUnit::format($this->realMemoryUsage, 3),
             'peak_memory_usage' => MemoryUnit::format($this->peakMemoryUsage, 3),
@@ -208,6 +218,8 @@ final class Snapshot implements JsonSerializable
             return $humans;
         }
 
-        return $humans[$property] ?? throw new InvalidArgument('Unknown snapshot name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
+        $propertyNormalized = str_replace(' ', '_', strtolower($property));
+
+        return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown snapshot name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
     }
 }

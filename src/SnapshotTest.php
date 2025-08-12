@@ -82,6 +82,17 @@ final class SnapshotTest extends TestCase
     }
 
     #[Test]
+    public function it_is_forgiving_when_using_for_human(): void
+    {
+        $snapshot = Snapshot::now();
+
+        self::assertSame(
+            $snapshot->forHuman('MeMorY UsaGE'),
+            $snapshot->forHuman('memory_usage')
+        );
+    }
+
+    #[Test]
     public function it_will_throw_if_the_cpu_property_is_missing_keys(): void
     {
         $this->expectException(InvalidArgument::class);
