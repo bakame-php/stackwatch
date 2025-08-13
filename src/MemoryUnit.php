@@ -166,16 +166,18 @@ enum MemoryUnit: int
      *
      * @throws ValueError If duration is negative.
      */
-    public static function format(float|int $bytes, ?int $precision = null): string
+    public static function format(float|int $bytes, ?int $precision = null, UnitSpacing $unitSpacing = UnitSpacing::Space): string
     {
+        $space = UnitSpacing::Space === $unitSpacing ? ' ' : '';
+
         $bytes = self::filterBytes($bytes);
         foreach (self::cases() as $unit) {
             if ($bytes >= $unit->value) {
-                return $unit->formatFromBytes($bytes, $precision).' '.$unit->suffix();
+                return $unit->formatFromBytes($bytes, $precision).$space.$unit->suffix();
             }
         }
 
-        return self::Byte->formatFromBytes($bytes, $precision).' '.self::Byte->suffix();
+        return self::Byte->formatFromBytes($bytes, $precision).$space.self::Byte->suffix();
     }
 
     private function formatFromBytes(float|int $bytes, ?int $precision = null): float|int|string
@@ -196,7 +198,7 @@ enum MemoryUnit: int
         };
     }
 
-    public static function formatSquared(float|int $bytes2, ?int $precision = null): string
+    public static function formatSquared(float|int $bytes2, ?int $precision = null, UnitSpacing $unitSpacing = UnitSpacing::Space): string
     {
         /** @var array<string, int> $units */
         static $units = [
@@ -208,10 +210,12 @@ enum MemoryUnit: int
         ];
 
         $precision ??= 6;
+        $space = UnitSpacing::Space === $unitSpacing ? ' ' : '';
+
         foreach ($units as $unit => $factor) {
             $value = $bytes2 / $factor;
             if ($value >= 1) {
-                return number_format($value, $precision)." $unit";
+                return number_format($value, $precision).$space.$unit;
             }
         }
 

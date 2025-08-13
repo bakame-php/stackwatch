@@ -154,16 +154,17 @@ enum DurationUnit: int
      *
      * @throws ValueError If duration is negative.
      */
-    public static function format(float|int $nanoseconds, ?int $precision = null): string
+    public static function format(float|int $nanoseconds, ?int $precision = null, UnitSpacing $unitSpacing = UnitSpacing::Space): string
     {
+        $space = UnitSpacing::Space === $unitSpacing ? ' ' : '';
         $nanoseconds = self::filterDuration($nanoseconds);
         foreach (self::cases() as $unit) {
             if ($nanoseconds >= $unit->value) {
-                return $unit->formatFromNanoseconds($nanoseconds, $precision).' '.$unit->suffix();
+                return $unit->formatFromNanoseconds($nanoseconds, $precision).$space.$unit->suffix();
             }
         }
 
-        return self::Nanosecond->formatFromNanoseconds($nanoseconds, $precision).' '.self::Nanosecond->suffix();
+        return self::Nanosecond->formatFromNanoseconds($nanoseconds, $precision).$space.self::Nanosecond->suffix();
     }
 
     private function formatFromNanoseconds(float|int $nanoseconds, ?int $precision = null): float|int|string
@@ -201,8 +202,9 @@ enum DurationUnit: int
         };
     }
 
-    public static function formatSquared(float|int $ns2, ?int $precision = null): string
+    public static function formatSquared(float|int $ns2, ?int $precision = null, UnitSpacing $unitSpacing = UnitSpacing::Space): string
     {
+        $space = UnitSpacing::Space === $unitSpacing ? ' ' : '';
         /** @var array<string, int|float> $units */
         static $units = [
             'min²' => 3.6e+21,
@@ -216,11 +218,11 @@ enum DurationUnit: int
         foreach ($units as $unit => $factor) {
             $value = $ns2 / $factor;
             if ($value >= 1) {
-                return number_format($value, $precision)." $unit";
+                return number_format($value, $precision).$space.$unit;
             }
         }
 
-        return number_format($ns2, $precision).' ns²';
+        return number_format($ns2, $precision).$space.'ns²';
     }
 
     public static function parseSquared(string $value): float

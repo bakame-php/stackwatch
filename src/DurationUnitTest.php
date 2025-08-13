@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 use ValueError;
 
 #[CoversClass(DurationUnit::class)]
+#[CoversClass(UnitSpacing::class)]
 final class DurationUnitTest extends TestCase
 {
     #[Test]
@@ -34,6 +35,7 @@ final class DurationUnitTest extends TestCase
         self::assertSame('1 h', DurationUnit::format(1_000_000_000 * 3_600));
         self::assertSame('24.0 h', DurationUnit::format(1_000_000_000 * 86_400, 1));
         self::assertSame('1.000 ms', DurationUnit::format(1_000_000, 3));
+        self::assertSame('1.000ms', DurationUnit::format(1_000_000, 3, UnitSpacing::None));
     }
 
     #[Test]

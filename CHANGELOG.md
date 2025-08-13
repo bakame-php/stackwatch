@@ -8,6 +8,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 - `--tags` option to the CLI command to filter profile that needs to be run based on the `tags` property of the #[Profile] attribute.
 - `--memory-limit` option to the CLI command to control the memroy limit of the main process.
+- `UnitSpacing` Enum to control the space between value and unit when using the format related methods of `MemoryUnit` and `DurationUnit`.
 
 ### Fixed
 

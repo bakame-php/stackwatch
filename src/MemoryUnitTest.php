@@ -11,6 +11,7 @@ use PHPUnit\Framework\TestCase;
 use ValueError;
 
 #[CoversClass(MemoryUnit::class)]
+#[CoversClass(UnitSpacing::class)]
 final class MemoryUnitTest extends TestCase
 {
     #[Test]
@@ -31,6 +32,7 @@ final class MemoryUnitTest extends TestCase
         self::assertSame('1 B', MemoryUnit::format(1));
         self::assertSame('1 KB', MemoryUnit::format(1_024));
         self::assertSame('1 MB', MemoryUnit::format(1_024 ** 2));
+        self::assertSame('1MB', MemoryUnit::format(1_024 ** 2, unitSpacing: UnitSpacing::None));
         self::assertSame('1 GB', MemoryUnit::format(1_024 ** 3));
         self::assertSame('1 TB', MemoryUnit::format(1_024 ** 4));
         self::assertSame('1.000 MB', MemoryUnit::format(1_024 * 1_024, 3));
