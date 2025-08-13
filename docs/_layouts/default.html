@@ -46,8 +46,7 @@
             <div class="absolute inset-y-0 right-0 w-full lg:w-[50vw]"></div>
             <nav class="sticky top-[4.5rem] w-64 pr-8 text-base lg:text-sm xl:w-72 xl:pr-16">
                 <ul role="list" class="-ml-0.5 h-[calc(100vh-4.5rem)] overflow-y-auto py-7 pl-0.5 space-y-4">
-                    {% if upgrading == false %}
-                    {% for section in site.data.menu.version[version] %}
+                    {% for section in site.data.menu.version['1.0'] %}
                     <h3 class="font-semibold tracking-tight text-slate-900">{{ section[0] }}</h3>
                     <ul role="list" class="pl-3 mt-3 space-y-2">
                         {% for link in section[1] %}
@@ -57,30 +56,10 @@
                         {% endfor %}
                     </ul>
                     {% endfor %}
-                    {% else %}
-                    {% for section in site.data.menu.upgrading %}
-                    <h3 class="font-semibold tracking-tight text-slate-900">{{ section[0] }}</h3>
-                    <ul role="list" class="pl-3 mt-3 space-y-2">
-                        {% for link in section[1] %}
-                        <li {% if page.url == link[1] %}class="selected"{% endif %}>
-                            <a href="{{ site.baseurl }}{{ link[1] }}" class="text-slate-900 hover:text-slate-800">{{ link[0] }}</a>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    {% endfor %}
-                    {% endif %}
                     <h3 class="font-semibold tracking-tight text-slate-900">Release Notes</h3>
                     <ul role="list" class="pl-3 mt-3 space-y-2">
                         <li {% if upgrading == true %}class="selected"{% endif %}><a href="{{ site.baseurl }}/releases/">Releases Notes</a></li>
                     </ul>
-                    <!--h3 class="font-semibold tracking-tight text-slate-900">Older versions</h3>
-                    <ul role="list" class="pl-3 mt-3 space-y-2">
-                        {% for v in site.data.menu.version %}
-                        <li {% if version == v[0] and upgrading == false %}class="selected"{% endif %}>
-                            <a href="{{ site.baseurl }}/{{ v[0] }}/">{{ v[0] }} {% if v[0] == site.data.project.releases.current.version %}(latest stable){% endif %}</a>
-                        </li>
-                        {% endfor %}
-                    </ul -->
                 </ul>
             </nav>
         </div>
