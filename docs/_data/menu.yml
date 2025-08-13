@@ -1,0 +1,10 @@
+version:
+    '1.0':
+        Getting Started:
+            Installation: '/1.0/'
+        Documentation:
+            Profiler: '/1.0/profiler/'
+            Timeline: '/1.0/timeline/'
+            CLI command: '/1.0/command/'
+            Exporters: '/1.0/exporters/'
+            Helpers: '/1.0/helpers/'

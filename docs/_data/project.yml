@@ -1,0 +1,19 @@
+# Documentation website
+title: "Stackwatch"
+tagline: "A minimalist multi-metric PHP Profiler."
+description: "A framework-agnostic PHP library that allows you to profile and gain performance insight into your code without much complex setup."
+# Github repository
+package: 'bakame/stackwatch'
+repository_url: 'https://github.com/bakame-php/stackwatch'
+release_major: '1.0'
+version: 0.13.0
+support: 'Once a new major version is released, the previous stable release remains supported for six more months with patches and security fixes.'
+releases:
+#    current:
+#        version: '1.0'
+#        requires: 'PHP >= 8.1.0'
+#        documentation_link: '/1.0/'
+#    previous:
+#        version: '1.0'
+#        requires: 'PHP >= 8.1.10'
+#        documentation_link: '/1.0/'

@@ -5,5 +5,7 @@
 build
 composer.lock
 docs/_site
+docs/.jekyll-cache
+docs/.jekyll-metadata
 vendor
 /nbproject/private/
