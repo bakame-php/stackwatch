@@ -296,6 +296,58 @@ count($profiler); // returns 0
 $profiler->isEmpty(); // return true
 ```
 
+#### Identifier
+
+Every `Profiler` instance has a unique identifier accessible via the `identifier` method.
+
+```php
+use Bakame\Stackwatch\Profiler;
+
+$profiler = new Profiler(function (): string {
+    usleep(1_000);
+    
+    return 'done';
+}, 'user_export');
+echo $profiler->identifier(); // 'user_export
+```
+
+If not provided, an internal generated unique identifer will be assigned to the property.
+The identifier can be used for logging, debugging or for correlation when
+multiple profilers and/or timelines are running in parallel.
+
+#### Logging
+
+You can optionally log profiling activity using any logger that implements `Psr\Log\LoggerInterface`.
+
+To enable this feature, you need to provide your instance to the `Profiler` constructor
+
+```php
+use Bakame\Stackwatch\Profiler;
+use Bakame\Stackwatch\Timeline;
+use Monolog\Level;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
+$logger = new Logger('profiler');
+$logger->pushHandler(new StreamHandler(STDOUT, Level::Debug));
+
+//logging with the Profiler instance
+
+$profiler = new Profiler(function () {
+    usleep(1_000);
+
+    return 'end';
+}, logger: $logger);
+
+$profiler->profile('toto');
+$profiler->profile('tata');
+```
+
+> [!NOTE]  
+>
+> - Logging can be done also on the `Profiler` static methods, they all optionally accept a `LoggerInterface` argument.
+> - When logging, the `Profiler` identifier is added to the log to ease identifying which instance is generating the log entries.
+
 ### Timeline
 
 In situation where you can't work with callbacks you can alternatively use the `Timeline` class.
@@ -449,13 +501,12 @@ $duration = $timeline->take('end')->metrics->executionTime;
 // $duration is expressed in nanoseconds
 ````
 
-### Identifier
+#### Identifier
 
-Every `Timeline` and `Profiler` instance has a unique identifier accessible via the `identifier` method.
+Every `Timeline` instance has a unique identifier accessible via the `identifier` method.
 
 ```php
 use Bakame\Stackwatch\Timeline;
-use Bakame\Stackwatch\Profiler;
 
 $timeline = Timeline::start(label: 'start', identifier: 'user_import');
 // or 
@@ -463,29 +514,22 @@ $timeline = new Timeline(identifier: 'user_import');
 $timeline->capture(label: 'start');
 
 echo $timeline->identifier(); // 'user_import'
-
-$profiler = new Profiler(function (): string {
-    usleep(1_000);
-    
-    return 'done';
-}, 'user_export');
-echo $profiler->identifier(); // 'user_export
 ```
 
-If not provided, an internal label generator will assign a unique name to the property.
+If not provided, a generated unique name will be assigned to the instance.
+
 The identifier can be used for logging, debugging or for correlation when
 multiple profilers and/or timelines are running in parallel.
 
-### Logging
+#### Logging
 
-The `Profiler` and `Timeline` classes can optionally log profiling activity using any logger that
+You can optionally log profiling activity using any logger that
 implements `Psr\Log\LoggerInterface`.
 
 To enable this feature, you must install and configure a `PSR-3`-compatible logger. Common
 implementations include `Monolog`, `Laminas\Log`, `Symfony’s or Laravel logger` component, and others.
 
 ```php
-use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Timeline;
 use Monolog\Level;
 use Monolog\Logger;
@@ -494,33 +538,18 @@ use Monolog\Handler\StreamHandler;
 $logger = new Logger('profiler');
 $logger->pushHandler(new StreamHandler(STDOUT, Level::Debug));
 
-//logging with the Profiler instance
-
-$profiler = new Profiler(function () {
-    usleep(1_000);
-
-    return 'end';
-}, logger: $logger);
-
-$profiler->profile('toto');
-$profiler->profile('tata');
-
-//logging the timeline process 
-
 $timeline = Timeline::start('init', logger: $logger);
 usleep(1_000);;
 $timeline->take('render', 'server_cycle');
 ```
 
 > [!TIP]  
-> Logging can be done also on the `Profiler` static methods, they all optionally accept a `LoggerInterface` argument.
-> When logging timeline or profiler instances their respective identifier is added to the log to ease identifying
-> which instance is generating the log entries.
-
-Outside the `Profiler` and the `Timeline` you can use the package features through a CLI command.
+>
+> - When logging the `Timeline` identifier is added to the log to ease identifying which instance is generating the log entries.
 
 ### CLI command
 
+Outside the `Profiler`and the `Timeline` you can use the package features through a CLI command.
 A CLI Command is available to allow you to benchmark PHP **functions and methods** located in a
 specific file or directory using the custom `#[Bakame\Stackwatch\Profile]` attribute.
 
