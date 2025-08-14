@@ -1,6 +1,6 @@
 #!/usr/bin/env php
 <?php
 
-/** @var Bakame\Stackwatch\Stackwatch $command */
+/** @var Bakame\Stackwatch\Console\Stackwatch $command */
 $command = require_once __DIR__.'/../bootstrap.php';
 $command->handle();
