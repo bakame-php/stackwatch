@@ -13,7 +13,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 ### Fixed
 
 - **BC BREAK:**  `Timeline::delta` default to creating the delta between the `from` and the next snapshot before it was with the last snapshot if no `to` label was given.
-- **BC BREAK:**  `StackWatch` is moved to the top namespace.
+- **BC BREAK:**  `Input` boolean properties are replaced by discret `Enum`
 
 ### Deprecated
 

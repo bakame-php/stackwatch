@@ -21,6 +21,8 @@ use function tempnam;
 #[CoversClass(JsonProcessor::class)]
 #[CoversClass(ConsoleProcessor::class)]
 #[CoversClass(UnitOfWorkGenerator::class)]
+#[CoversClass(State::class)]
+#[CoversClass(Visibility::class)]
 final class PathProfilerTest extends TestCase
 {
     private string $tmpFile;

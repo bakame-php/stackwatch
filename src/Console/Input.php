@@ -52,19 +52,19 @@ final class Input
      */
     public function __construct(
         public readonly ?string $path,
-        public readonly bool $showHelp = false,
-        public readonly bool $showInfo = false,
-        public readonly bool $showVersion = false,
+        public readonly Visibility $helpSection = Visibility::Hide,
+        public readonly Visibility $infoSection = Visibility::Hide,
+        public readonly Visibility $versionSection = Visibility::Hide,
         public readonly string $format = self::TABLE_FORMAT,
         public readonly ?string $output = null,
-        public readonly bool $pretty = false,
-        public readonly bool $inIsolation = false,
+        public readonly State $jsonPrettyPrint = State::Disabled,
+        public readonly State $inIsolation = State::Disabled,
         public readonly int $depth = -1,
         public readonly array $tags = [],
     ) {
         in_array($this->format, [self::JSON_FORMAT, self::TABLE_FORMAT], true) || throw new InvalidArgument('Output format is not supported');
         null === $this->path || '' !== trim($this->path) || throw new InvalidArgument('path format is not valid');
-        ($this->showHelp || $this->showInfo || $this->showVersion || null !== $this->path) || throw new InvalidArgument('Missing required option: --path');
+        ($this->helpSection->isVisible() || $this->infoSection->isVisible() || $this->versionSection->isVisible() || null !== $this->path) || throw new InvalidArgument('Missing required option: --path');
         -1 <= $this->depth || throw new InvalidArgument('depth option must be greater or equal to -1.');
     }
 
@@ -75,13 +75,13 @@ final class Input
     {
         return new self(
             path: self::getFirstValue($input, 'path', 'p'),
-            showHelp: self::hasFlag($input, 'help', 'h'),
-            showInfo: self::hasFlag($input, 'info', 'i'),
-            showVersion: self::hasFlag($input, 'version', 'V'),
+            helpSection: Visibility::fromBool(self::hasFlag($input, 'help', 'h')),
+            infoSection: Visibility::fromBool(self::hasFlag($input, 'info', 'i')),
+            versionSection: Visibility::fromBool(self::hasFlag($input, 'version', 'V')),
             format: self::normalizeFormat(self::getFirstValue($input, 'format', 'f') ?? self::TABLE_FORMAT),
             output: self::getFirstValue($input, 'output', 'o'),
-            pretty: self::hasFlag($input, 'pretty', 'P'),
-            inIsolation: self::hasFlag($input, 'isolation', 'x'),
+            jsonPrettyPrint: State::fromBool(self::hasFlag($input, 'pretty', 'P')),
+            inIsolation: State::fromBool(self::hasFlag($input, 'isolation', 'x')),
             depth: self::resolveDepth($input),
             tags: self::resolveTags($input),
         );

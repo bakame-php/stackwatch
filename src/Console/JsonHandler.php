@@ -21,12 +21,12 @@ final class JsonHandler implements Handler
 
     public function handle(Input $input): void
     {
-        $jsonOptions = $input->pretty
+        $jsonOptions = $input->jsonPrettyPrint->isEnabled()
             ? JSON_PRETTY_PRINT | JSON_BIGINT_AS_STRING
             : JSON_BIGINT_AS_STRING;
         $stream = $input->output ?? STDOUT;
         $profiler = PathProfiler::forJson($input, $stream, $jsonOptions, $this->logger);
-        if ($input->showInfo) {
+        if ($input->infoSection->isVisible()) {
             $processor = $profiler->processor;
             if ($processor instanceof JsonProcessor) {
                 $processor->exporter->writeln($this->environment);

@@ -35,7 +35,7 @@ final class ConsoleHandler implements Handler
         $profiler = PathProfiler::forConsole($input, $output, $this->logger);
         $output->writeln(Version::toConsoleString());
 
-        if ($input->showInfo) {
+        if ($input->infoSection->isVisible()) {
             $processor = $profiler->processor;
             if ($processor instanceof ConsoleProcessor) {
                 $processor->exporter->exportEnvironment($this->environment);

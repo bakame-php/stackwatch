@@ -10,6 +10,8 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\InputInterface;
 
 #[CoversClass(Input::class)]
+#[CoversClass(State::class)]
+#[CoversClass(Visibility::class)]
 final class InputTest extends TestCase
 {
     /**
@@ -35,7 +37,7 @@ final class InputTest extends TestCase
 
         self::assertSame('/tmp', $obj->path);
         self::assertSame(Input::TABLE_FORMAT, $obj->format);
-        self::assertFalse($obj->showHelp);
+        self::assertFalse($obj->helpSection->isVisible());
         self::assertSame(-1, $obj->depth);
     }
 
@@ -65,7 +67,7 @@ final class InputTest extends TestCase
         $obj = Input::fromInput($input);
 
         self::assertSame(Input::JSON_FORMAT, $obj->format);
-        self::assertTrue($obj->pretty);
+        self::assertTrue($obj->jsonPrettyPrint->isEnabled());
     }
 
     public function testInvalidFormatThrowsException(): void

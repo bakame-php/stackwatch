@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Console;
 
-use Bakame\Stackwatch\Console\ConsoleHandler;
-use Bakame\Stackwatch\Console\Input;
-use Bakame\Stackwatch\Console\JsonHandler;
+use Bakame\Stackwatch\Environment;
+use Bakame\Stackwatch\Version;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -43,14 +42,14 @@ final class Stackwatch
 
     public function execute(Input $input): int
     {
-        if ($input->showHelp) {
+        if ($input->helpSection->isVisible()) {
             $this->stdout->writeln(Version::toConsoleString());
             $this->stdout->writeln($this->helpText());
 
             return self::SUCCESS;
         }
 
-        if ($input->showVersion) {
+        if ($input->versionSection->isVisible()) {
             $this->stdout->writeln(
                 Input::JSON_FORMAT === $input->format
                     ? Version::toJson()
@@ -60,7 +59,7 @@ final class Stackwatch
             return self::SUCCESS;
         }
 
-        if (null === $input->path && !$input->showInfo) {
+        if (null === $input->path && $input->infoSection->isHidden()) {
             $this->stderr->writeln('<error> Please specify a valid path. </error>');
             $this->stdout->writeln($this->helpText());
 

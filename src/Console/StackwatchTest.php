@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Console;
 
-use Bakame\Stackwatch\Console\Input;
-use Bakame\Stackwatch\Console\Logger;
-use Bakame\Stackwatch\Console\UnitOfWork;
+use Bakame\Stackwatch\Environment;
+use Bakame\Stackwatch\InvalidArgument;
+use Bakame\Stackwatch\Version;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -20,6 +20,8 @@ use function unlink;
 #[CoversClass(Input::class)]
 #[CoversClass(Stackwatch::class)]
 #[CoversClass(UnitOfWork::class)]
+#[CoversClass(State::class)]
+#[CoversClass(Visibility::class)]
 final class StackwatchTest extends TestCase
 {
     private BufferedOutput $stdout;

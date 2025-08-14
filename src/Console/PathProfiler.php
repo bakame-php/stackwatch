@@ -44,7 +44,7 @@ final class PathProfiler
         public readonly Processor $processor,
         public readonly LoggerInterface $logger = new NullLogger(),
         public readonly int $depth = -1,
-        public readonly bool $isInIsolation = false,
+        public readonly State $isInIsolation = State::Disabled,
         public readonly array $tags = [],
     ) {
     }
@@ -124,8 +124,8 @@ final class PathProfiler
     public function handleFile(SplFileInfo $path): void
     {
         $units = match ($this->isInIsolation) {
-            true => $this->createUnitOfWorksInIsolation($path),
-            false => $this->createUnitOfWorks($path),
+            State::Enabled => $this->createUnitOfWorksInIsolation($path),
+            State::Disabled => $this->createUnitOfWorks($path),
         };
 
         if ([] !== $units) {
