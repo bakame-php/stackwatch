@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use Bakame\Stackwatch\Console\Logger;
+use Bakame\Stackwatch\Console\Stackwatch;
 use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\Stackwatch;
 use Symfony\Component\Console\Output\StreamOutput;
 
 if (is_file(__DIR__ . '/vendor/autoload.php')) {
@@ -30,17 +30,7 @@ if ('cli' !== PHP_SAPI) {
     exit(1);
 }
 
-function updateIniSettings(array $argv): void
-{
-    foreach ($argv as $arg) {
-        if (1 === preg_match('/^--memory-limit=(?<memory>.+)$/', $arg, $m)) {
-            ini_set('memory_limit', $m['memory']);
-            break;
-        }
-    }
-}
-
-updateIniSettings($argv);
+Stackwatch::setMemoryLimit($argv);
 
 $stderr = new StreamOutput(STDERR);
 

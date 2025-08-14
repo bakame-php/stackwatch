@@ -11,11 +11,27 @@ use RuntimeException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Throwable;
 
+use function ini_set;
+use function preg_match;
+
 final class Stackwatch
 {
     public const SUCCESS = 0;
     public const ERROR = 1;
     private const DESCRIPTION = 'Profiles functions and methods in a PHP codebase using #[Profile] attributes.';
+
+    /**
+     * @param array<string> $argv
+     */
+    public static function setMemoryLimit(array $argv = []): void
+    {
+        foreach ($argv as $arg) {
+            if (1 === preg_match('/^--memory-limit=(?<memory>.+)$/', $arg, $m)) {
+                ini_set('memory_limit', $m['memory']);
+                break;
+            }
+        }
+    }
 
     public function __construct(
         private readonly OutputInterface $stdout,
