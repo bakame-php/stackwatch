@@ -2,6 +2,24 @@
 
 All Notable changes to `bakame/stackwatch` will be documented in this file.
 
+## [Next - African City](https://github.com/bakame-php/stackwatch/compare/0.13.0...main) - TBD
+
+### Added
+
+- None
+
+### Fixed
+
+- None
+
+### Deprecated
+
+- None
+
+### Removed
+
+- None
+
 ## [0.13.0 - Marrakesh](https://github.com/bakame-php/stackwatch/compare/0.12.0...0.13.0) - 2025-08-14
 
 ### Added
