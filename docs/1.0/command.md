@@ -78,7 +78,7 @@ function test() : int {
 If you run the following command:
 
 ```bash
-php bin/stackwatch --path=/path/profiler/test.php
+php vendor/bin/stackwatch --path=/path/profiler/test.php
 ```
 It will output the following:
 
@@ -205,7 +205,7 @@ You can run the profiling command in your CI pipelines to detect regressions or 
 
 ```yaml
 - name: Run Profiler
-  run: php bin/stackwatch --path=/path/profiler/test.php --format=json
+  run: php vendor/bin/stackwatch --path=/path/profiler/test.php --format=json
 ```
 
 <div class="message-info">

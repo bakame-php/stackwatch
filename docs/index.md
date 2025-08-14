@@ -71,7 +71,7 @@ enum Foobar
 If you mark your code with the `Bakame\Stackwatch\Profile` attribute and run the CLI command:
 
 ```bash
-php bin/stackwatch --path=/path/to/profiling/code.php
+php vendor/bin/stackwatch --path=/path/to/profiling/code.php
 ```
 It will output the following with no complex setup.
 
