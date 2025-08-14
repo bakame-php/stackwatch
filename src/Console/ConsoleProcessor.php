@@ -134,11 +134,7 @@ final class ConsoleProcessor implements Processor
 
         // Try stty size
         $stty = $exec('stty size 2>/dev/null');
-        if (false === $stty) {
-            return $fallback;
-        }
-
-        if (1 === preg_match('/^\d+\s+(?<size>\d+)$/', trim($stty), $match)) {
+        if (false !== $stty && 1 === preg_match('/^\d+\s+(?<size>\d+)$/', trim($stty), $match)) {
             return (int) $match['size'];
         }
 
@@ -147,11 +143,7 @@ final class ConsoleProcessor implements Processor
         }
 
         $mode = $exec('mode con');
-        if (false === $mode) {
-            return $fallback;
-        }
-
-        if (1 === preg_match('/Columns:\s+(?<size>\d+)/i', $mode, $match)) {
+        if (false !== $mode && 1 === preg_match('/Columns:\s+(?<size>\d+)/i', $mode, $match)) {
             return (int) $match['size'];
         }
 
