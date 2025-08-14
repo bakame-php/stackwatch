@@ -1,4 +1,4 @@
-![Stackwatch](docs/assets/img/stackwatch.png?raw=true)
+![Stackwatch](docs/assets/img/stackwatch-logo.png?raw=true)
 
 # Stackwatch
 
