@@ -26,7 +26,7 @@ final class ConsoleHandler implements Handler
 
         if (null !== $input->output) {
             set_error_handler(fn () => true);
-            $handler = @fopen($input->output, 'w');
+            $handler = fopen($input->output, 'w');
             restore_error_handler();
             false !== $handler || throw new RuntimeException('Unable to open the file for storing the output.');
             $output = new StreamOutput($handler);

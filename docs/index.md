@@ -77,19 +77,18 @@ php vendor/bin/stackwatch --path=/path/to/profiling/code.php
 It will output the following with no complex setup.
 
 ```bash
-stackwatch v0.12.0 (Luanda) by Ignace Nyamagana Butera and contributors.
+stackwatch v0.13.0 (Marrakesh) by Ignace Nyamagana Butera and contributors.
 
-Runtime: PHP 8.3.24 OS: Darwin Memory Limit: 128M
+Runtime: PHP 8.3.24 OS: Linux Memory Limit: 64M
 
-Average metrics for Foobar\Baz\MyEnum::test located in /path/to/profiling/code.php after 3 iterations and 0 warmups
-+------------------------------------+
-|         Execution Time: 145.556 µs |
-|               CPU Time: 18.333 µs  |
-|           Memory Usage: 1.0 KB     |
-|      Real Memory Usage: 0.0 B      |
-|      Peak Memory Usage: 0.0 B      |
-| Real Peak Memory Usage: 0.0 B      |
-+------------------------------------+
+(Average) Target: Foobar\Baz\Foobar::test; Path: /path/to/profiling/code.php; Iterations: 3; Warmup: 0;
+
+CPU Time ............................................................. 19.000 µs
+Execution Time ...................................................... 144.611 µs
+Memory Usage ............................................................ 1.0 KB
+Real Memory Usage ........................................................ 0.0 B
+Peak Memory Usage ........................................................ 0.0 B
+Real Peak Memory Usage ................................................... 0.0 B
 ```
 
 # Motivation

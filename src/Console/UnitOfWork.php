@@ -345,9 +345,10 @@ final class UnitOfWork implements JsonSerializable
 
     private function template(): string
     {
-        $this->template ??= Profile::DETAILED === $this->profile->type
-            ? 'Detailed metrics for {name} located in {file} after {iterations} iterations and {warmup} warmups'
-            : 'Average metrics for {name} located in {file} after {iterations} iterations and {warmup} warmups';
+        /** @var string $template */
+        static $template = 'Target: {name}; Path: {file}; Iterations: {iterations}; Warmup: {warmup};';
+
+        $this->template ??= Profile::DETAILED === $this->profile->type ? '(Detailed) '.$template : '(Average) '.$template;
 
         return $this->template;
     }

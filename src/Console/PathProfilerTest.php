@@ -85,8 +85,8 @@ PHP;
         $output = $this->stdout->fetch();
         $errorOutput = $this->stderr->fetch();
 
-        self::assertStringContainsString('Detailed metrics for ', $output);
-        self::assertStringContainsString('Average metrics for ', $output);
+        self::assertStringContainsString('(Average)', $output);
+        self::assertStringContainsString('(Detailed)', $output);
 
         self::assertEmpty($errorOutput, 'No errors expected');
     }
@@ -118,7 +118,7 @@ PHP;
         $output = $this->stdout->fetch();
         $errorOutput = $this->stderr->fetch();
 
-        self::assertStringContainsString('Detailed metrics for ', $output);
+        self::assertStringContainsString('(Detailed)', $output);
         self::assertEmpty($errorOutput, 'No errors expected');
     }
 

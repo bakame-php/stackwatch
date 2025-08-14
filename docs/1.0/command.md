@@ -83,20 +83,21 @@ php vendor/bin/stackwatch --path=/path/profiler/test.php
 It will output the following:
 
 ```bash
-stackwatch v0.11.0 (Kampala) by Ignace Nyamagana Butera and contributors.
+```bash
+stackwatch v0.13.0 (Marrakesh) by Ignace Nyamagana Butera and contributors.
 
-Runtime: PHP 8.3.23 OS: Linux Memory Limit: 128M
+Runtime: PHP 8.3.24 OS: Linux Memory Limit: 64M
 
-Average metrics for the method Foobar\Baz\Foobar::test located in /path/to/test.php called 10 times
-+------------------------------------+
-|         Execution Time: 148.508 µs |
-|               CPU Time: 15.500 µs  |
-|           Memory Usage: 1.0 KB     |
-|      Real Memory Usage: 0.0 B      |
-|      Peak Memory Usage: 0.0 B      |
-| Real Peak Memory Usage: 0.0 B      |
-+------------------------------------+
-Report for the function Foobar\Baz\test located in /path/to/test.php called 20 times
+(Average) Target: Foobar\Baz\Foobar::test; Path: /path/to/profiling/code.php; Iterations: 3; Warmup: 0;
+
+CPU Time ............................................................. 19.000 µs
+Execution Time ...................................................... 144.611 µs
+Memory Usage ............................................................ 1.0 KB
+Real Memory Usage ........................................................ 0.0 B
+Peak Memory Usage ........................................................ 0.0 B
+Real Peak Memory Usage ................................................... 0.0 B
+
+(Detailed) Target: Foobar\Baz\test; Path: /path/to/test.php; Iterations: 20; Warmup: 2:
 +------------------------+---------------+------------+------------+--------------+------------+-----------+------------+------------+----------+-----------+
 | Metric                 | Nb Iterations | Min Value  | Max Value  | Median Value | Sum        | Range     | Average    | Variance   | Std Dev  | Coef Var  |
 +------------------------+---------------+------------+------------+--------------+------------+-----------+------------+------------+----------+-----------+
@@ -109,8 +110,8 @@ Report for the function Foobar\Baz\test located in /path/to/test.php called 20 t
 +------------------------+---------------+------------+------------+--------------+------------+-----------+------------+------------+----------+-----------+
 ```
 
-- the first table shows the average metrics for the `Foobar::test` method.
-- the second table shows the fully detailed report on the function `test`.
+- the leader list shows the average metrics for the `Foobar::test` method.
+- the table shows the fully detailed report on the function `test`.
 
 ## The Profile attribute
 
