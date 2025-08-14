@@ -145,7 +145,15 @@ foreach ($timeline->deltas() as $summary) {
 }
 ```
 
-And we can adapt the first example using the `Timeline` class this time.
+Traditionally, profiling a section of code quickly looks like this:
+
+```php
+$start = microtime(true);
+$service->calculateHeavyStuff();
+echo microtime(true) - $start; // the execution time of your code
+```
+
+We can adapt this example using the `Timeline` class this time.
 
 ```php
 use Bakame\Stackwatch\Timeline;

@@ -27,6 +27,8 @@ use Bakame\Stackwatch\Timeline;
 
 $timeline = Timeline::start('start');
 // the piece of code to be profiled
+$timeline->capture('middile');
+//another piece of code
 $duration = $timeline->take('end')->metrics->executionTime;
 // $duration is expressed in nanoseconds
 ````

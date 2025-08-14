@@ -6,7 +6,7 @@ description: "A framework-agnostic PHP library that allows you to profile and ga
 package: 'bakame/stackwatch'
 repository_url: 'https://github.com/bakame-php/stackwatch'
 release_major: '1.0'
-version: 0.13.0
+version: 0.12.0
 support: 'Once a new major version is released, the previous stable release remains supported for six more months with patches and security fixes.'
 releases:
 #    current:
