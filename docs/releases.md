@@ -14,7 +14,7 @@ If we've missed anything, feel free to create an issue, or send a pull request.
 
 {% for release in site.github.releases %}
 
-## {{ release.name }} - {{ release.published_at | date: "%Y-%m-%d" }}
+## {{ release.name }} : {{ release.published_at | date: "%Y-%m-%d" }}
 
 {{ release.body | replace:'```':'~~~' | markdownify }}
 {% endfor %}
