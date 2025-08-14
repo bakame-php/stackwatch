@@ -17,7 +17,7 @@ This is especially useful for:
 ## Usage
 
 ```bash
-php bin/stackwatch --path=PATH [options]
+php vendor/bin/stackwatch --path=PATH [options]
 ```
 
 | Option                | Description                                                             |
