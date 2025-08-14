@@ -27,8 +27,8 @@ use Bakame\Stackwatch\Timeline;
 
 $timeline = Timeline::start('start');
 // the piece of code to be profiled
-$timeline->capture('middile');
-//another piece of code
+$timeline->capture('middle');
+// another piece of code
 $duration = $timeline->take('end')->metrics->executionTime;
 // $duration is expressed in nanoseconds
 ````
@@ -60,11 +60,12 @@ trait TimerTrait {
     }
 }
 
-enum Foobar
+enum MyEnum
 {
     use TimerTrait;
 
-    case Foobar;
+    case Case1;
+    case Case2;
 }
 ```
 
@@ -76,14 +77,14 @@ php vendor/bin/stackwatch --path=/path/to/profiling/code.php
 It will output the following with no complex setup.
 
 ```bash
-stackwatch v0.11.0 (Kampala) by Ignace Nyamagana Butera and contributors.
+stackwatch v0.12.0 (Luanda) by Ignace Nyamagana Butera and contributors.
 
-Runtime: PHP 8.3.23 OS: Linux Memory Limit: 128M
+Runtime: PHP 8.3.24 OS: Darwin Memory Limit: 128M
 
-Average metrics for the method Foobar\Baz\Foobar::test located in /path/to/profiling/code.php called 3 times
+Average metrics for Foobar\Baz\MyEnum::test located in /path/to/profiling/code.php after 3 iterations and 0 warmups
 +------------------------------------+
-|         Execution Time: 148.508 µs |
-|               CPU Time: 15.500 µs  |
+|         Execution Time: 145.556 µs |
+|               CPU Time: 18.333 µs  |
 |           Memory Usage: 1.0 KB     |
 |      Real Memory Usage: 0.0 B      |
 |      Peak Memory Usage: 0.0 B      |

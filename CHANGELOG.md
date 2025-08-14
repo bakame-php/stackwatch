@@ -9,11 +9,12 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - `--tags` option to the CLI command to filter profile that needs to be run based on the `tags` property of the #[Profile] attribute.
 - `--memory-limit` option to the CLI command to control the memroy limit of the main process.
 - `UnitSpacing` Enum to control the space between value and unit when using the format related methods of `MemoryUnit` and `DurationUnit`.
+- `Visibility` and `State` Enums to improve `Input` option flags properties.
 
 ### Fixed
 
-- **BC BREAK:**  `Timeline::delta` default to creating the delta between the `from` and the next snapshot before it was with the last snapshot if no `to` label was given.
-- **BC BREAK:**  `Input` boolean properties are replaced by discret `Enum`
+- **BC BREAK:** `Timeline::delta` default to creating the delta between the `from` and the next snapshot before it was with the last snapshot if no `to` label was given.
+- **BC BREAK:** `Input` boolean properties are replaced by discret `Enum`
 
 ### Deprecated
 
