@@ -139,6 +139,7 @@ final class ConsoleExporter implements Exporter
                 'Peak Memory Usage',
                 'Real Peak Memory Usage',
                 'CPU',
+                'Call Location',
             ])
             ->addRow([
                 $stats['timestamp'],
@@ -147,6 +148,7 @@ final class ConsoleExporter implements Exporter
                 $stats['peak_memory_usage'],
                 $stats['real_peak_memory_usage'],
                 $stats['cpu'],
+                $stats['call_location'],
             ])
             ->setVertical()
             ->render();

@@ -23,7 +23,7 @@ use function trim;
 
 /**
  * @implements IteratorAggregate<non-empty-string, Snapshot>
- * @phpstan-import-type SnapshotStat from Snapshot
+ * @phpstan-import-type SnapshotMap from Snapshot
  */
 final class Timeline implements Countable, IteratorAggregate, JsonSerializable
 {
@@ -102,7 +102,7 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
     /**
      * @return array{
      *     identifier: non-empty-string,
-     *     snapshots: list<SnapshotStat>
+     *     snapshots: list<SnapshotMap>
      * }
      */
     public function toArray(): array

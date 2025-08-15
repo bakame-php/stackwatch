@@ -1,0 +1,72 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Bakame\Stackwatch;
+
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\TestCase;
+
+#[CoversClass(CallLocation::class)]
+#[CoversClass(Snapshot::class)]
+final class CallLocationTest extends TestCase
+{
+    #[Test]
+    public function it_returns_an_empty_instance_by_default(): void
+    {
+        $location = new CallLocation();
+
+        self::assertNull($location->path);
+        self::assertNull($location->line);
+    }
+
+    #[Test]
+    public function it_returns_a_completed_instance_with_both_properties(): void
+    {
+        $location = new CallLocation('/path/to/file.php', 42);
+
+        self::assertSame('/path/to/file.php', $location->path);
+        self::assertSame(42, $location->line);
+    }
+
+    #[Test]
+    public function it_fails_creating_a_new_instance_without_the_line(): void
+    {
+        $this->expectException(InvalidArgument::class);
+        $this->expectExceptionMessage('Both "path" and "line" must be provided together if any is set.');
+
+        new CallLocation('/path/to/file.php');
+    }
+
+    #[Test]
+    public function it_fails_creating_a_new_instance_without_the_path(): void
+    {
+        $this->expectException(InvalidArgument::class);
+        $this->expectExceptionMessage('Both "path" and "line" must be provided together if any is set.');
+
+        new CallLocation(null, 42);
+    }
+
+    #[Test]
+    public function it_can_records_nested_calls(): void
+    {
+        $timeline = Timeline::start('init');
+        usleep(1_000);
+        $timeline->capture('step');
+
+        $start = $timeline->get('init');
+        $step = $timeline->get('step');
+
+        self::assertNotNull($start->callLocation->path);
+        self::assertStringContainsString('CallLocationTest.php', $start->callLocation->path);
+
+        self::assertNotNull($step->callLocation->path);
+        self::assertStringContainsString('CallLocationTest.php', $step->callLocation->path);
+
+        self::assertIsInt($start->callLocation->line);
+        self::assertIsInt($step->callLocation->line);
+
+        self::assertLessThan($step->callLocation->line, $start->callLocation->line);
+    }
+}

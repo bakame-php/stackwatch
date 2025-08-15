@@ -24,21 +24,24 @@ use function strtolower;
 use const JSON_PRETTY_PRINT;
 
 /**
- * @phpstan-type CpuStat array{
+ * @phpstan-import-type CallLocationMap from CallLocation
+ *
+ * @phpstan-type CpuMap array{
  *     'ru_utime.tv_sec': int,
  *     'ru_utime.tv_usec': int,
  *     'ru_stime.tv_sec': int,
  *     'ru_stime.tv_usec': int,
  * }
- * @phpstan-type SnapshotStat array{
+ * @phpstan-type SnapshotMap array{
  *     label: non-empty-string,
  *     timestamp: string,
  *     hrtime: float,
- *     cpu: CpuStat,
+ *     cpu: CpuMap,
  *     memory_usage: int,
  *     real_memory_usage: int,
  *     peak_memory_usage: int,
- *     real_peak_memory_usage: int
+ *     real_peak_memory_usage: int,
+ *     call_location: CallLocationMap,
  * }
  * @phpstan-type SnapshotHumanReadable array{
  *     label: non-empty-string,
@@ -47,14 +50,15 @@ use const JSON_PRETTY_PRINT;
  *     real_memory_usage: string,
  *     peak_memory_usage: string,
  *     real_peak_memory_usage: string,
- *     cpu:string
+ *     cpu:string,
+ *     call_location: string,
  * }
  */
 final class Snapshot implements JsonSerializable
 {
     public const DATE_FORMAT = "Y-m-d\TH:i:s.uP";
 
-    /** @var CpuStat $default */
+    /** @var CpuMap $default */
     private const CPU_STAT = [
         'ru_utime.tv_sec' => 0,
         'ru_utime.tv_usec' => 0,
@@ -64,7 +68,7 @@ final class Snapshot implements JsonSerializable
 
     /**
      * @param non-empty-string $label
-     * @param CpuStat $cpu
+     * @param CpuMap $cpu
      */
     public function __construct(
         public readonly string $label,
@@ -75,6 +79,7 @@ final class Snapshot implements JsonSerializable
         public readonly int $realMemoryUsage,
         public readonly int $peakMemoryUsage,
         public readonly int $realPeakMemoryUsage,
+        public readonly CallLocation $callLocation = new CallLocation(),
     ) {
         LabelGenerator::sanitize($this->label) === $this->label || throw new InvalidArgument('the label `'.$this->label.'` is invalid');
         $missingKeys = array_diff_key(array_flip(array_keys(self::CPU_STAT)), $this->cpu);
@@ -84,7 +89,7 @@ final class Snapshot implements JsonSerializable
     }
 
     /**
-     * @param SnapshotStat $data
+     * @param SnapshotMap $data
      *
      * @throws InvalidArgument
      */
@@ -99,6 +104,7 @@ final class Snapshot implements JsonSerializable
             'real_memory_usage' => 1,
             'peak_memory_usage' => 1,
             'real_peak_memory_usage' => 1,
+            'call_location' => 1,
         ], $data);
 
         [] === $missingKeys || throw new InvalidArgument('The payload is missing the following keys: '.implode(', ', array_keys($missingKeys)));
@@ -106,6 +112,15 @@ final class Snapshot implements JsonSerializable
         try {
             $datetime = DateTimeImmutable::createFromFormat(self::DATE_FORMAT, $data['timestamp']);
             false !== $datetime || throw new InvalidArgument('The timestamp uses an unsupported date format.');
+        } catch (Throwable $exception) {
+            throw new InvalidArgument('The "timestamp" is invalid.', previous: $exception);
+        }
+
+        $callLocation = new CallLocation();
+        try {
+            if (isset($data['call_location']) && is_array($data['call_location']) && [] !== $data['call_location']) {
+                $callLocation = CallLocation::fromArray($data['call_location']);
+            }
         } catch (Throwable $exception) {
             throw new InvalidArgument('The "timestamp" is invalid.', previous: $exception);
         }
@@ -120,6 +135,7 @@ final class Snapshot implements JsonSerializable
                 $data['real_memory_usage'],
                 $data['peak_memory_usage'],
                 $data['real_peak_memory_usage'],
+                $callLocation,
             );
         } catch (Throwable $exception) {
             throw new InvalidArgument('Unable to create a snapshot from the payload', previous: $exception);
@@ -142,15 +158,16 @@ final class Snapshot implements JsonSerializable
             memory_get_usage(true),
             memory_get_peak_usage(),
             memory_get_peak_usage(true),
+            CallLocation::fromLastInternalCall(__NAMESPACE__, ['*Test.php']),
         );
     }
 
     /**
-     * @return CpuStat
+     * @return CpuMap
      */
     private static function getRawCpuData(): array
     {
-        /** @var CpuStat|false $cpu */
+        /** @var CpuMap|false $cpu */
         $cpu = getrusage();
         if (false !== $cpu) {
             return array_intersect_key($cpu, array_flip(array_keys(self::CPU_STAT)));
@@ -160,7 +177,7 @@ final class Snapshot implements JsonSerializable
     }
 
     /**
-     * @return SnapshotStat
+     * @return SnapshotMap
      */
     public function jsonSerialize(): array
     {
@@ -168,7 +185,7 @@ final class Snapshot implements JsonSerializable
     }
 
     /**
-     * @return SnapshotStat
+     * @return SnapshotMap
      */
     public function toArray(): array
     {
@@ -181,6 +198,7 @@ final class Snapshot implements JsonSerializable
             'real_memory_usage' => $this->realMemoryUsage,
             'peak_memory_usage' => $this->peakMemoryUsage,
             'real_peak_memory_usage' => $this->realPeakMemoryUsage,
+            'call_location' => $this->callLocation->toArray(),
         ];
     }
 
@@ -212,6 +230,7 @@ final class Snapshot implements JsonSerializable
             'peak_memory_usage' => MemoryUnit::format($this->peakMemoryUsage, 3),
             'real_peak_memory_usage' => MemoryUnit::format($this->realPeakMemoryUsage, 3),
             'cpu' => (string) json_encode($this->cpu, JSON_PRETTY_PRINT),
+            'call_location' => (string) json_encode($this->callLocation, JSON_PRETTY_PRINT),
         ];
 
         if (null === $property) {

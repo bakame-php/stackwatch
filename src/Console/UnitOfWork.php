@@ -32,7 +32,7 @@ use function strtr;
 use const JSON_THROW_ON_ERROR;
 
 /**
- * @phpstan-import-type MetricsStat from Metrics
+ * @phpstan-import-type MetricsMap from Metrics
  * @phpstan-import-type ReportMap from Report
  * @phpstan-type UnitOfWorkMap array{
  *      type: 'detailed'|'summary',
@@ -44,7 +44,7 @@ use const JSON_THROW_ON_ERROR;
  *      method?: non-empty-string|null,
  *      function?: non-empty-string|null,
  *      run_at: ?string,
- *      attributes: MetricsStat|ReportMap|array{}
+ *      attributes: MetricsMap|ReportMap|array{}
  *  }
  */
 final class UnitOfWork implements JsonSerializable
@@ -63,6 +63,7 @@ final class UnitOfWork implements JsonSerializable
     private ?string $template = null;
     private Report|Metrics|null $result = null;
     private ?DateTimeImmutable $runAt = null;
+    private ?Closure $callback = null;
 
     public function __construct(Profile $profile, ReflectionFunctionAbstract $target)
     {
@@ -196,8 +197,12 @@ final class UnitOfWork implements JsonSerializable
         }
     }
 
-    private function callback(): Closure
+    private function getCallback(): Closure
     {
+        if (null !== $this->callback) {
+            return $this->callback;
+        }
+
         (file_exists($this->path) && is_readable($this->path)) || throw new UnableToProfile('The path '.$this->path.' does not exist or is not readable.');
 
         require_once $this->path;
@@ -207,7 +212,9 @@ final class UnitOfWork implements JsonSerializable
             $ref = new ReflectionFunction($this->function);
             0 === $ref->getNumberOfRequiredParameters() || throw new UnableToProfile('The '.$this->function.' function cannot be profiled because it has required parameters.');
 
-            return fn () => $ref->invoke();
+            $this->callback = fn () => $ref->invoke();
+
+            return $this->callback;
         }
 
         (null !== $this->class && null !== $this->method) || throw new UnableToProfile('The '.$this->class.'::'.$this->function.' method cannot be profiled because it was not found.');
@@ -222,12 +229,16 @@ final class UnitOfWork implements JsonSerializable
         0 === $refMethod->getNumberOfRequiredParameters() || throw new UnableToProfile('The method '.$this->class.'::'.$this->method.' cannot be profiled because it has required parameters.');
 
         if ($refMethod->isStatic()) {
-            return fn () => $refMethod->invoke(null);
+            $this->callback =  fn () => $refMethod->invoke(null);
+
+            return $this->callback;
         }
 
         $instance = $refClass instanceof ReflectionEnum ? $refClass->getCases()[0]->getValue() : $refClass->newInstance();
 
-        return fn () => $refMethod->invoke($instance);
+        $this->callback = fn () => $refMethod->invoke($instance);
+
+        return $this->callback;
     }
 
     public function path(): string
@@ -267,7 +278,7 @@ final class UnitOfWork implements JsonSerializable
     public function run(): void
     {
         if (!$this->hasRun()) {
-            $callback = $this->callback();
+            $callback = $this->getCallback();
             $this->runAt = new DateTimeImmutable('now', new DateTimeZone('UTC'));
             $this->result = Profile::DETAILED === $this->profile->type
                 ? Profiler::report($callback, $this->profile->iterations, $this->profile->warmup)

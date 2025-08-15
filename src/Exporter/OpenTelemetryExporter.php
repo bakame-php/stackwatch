@@ -96,6 +96,8 @@ final class OpenTelemetryExporter implements Exporter
             'snapshot.memory.peak' => $snapshot->peakMemoryUsage,
             'snapshot.memory.peak.real' => $snapshot->realPeakMemoryUsage,
             'snapshot.timestamp.iso' => $snapshot->timestamp->format(DateTimeInterface::ATOM),
+            'snapshot.call.location.file' => $snapshot->callLocation->path ?? '',
+            'snapshot.call.location.line' => $snapshot->callLocation->line ?? '',
         ];
 
         foreach ($snapshot->cpu as $key => $value) {

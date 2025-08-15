@@ -13,6 +13,7 @@ use stdClass;
 use function hrtime;
 
 #[CoversClass(Snapshot::class)]
+#[CoversClass(CallLocation::class)]
 final class SnapshotTest extends TestCase
 {
     #[Test]
@@ -46,7 +47,8 @@ final class SnapshotTest extends TestCase
             $snapshot1->memoryUsage,
             $snapshot1->realMemoryUsage,
             $snapshot1->peakMemoryUsage,
-            $snapshot1->realPeakMemoryUsage
+            $snapshot1->realPeakMemoryUsage,
+            $snapshot1->callLocation,
         );
 
         self::assertTrue($snapshot1->equals($snapshot2));
@@ -105,7 +107,7 @@ final class SnapshotTest extends TestCase
             memoryUsage: 1,
             realMemoryUsage: 1,
             peakMemoryUsage: 1,
-            realPeakMemoryUsage: 1
+            realPeakMemoryUsage: 1,
         );
     }
 
