@@ -69,10 +69,10 @@ final class SnapshotTest extends TestCase
     #[Test]
     public function it_will_return_a_human_readable_value(): void
     {
-        /** @var string $cpuForHuman */
-        $cpuForHuman = Snapshot::now('test')->forHuman('cpu');
+        $humans = Snapshot::now('test')->forHuman();
 
-        self::assertStringContainsString('ru_utime.tv_sec', $cpuForHuman);
+        self::assertIsArray($humans);
+        self::assertArrayHasKey('cpu_user_time', $humans);
     }
 
     #[Test]

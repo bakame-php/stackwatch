@@ -50,6 +50,40 @@ A `Snapshot` can be:
 - JSON-encoded via `json_encode` (implementing the `JsonSerializable` interface)
 - Returned in a **human-readable** format via `forHuman()`.
 
+#### Full human-readable export
+
+The human-readable export automatically converts **nanoseconds** and **bytes** into more human-friendly
+formats depending on the recorded values.
+
+```php
+$snapshot->forHuman(); 
+// returns an array
+// [
+//   "label" => "database_query"
+//   "timestamp" => "2025-08-15T16:47:39.025356+00:00"
+//   "memory_usage" => "2.181 MB"
+//   "real_memory_usage" => "4.000 MB"
+//   "peak_memory_usage" => "2.678 MB"
+//   "real_peak_memory_usage" => "4.000 MB"
+//   "cpu_user_time" => "36.923 ms"
+//   "cpu_system_time" => "9.039 ms"
+//   "cpu_total_time" => "45.962 ms"
+//   "call_location_path" => "/path/to/the/profiled/code.php"
+//   "call_location_line" => "11"
+// ]
+```
+
+#### Accessing individual properties
+
+You can retrieve a single value by providing a friendly key.
+Keys are case-insensitive and may contain spaces, underscores, or dashes — all forms are accepted.
+
+```php
+$snapshot->forHuman('CPU user time'); // returns "36.923 ms"
+$snapshot->forHuman('cpu-user-time'); // returns "36.923 ms"
+$snapshot->forHuman('cpu_user_time'); // returns "36.923 ms"
+```
+
 ### Comparing Snapshots
 
 Two `Snapsnot` instances can be compared using the `equals()` method.
@@ -133,10 +167,10 @@ Will return
 
 ## Unit of Measurement
 
-To correctly show the memory and duration unit, the package comes with 2 helper Enum:
+To correctly show the memory and duration unit, the package comes with **two helper Enum**:
 
-- `MemoryUnit` to help formatting and converting to and from bytes.
-- `DurationUnit` to help formatting and converting to and from nanoseconds.
+- `MemoryUnit` - for formatting and converting to and from bytes.
+- `DurationUnit` - for formatting and converting to and from nanoseconds.
 
 ```php
 use Bakame\Stackwatch\MemoryUnit;
@@ -146,9 +180,20 @@ use Bakame\Stackwatch\UnitSpacing;
 MemoryUnit::format(1_024 ** 2); // returns '1 MB'
 MemoryUnit::format(1_024 ** 2, UnitSpacing::None); // returns '1MB' //no space between the value and its unit 
 MemoryUnit::parse('1 kb'); // returns 1000 in bytes
+MemoryUnit::convertTo(MemoryUnit::GB, 2_500_000_000); // returns 2.33 (GB)
 
 DurationUnit::Second->convertToNano(1); // returns 1_000_000_000
 DurationUnit::format('23_000'); // returns 23 µs
+DurationUnit::format('23_000', UnitSpacing::Space); // returns 23 µs
+DurationUnit::format('23_000', UnitSpacing::None); // returns 23µs
 DurationUnit::tryParse('28 kb'); // returns null
 DurationUnit::Second->convertTo(DurationUnit::Hour, 9_000) // returns 2.5 (the duration expressed in hour)
 ```
+
+<div class="message-info">
+<code>UnitSpacing::None</code> removes the space between the numeric value and the unit.
+<code>UnitSpacing::Space</code> preserves the space between the numeric value and the unit.
+By default, the method takes <code>UnitSpacing::Space</code>.
+</div>
+
+<div class="message-info">Both Enums support unit conversion and human-readable formatting.</div>

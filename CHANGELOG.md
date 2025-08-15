@@ -11,6 +11,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 ### Fixed
 
 -  `UnitOfWork` internal code improvement.
+- **BC BREAK:** `Snapshot::forHuman` properties key have been updated to remove JSON like string representation.
 
 ### Deprecated
 

@@ -12,7 +12,7 @@ use function array_keys;
 use function array_reduce;
 use function count;
 use function implode;
-use function str_replace;
+use function preg_replace;
 use function strtolower;
 
 /**
@@ -216,7 +216,7 @@ final class Metrics implements JsonSerializable
             return $humans;
         }
 
-        $propertyNormalized = str_replace(' ', '_', strtolower($property));
+        $propertyNormalized = strtolower((string) preg_replace('/[\s_\-]+/', '_', $property));
 
         return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown metrics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
     }

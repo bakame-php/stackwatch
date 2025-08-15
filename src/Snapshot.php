@@ -15,13 +15,10 @@ use function array_keys;
 use function getrusage;
 use function hrtime;
 use function implode;
-use function json_encode;
 use function memory_get_peak_usage;
 use function memory_get_usage;
-use function str_replace;
+use function preg_replace;
 use function strtolower;
-
-use const JSON_PRETTY_PRINT;
 
 /**
  * Represents an immutable profiling snapshot of CPU usage, memory usage, and call location
@@ -74,8 +71,11 @@ use const JSON_PRETTY_PRINT;
  *     real_memory_usage: string,
  *     peak_memory_usage: string,
  *     real_peak_memory_usage: string,
- *     cpu:string,
- *     call_location: string,
+ *     cpu_user_time:string,
+ *     cpu_system_time:string,
+ *     cpu_total_time:string,
+ *     call_location_path: string,
+ *     call_location_line: string,
  * }
  */
 final class Snapshot implements JsonSerializable
@@ -247,6 +247,9 @@ final class Snapshot implements JsonSerializable
      */
     public function forHuman(?string $property = null): array|string
     {
+        $userTimeNs = ($this->cpu['ru_utime.tv_sec'] * 1_000_000_000) + ($this->cpu['ru_utime.tv_usec'] * 1_000);
+        $systemTimeNs = ($this->cpu['ru_stime.tv_sec'] * 1_000_000_000) + ($this->cpu['ru_stime.tv_usec'] * 1_000);
+
         $humans = [
             'label' => $this->label,
             'timestamp' => $this->timestamp->format(self::DATE_FORMAT),
@@ -254,15 +257,18 @@ final class Snapshot implements JsonSerializable
             'real_memory_usage' => MemoryUnit::format($this->realMemoryUsage, 3),
             'peak_memory_usage' => MemoryUnit::format($this->peakMemoryUsage, 3),
             'real_peak_memory_usage' => MemoryUnit::format($this->realPeakMemoryUsage, 3),
-            'cpu' => (string) json_encode($this->cpu, JSON_PRETTY_PRINT),
-            'call_location' => (string) json_encode($this->callLocation, JSON_PRETTY_PRINT),
+            'cpu_user_time' => DurationUnit::format($userTimeNs, 3),
+            'cpu_system_time' => DurationUnit::format($systemTimeNs, 3),
+            'cpu_total_time' => DurationUnit::format($userTimeNs + $systemTimeNs, 3),
+            'call_location_path' => (string) $this->callLocation->path,
+            'call_location_line' => (string) $this->callLocation->line,
         ];
 
         if (null === $property) {
             return $humans;
         }
 
-        $propertyNormalized = str_replace(' ', '_', strtolower($property));
+        $propertyNormalized = strtolower((string) preg_replace('/[\s_\-]+/', '_', $property));
 
         return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown snapshot name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
     }

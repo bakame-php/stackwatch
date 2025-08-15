@@ -134,21 +134,27 @@ final class ConsoleExporter implements Exporter
         (new Table($this->output))
             ->setHeaders([
                 'Timestamp',
+                'Call Location Path',
+                'Call Location Line',
                 'Memory Usage',
                 'Real Memory Usage',
                 'Peak Memory Usage',
                 'Real Peak Memory Usage',
-                'CPU',
-                'Call Location',
+                'CPU System Time',
+                'CPU User Time',
+                'CPU Total Time',
             ])
             ->addRow([
                 $stats['timestamp'],
+                $stats['call_location_path'],
+                $stats['call_location_line'],
                 $stats['memory_usage'],
                 $stats['real_memory_usage'],
                 $stats['peak_memory_usage'],
                 $stats['real_peak_memory_usage'],
-                $stats['cpu'],
-                $stats['call_location'],
+                $stats['cpu_system_time'],
+                $stats['cpu_user_time'],
+                $stats['cpu_total_time'],
             ])
             ->setVertical()
             ->render();
