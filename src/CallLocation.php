@@ -13,10 +13,7 @@ use function str_replace;
 use const DEBUG_BACKTRACE_IGNORE_ARGS;
 
 /**
- * @phpstan-type CallLocationMap array{
- *     path: ?string,
- *     line: ?int,
- * }
+ * @phpstan-type CallLocationMap array{path: ?string,line: ?int}
  */
 final class CallLocation implements JsonSerializable
 {
@@ -99,5 +96,11 @@ final class CallLocation implements JsonSerializable
         return $value instanceof CallLocation
             && $value->path === $this->path
             && $value->line === $this->line;
+    }
+
+    public function isEmpty(): bool
+    {
+        return null === $this->path
+            && null === $this->line;
     }
 }

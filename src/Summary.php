@@ -12,12 +12,14 @@ use function array_keys;
 use function implode;
 
 /**
+ * @phpstan-import-type CallRangeMap from CallRange
  * @phpstan-import-type MetricsMap from Metrics
  * @phpstan-import-type SnapshotMap from Snapshot
  * @phpstan-type SummaryMap array{
  *     label: non-empty-string,
  *     snapshots: array{0: SnapshotMap, 1: SnapshotMap},
- *     metrics: MetricsMap
+ *     range: CallRangeMap,
+ *     metrics: MetricsMap,
  * }
  */
 final class Summary implements JsonSerializable
@@ -25,6 +27,7 @@ final class Summary implements JsonSerializable
     public readonly Metrics $metrics;
     public readonly Snapshot $start;
     public readonly Snapshot $end;
+    public readonly CallRange $range;
     /** @var non-empty-string */
     public readonly string $label;
 
@@ -39,6 +42,7 @@ final class Summary implements JsonSerializable
         $this->start = $start;
         $this->end = $end;
         $this->label = LabelGenerator::sanitize($label);
+        $this->range = CallRange::fromSnapshots($start, $end);
     }
 
     /**
@@ -52,6 +56,7 @@ final class Summary implements JsonSerializable
                 $this->start->toArray(),
                 $this->end->toArray(),
             ],
+            'range' => $this->range->toArray(),
             'metrics' => $this->metrics->toArray(),
         ];
     }
@@ -63,6 +68,7 @@ final class Summary implements JsonSerializable
     {
         $missingKeys = array_diff_key(['label' => 1, 'snapshots' => 1], $data);
         [] === $missingKeys || throw new InvalidArgument('The payload is missing the following keys: '.implode(', ', array_keys($missingKeys)));
+        (is_array($data['snapshots']) && 2 === count($data['snapshots'])) || throw new InvalidArgument('The "snapshots" array must contain exactly 2 elements.');
 
         try {
             return new self(
@@ -79,6 +85,7 @@ final class Summary implements JsonSerializable
      * @return array{
      *     label: non-empty-string,
      *     snapshots: array{0: Snapshot, 1: Snapshot},
+     *     range: CallRange,
      *     metrics: Metrics
      * }
      */
@@ -90,6 +97,7 @@ final class Summary implements JsonSerializable
                 $this->start,
                 $this->end,
             ],
+            'range' => $this->range,
             'metrics' => $this->metrics,
         ];
     }

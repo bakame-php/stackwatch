@@ -143,7 +143,7 @@ final class Statistics implements JsonSerializable
     /**
      * @param StatsMap $data
      *
-     * @throws Throwable If the instance can not be generated
+     * @throws Throwable If the instance cannot be generated
      *
      */
     public static function fromArray(array $data): self

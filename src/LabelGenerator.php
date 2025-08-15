@@ -17,11 +17,11 @@ use function trim;
 final class LabelGenerator
 {
     private const REGEXP_LABEL = '/^
-        (?!.*[._]{2})             # disallow consecutive dots or underscore anywhere
-        (?!.*[._]$)               # disallow ending with a dot or underscore
-        (?!^[._])                 # disallow starting with a dot or underscore
-        [a-z0-9]                  # first character must be a letter or a digit
-        (?:[a-z0-9._]*[a-z0-9])?  # middle optional, ending with letter or digit
+        (?!.*[._-]{2})             # disallow consecutive dots or underscore anywhere
+        (?!.*[._-]$)               # disallow ending with a dot or underscore
+        (?!^[._-])                 # disallow starting with a dot or underscore
+        [a-z0-9]                   # first character must be a letter or a digit
+        (?:[a-z0-9._-]*[a-z0-9])?  # middle optional, ending with letter or digit
     $/x';
 
     /**
