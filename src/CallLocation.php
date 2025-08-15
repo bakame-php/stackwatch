@@ -91,4 +91,11 @@ final class CallLocation implements JsonSerializable
     {
         return $this->toArray();
     }
+
+    public function equals(mixed $value): bool
+    {
+        return $value instanceof CallLocation
+            && $value->path === $this->path
+            && $value->line === $this->line;
+    }
 }

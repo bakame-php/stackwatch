@@ -5,6 +5,67 @@ title: Profiling Helpers
 
 # Helpers
 
+## Snapshot
+
+The `Snapshot` class represents an **immutable profiling snapshot** of the PHP process at a specific moment in time.
+It captures **CPU usage, memory usage**, and the call location from which it was created.
+
+It is the **base construct** used to measure resource consumption across different points in code execution.
+
+`Snapshots` are **read-only** after creation.
+
+### Create a Snapshot
+
+You can create a snapshot using the `now()` static method:
+
+```php
+use Bakame\Stackwatch\Snapshot;
+
+$snapshot = Snapshot::now('database_query'); // with custom label
+$snapshot = Snapshot::now(); // with auto generated label
+
+$snapshot->label; // 'database_query' or a generated one
+
+// When the snapshot was taken
+$snapshot->timestamp;
+
+// Where the snapshot was taken
+$snapshot->callLocation->path;
+$snapshot->callLocation->line;
+
+//Metrics collected at the creation time
+$snapshot->memoryUsage;
+$snapshot->realMemoryUsage;
+$snapshot->peakMemoryUsage;
+$snapshot->realPeakMemoryUsage;
+$snapshot->cpu;
+$snapshot->hrtime;
+```
+
+### Export a Snapshot
+
+A `Snapshot` can be:
+
+- Converted to an `array` via `toArray` method, 
+- JSON-encoded via `json_encode` (implementing the `JsonSerializable` interface)
+- Returned in a **human-readable** format via `forHuman()`.
+
+### Comparing Snapshots
+
+Two `Snapsnot` instances can be compared using the `equals()` method.
+
+```php
+use Bakame\Stackwatch\Snapshot;
+
+$snapshot = Snapshot::now('test');
+usleep();
+Snapshot::now('test')->equals($snapshot); // return false
+```
+
+The built-in exporters (`JsonExporter`, `ConsoleExporter`, and `OpenTelemetryExporter`) can export a
+snapshot either internally or through a dedicated `exportSnapshot()` method. The exported format
+depends on the selected exporter.
+
 ## Environment
 
 The package includes an `Environment` class that collects information about the current system for profiling purposes.
@@ -80,8 +141,10 @@ To correctly show the memory and duration unit, the package comes with 2 helper 
 ```php
 use Bakame\Stackwatch\MemoryUnit;
 use Bakame\Stackwatch\DurationUnit;
+use Bakame\Stackwatch\UnitSpacing;
 
 MemoryUnit::format(1_024 ** 2); // returns '1 MB'
+MemoryUnit::format(1_024 ** 2, UnitSpacing::None); // returns '1MB' //no space between the value and its unit 
 MemoryUnit::parse('1 kb'); // returns 1000 in bytes
 
 DurationUnit::Second->convertToNano(1); // returns 1_000_000_000

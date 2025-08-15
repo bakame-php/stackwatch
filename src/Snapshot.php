@@ -24,6 +24,30 @@ use function strtolower;
 use const JSON_PRETTY_PRINT;
 
 /**
+ * Represents an immutable profiling snapshot of CPU usage, memory usage, and call location
+ * at a specific point in time.
+ *
+ * A snapshot contains:
+ *  - A label (human-readable identifier for the measurement)
+ *  - A timestamp (high-resolution and wall-clock time)
+ *  - CPU usage statistics (user/system time in seconds and microseconds)
+ *  - Memory usage statistics (current, real, and peak usage values)
+ *  - The originating call location (file path and line number)
+ *
+ * Typical usage:
+ *  - `Snapshot::now()` — capture the current execution state with optional custom label.
+ *  - `Snapshot::fromArray()` — reconstruct a snapshot from serialized array data.
+ *  - `toArray()` / `jsonSerialize()` — export the snapshot in a structured format.
+ *  - `forHuman()` — obtain a human-readable representation of the snapshot data.
+ *
+ * Validation:
+ *  - The label must be a non-empty string matching `LabelGenerator::sanitize()`.
+ *  - CPU data must include all keys defined in {@see self::CPU_STAT}.
+ *  - The timestamp must follow the {@see self::DATE_FORMAT} format.
+ *
+ * Immutability:
+ *  - All properties are readonly and set only via the constructor.
+ *
  * @phpstan-import-type CallLocationMap from CallLocation
  *
  * @phpstan-type CpuMap array{
@@ -212,7 +236,8 @@ final class Snapshot implements JsonSerializable
             && $this->peakMemoryUsage === $other->peakMemoryUsage
             && $this->realMemoryUsage === $other->realMemoryUsage
             && $this->realPeakMemoryUsage === $other->realPeakMemoryUsage
-            && $this->timestamp->format('U.u') === $other->timestamp->format('U.u');
+            && $this->timestamp->format('U.u') === $other->timestamp->format('U.u')
+            && $this->callLocation->equals($other->callLocation);
     }
 
     /**
