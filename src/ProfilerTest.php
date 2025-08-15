@@ -20,7 +20,7 @@ use function usleep;
 #[CoversClass(Result::class)]
 #[CoversClass(LabelGenerator::class)]
 /**
- * @phpstan-import-type SummaryStat from Summary
+ * @phpstan-import-type SummaryMap from Summary
  */
 final class ProfilerTest extends TestCase
 {
@@ -109,14 +109,14 @@ final class ProfilerTest extends TestCase
         $profiler();
         /** @var non-empty-string $json */
         $json = json_encode($profiler);
-        /** @var array<SummaryStat> $data */
+        /** @var array<SummaryMap> $data */
         $data = json_decode($json, true); /** @phpstan-ignore-line */
-        /** @var SummaryStat $summaryStats */
-        $summaryStats = $data['summaries'][0];  /* @phpstan-ignore-line */
+        /** @var SummaryMap $SummaryMaps */
+        $SummaryMaps = $data['summaries'][0];  /* @phpstan-ignore-line */
 
-        self::assertIsArray($summaryStats);
-        self::assertArrayHasKey('label', $summaryStats);
-        self::assertArrayHasKey('metrics', $summaryStats);
+        self::assertIsArray($SummaryMaps);
+        self::assertArrayHasKey('label', $SummaryMaps);
+        self::assertArrayHasKey('metrics', $SummaryMaps);
     }
 
     #[Test]

@@ -11,9 +11,9 @@ use PHPUnit\Framework\TestCase;
 use function usleep;
 
 /**
- * @phpstan-import-type SnapshotStat from Snapshot
- * @phpstan-import-type MetricsStat from Metrics
- * @phpstan-import-type SummaryStat from Summary
+ * @phpstan-import-type SnapshotMap from Snapshot
+ * @phpstan-import-type MetricsMap from Metrics
+ * @phpstan-import-type SummaryMap from Summary
  */
 #[CoversClass(Summary::class)]
 #[CoversClass(Metrics::class)]
@@ -78,7 +78,7 @@ final class SummaryTest extends TestCase
         $json = json_encode($summary);
         self::assertJson($json);
 
-        /** @var SummaryStat $decoded */
+        /** @var SummaryMap $decoded */
         $decoded = json_decode($json, true);
         self::assertArrayHasKey('label', $decoded);
     }

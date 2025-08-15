@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Exporter;
 
+use Bakame\Stackwatch\CallLocation;
 use Bakame\Stackwatch\DurationUnit;
 use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\MemoryUnit;
@@ -28,6 +29,7 @@ use function usleep;
 #[CoversClass(Profiler::class)]
 #[CoversClass(Unit::class)]
 #[CoversClass(Statistics::class)]
+#[CoversClass(CallLocation::class)]
 final class ConsoleExporterTest extends TestCase
 {
     #[Test]

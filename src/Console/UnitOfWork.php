@@ -32,7 +32,7 @@ use function strtr;
 use const JSON_THROW_ON_ERROR;
 
 /**
- * @phpstan-import-type MetricsStat from Metrics
+ * @phpstan-import-type MetricsMap from Metrics
  * @phpstan-import-type ReportMap from Report
  * @phpstan-type UnitOfWorkMap array{
  *      type: 'detailed'|'summary',
@@ -44,7 +44,7 @@ use const JSON_THROW_ON_ERROR;
  *      method?: non-empty-string|null,
  *      function?: non-empty-string|null,
  *      run_at: ?string,
- *      attributes: MetricsStat|ReportMap|array{}
+ *      attributes: MetricsMap|ReportMap|array{}
  *  }
  */
 final class UnitOfWork implements JsonSerializable

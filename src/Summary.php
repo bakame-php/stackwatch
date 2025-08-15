@@ -12,12 +12,12 @@ use function array_keys;
 use function implode;
 
 /**
- * @phpstan-import-type MetricsStat from Metrics
- * @phpstan-import-type SnapshotStat from Snapshot
- * @phpstan-type SummaryStat array{
+ * @phpstan-import-type MetricsMap from Metrics
+ * @phpstan-import-type SnapshotMap from Snapshot
+ * @phpstan-type SummaryMap array{
  *     label: non-empty-string,
- *     snapshots: array{0: SnapshotStat, 1: SnapshotStat},
- *     metrics: MetricsStat
+ *     snapshots: array{0: SnapshotMap, 1: SnapshotMap},
+ *     metrics: MetricsMap
  * }
  */
 final class Summary implements JsonSerializable
@@ -42,7 +42,7 @@ final class Summary implements JsonSerializable
     }
 
     /**
-     * @return SummaryStat
+     * @return SummaryMap
      */
     public function toArray(): array
     {
@@ -57,7 +57,7 @@ final class Summary implements JsonSerializable
     }
 
     /**
-     * @param SummaryStat $data
+     * @param SummaryMap $data
      */
     public static function fromArray(array $data): self
     {

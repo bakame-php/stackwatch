@@ -16,7 +16,7 @@ use function str_replace;
 use function strtolower;
 
 /**
- * @phpstan-type MetricsStat array{
+ * @phpstan-type MetricsMap array{
  *     cpu_time: float,
  *     execution_time: float,
  *     memory_usage: float,
@@ -80,7 +80,7 @@ final class Metrics implements JsonSerializable
     }
 
     /**
-     * @param MetricsStat $data
+     * @param MetricsMap $data
      *
      * @throws InvalidArgument
      */
@@ -174,7 +174,7 @@ final class Metrics implements JsonSerializable
     }
 
     /**
-     * @return MetricsStat
+     * @return MetricsMap
      */
     public function jsonSerialize(): array
     {
@@ -182,7 +182,7 @@ final class Metrics implements JsonSerializable
     }
 
     /**
-     * @return MetricsStat
+     * @return MetricsMap
      */
     public function toArray(): array
     {
