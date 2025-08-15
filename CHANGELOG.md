@@ -6,11 +6,11 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Added
 
-- None
+- `CallLocation` class to allow recording where the package `Snapshot` was called from [#8](https://github.com/bakame-php/stackwatch/pull/8)
 
 ### Fixed
 
-- None
+-  `UnitOfWork` internal code improvement.
 
 ### Deprecated
 
