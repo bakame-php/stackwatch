@@ -58,15 +58,15 @@ final class CallLocationTest extends TestCase
         $start = $timeline->get('init');
         $step = $timeline->get('step');
 
-        self::assertNotNull($start->callLocation->path);
-        self::assertStringContainsString('CallLocationTest.php', $start->callLocation->path);
+        self::assertNotNull($start->originPath);
+        self::assertStringContainsString('CallLocationTest.php', $start->originPath);
 
-        self::assertNotNull($step->callLocation->path);
-        self::assertStringContainsString('CallLocationTest.php', $step->callLocation->path);
+        self::assertNotNull($step->originPath);
+        self::assertStringContainsString('CallLocationTest.php', $step->originPath);
 
-        self::assertIsInt($start->callLocation->line);
-        self::assertIsInt($step->callLocation->line);
+        self::assertIsInt($start->originLine);
+        self::assertIsInt($step->originLine);
 
-        self::assertLessThan($step->callLocation->line, $start->callLocation->line);
+        self::assertLessThan($step->originLine, $start->originLine);
     }
 }

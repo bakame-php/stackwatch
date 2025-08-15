@@ -146,8 +146,8 @@ final class ConsoleExporter implements Exporter
             ])
             ->addRow([
                 $stats['timestamp'],
-                $stats['call_location_path'],
-                $stats['call_location_line'],
+                $stats['origin_path'],
+                $stats['origin_line'],
                 $stats['memory_usage'],
                 $stats['real_memory_usage'],
                 $stats['peak_memory_usage'],

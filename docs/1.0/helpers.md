@@ -30,15 +30,16 @@ $snapshot->label; // 'database_query' or a generated one
 $snapshot->timestamp;
 
 // Where the snapshot was taken
-$snapshot->callLocation->path;
-$snapshot->callLocation->line;
+$snapshot->originPath;
+$snapshot->originLine;
 
 //Metrics collected at the creation time
 $snapshot->memoryUsage;
 $snapshot->realMemoryUsage;
 $snapshot->peakMemoryUsage;
 $snapshot->realPeakMemoryUsage;
-$snapshot->cpu;
+$snapshot->cpuUserTime;
+$snapshot->cpuSystemTime;
 $snapshot->hrtime;
 ```
 

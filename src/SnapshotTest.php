@@ -4,24 +4,15 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch;
 
-use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-use function hrtime;
-
 #[CoversClass(Snapshot::class)]
 #[CoversClass(CallLocation::class)]
 final class SnapshotTest extends TestCase
 {
-    #[Test]
-    public function it_can_create_a_valid_snapshot_with_the_now_named_constructor(): void
-    {
-        self::assertArrayHasKey('ru_utime.tv_sec', Snapshot::now()->cpu);
-    }
-
     #[Test]
     public function it_can_generate_a_valid_json_representation(): void
     {
@@ -30,7 +21,8 @@ final class SnapshotTest extends TestCase
         self::assertArrayHasKey('label', $data);
         self::assertArrayHasKey('timestamp', $data);
         self::assertArrayHasKey('hrtime', $data);
-        self::assertArrayHasKey('cpu', $data);
+        self::assertArrayHasKey('cpu_system_time', $data);
+        self::assertArrayHasKey('cpu_user_time', $data);
         self::assertArrayHasKey('memory_usage', $data);
     }
 
@@ -43,12 +35,14 @@ final class SnapshotTest extends TestCase
             $snapshot1->label,
             $snapshot1->timestamp,
             $snapshot1->hrtime,
-            $snapshot1->cpu,
+            $snapshot1->cpuUserTime,
+            $snapshot1->cpuSystemTime,
             $snapshot1->memoryUsage,
             $snapshot1->realMemoryUsage,
             $snapshot1->peakMemoryUsage,
             $snapshot1->realPeakMemoryUsage,
-            $snapshot1->callLocation,
+            $snapshot1->originPath,
+            $snapshot1->originLine,
         );
 
         self::assertTrue($snapshot1->equals($snapshot2));
@@ -91,23 +85,6 @@ final class SnapshotTest extends TestCase
         self::assertSame(
             $snapshot->forHuman('MeMorY UsaGE'),
             $snapshot->forHuman('memory_usage')
-        );
-    }
-
-    #[Test]
-    public function it_will_throw_if_the_cpu_property_is_missing_keys(): void
-    {
-        $this->expectException(InvalidArgument::class);
-
-        new Snapshot(
-            label: 'test',
-            timestamp: new DateTimeImmutable(),
-            hrtime: hrtime(true),
-            cpu: [],  /* @phpstan-ignore-line */
-            memoryUsage: 1,
-            realMemoryUsage: 1,
-            peakMemoryUsage: 1,
-            realPeakMemoryUsage: 1,
         );
     }
 

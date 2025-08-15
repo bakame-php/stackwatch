@@ -164,13 +164,7 @@ final class Metrics implements JsonSerializable
 
     private static function calculateCpuTime(Snapshot $start, Snapshot $end): float
     {
-        $cpuStart = $start->cpu;
-        $cpuEnd = $end->cpu;
-
-        return ($cpuEnd['ru_utime.tv_sec'] * 1000 ** 3) - ($cpuStart['ru_utime.tv_sec'] * 1000 ** 3)
-            + ($cpuEnd['ru_utime.tv_usec'] * 1000) - ($cpuStart['ru_utime.tv_usec'] * 1000)
-            + ($cpuEnd['ru_stime.tv_sec'] * 1000 ** 3) - ($cpuStart['ru_stime.tv_sec'] * 1000 ** 3)
-            + ($cpuEnd['ru_stime.tv_usec'] * 1000) - ($cpuStart['ru_stime.tv_usec'] * 1000);
+        return $end->cpuUserTime + $end->cpuSystemTime - $start->cpuUserTime - $start->cpuSystemTime;
     }
 
     /**

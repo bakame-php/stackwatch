@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Exporter;
 
-use Bakame\Stackwatch\CallLocation;
 use Bakame\Stackwatch\DurationUnit;
 use Bakame\Stackwatch\MemoryUnit;
 use Bakame\Stackwatch\Profiler;
@@ -45,25 +44,29 @@ class OpenTelemetryExporterTest extends TestCase
             'start',
             new DateTimeImmutable(),
             hrtime(true),
-            [
-            'ru_utime.tv_sec' => 1,
-            'ru_stime.tv_sec' => 1,
-            'ru_utime.tv_usec' => 1,
-            'ru_stime.tv_usec' => 1,
-        ],
+            1001,
+            1001,
             1000,
             2000,
             3000,
             4000,
-            new CallLocation('/test/this/code.php', 42)
+            '/test/this/code.php',
+            42
         );
         usleep(100);
-        $end = new Snapshot('end', new DateTimeImmutable(), hrtime(true) + 1, [
-            'ru_utime.tv_sec' => 1,
-            'ru_stime.tv_sec' => 1,
-            'ru_utime.tv_usec' => 1,
-            'ru_stime.tv_usec' => 1,
-        ], 1100, 2100, 3100, 4100, new CallLocation('/test/this/code.php', 56));
+        $end = new Snapshot(
+            'end',
+            new DateTimeImmutable(),
+            hrtime(true) + 1,
+            1001,
+            1001,
+            1100,
+            2100,
+            3100,
+            4100,
+            '/test/this/code.php',
+            56
+        );
         return new Summary($label, $start, $end);
     }
 
@@ -165,26 +168,47 @@ class OpenTelemetryExporterTest extends TestCase
     public function it_can_export_a_timeline(): void
     {
         $timeline = new Timeline('test-timeline');
-        $start = new Snapshot('start', new DateTimeImmutable(), hrtime(true), [
-            'ru_utime.tv_sec' => 1,
-            'ru_stime.tv_sec' => 1,
-            'ru_utime.tv_usec' => 1,
-            'ru_stime.tv_usec' => 1,
-        ], 1000, 2000, 3000, 4000, new CallLocation('/test/this/code.php', 42));
+        $start = new Snapshot(
+            'start',
+            new DateTimeImmutable(),
+            hrtime(true),
+            1001,
+            1001,
+            1000,
+            2000,
+            3000,
+            4000,
+            '/test/this/code.php',
+            42
+        );
         usleep(100);
-        $middle = new Snapshot('middle', new DateTimeImmutable(), hrtime(true), [
-            'ru_utime.tv_sec' => 1,
-            'ru_stime.tv_sec' => 1,
-            'ru_utime.tv_usec' => 1,
-            'ru_stime.tv_usec' => 1,
-        ], 1000, 2000, 3000, 4000, new CallLocation('/test/this/code.php', 56));
+        $middle = new Snapshot(
+            'middle',
+            new DateTimeImmutable(),
+            hrtime(true),
+            1001,
+            1001,
+            1000,
+            2000,
+            3000,
+            4000,
+            '/test/this/code.php',
+            56
+        );
         usleep(100);
-        $end = new Snapshot('end', new DateTimeImmutable(), hrtime(true) + 1, [
-            'ru_utime.tv_sec' => 1,
-            'ru_stime.tv_sec' => 1,
-            'ru_utime.tv_usec' => 1,
-            'ru_stime.tv_usec' => 1,
-        ], 1100, 2100, 3100, 4100, new CallLocation('/test/this/code.php', 64));
+        $end = new Snapshot(
+            'end',
+            new DateTimeImmutable(),
+            hrtime(true) + 1,
+            1001,
+            1001,
+            1100,
+            2100,
+            3100,
+            4100,
+            '/test/this/code.php',
+            64
+        );
 
         $reflection = new ReflectionClass($timeline);
         $reflection->getProperty('snapshots')->setValue($timeline, ['start' => $start, 'middle' => $middle, 'end' => $end]);

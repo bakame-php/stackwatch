@@ -20,6 +20,8 @@ use const DEBUG_BACKTRACE_IGNORE_ARGS;
  */
 final class CallLocation implements JsonSerializable
 {
+    private const DEBUG_BACKTRACE_LIMIT = 10;
+
     public function __construct(
         public readonly ?string $path = null,
         public readonly ?int $line = null,
@@ -39,7 +41,7 @@ final class CallLocation implements JsonSerializable
     {
         $namespace = trim($namespace, '\\');
         $lastFrame = null;
-        foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS) as $frame) {
+        foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, self::DEBUG_BACKTRACE_LIMIT) as $frame) {
             $class = $frame['class'] ?? '';
             if (!isset($frame['file'], $frame['line'])) {
                 continue;

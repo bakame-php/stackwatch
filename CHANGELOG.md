@@ -12,6 +12,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 -  `UnitOfWork` internal code improvement.
 - **BC BREAK:** `Snapshot::forHuman` properties key have been updated to remove JSON like string representation.
+- **BC BREAK:** `Snapshot::cpu` property is replaced by 2 properties `Snapshot::cpuUserTime` and `Snapshot::cpuSystemTime`.
 
 ### Deprecated
 

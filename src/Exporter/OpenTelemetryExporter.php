@@ -95,14 +95,12 @@ final class OpenTelemetryExporter implements Exporter
             'snapshot.memory.usage.real' => $snapshot->realMemoryUsage,
             'snapshot.memory.peak' => $snapshot->peakMemoryUsage,
             'snapshot.memory.peak.real' => $snapshot->realPeakMemoryUsage,
+            'snapshot.cpu.user.time' => $snapshot->cpuUserTime,
+            'snapshot.cpu.system.time.real' => $snapshot->cpuSystemTime,
             'snapshot.timestamp.iso' => $snapshot->timestamp->format(DateTimeInterface::ATOM),
-            'snapshot.call.location.file' => $snapshot->callLocation->path ?? '',
-            'snapshot.call.location.line' => $snapshot->callLocation->line ?? '',
+            'snapshot.call.location.file' => $snapshot->originPath ?? '',
+            'snapshot.call.location.line' => $snapshot->originLine ?? '',
         ];
-
-        foreach ($snapshot->cpu as $key => $value) {
-            $attributes["snapshot.cpu.$key"] = $value;
-        }
 
         $activeSpan->addEvent('snapshot', $attributes, $timestampNs);
     }
