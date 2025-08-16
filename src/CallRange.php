@@ -84,7 +84,14 @@ final class CallRange implements JsonSerializable
 
     public function isComplete(): bool
     {
-        return $this->hasStart() && $this->hasEnd();
+        return $this->start->isComplete()
+            && $this->end->isComplete();
+    }
+
+    public function isEmpty(): bool
+    {
+        return $this->start->isEmpty()
+            && $this->end->isEmpty();
     }
 
     public function lineSpan(): ?int

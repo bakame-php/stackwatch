@@ -17,7 +17,7 @@ use const DEBUG_BACKTRACE_IGNORE_ARGS;
  */
 final class CallLocation implements JsonSerializable
 {
-    private const DEBUG_BACKTRACE_LIMIT = 10;
+    private const DEBUG_BACKTRACE_LIMIT = 5;
 
     public function __construct(
         public readonly ?string $path = null,
@@ -102,5 +102,17 @@ final class CallLocation implements JsonSerializable
     {
         return null === $this->path
             && null === $this->line;
+    }
+
+    public function isPartial(): bool
+    {
+        return null !== $this->path
+            && null !== $this->line;
+    }
+
+    public function isComplete(): bool
+    {
+        return null !== $this->path
+            && null !== $this->line;
     }
 }
