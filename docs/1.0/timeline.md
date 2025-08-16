@@ -38,19 +38,19 @@ $timeline->capture('render');
 To get a high-level profile between the **first and lastest** snapshot use the `summarize` method.
 
 ```php
-$summary = $timeline->summarize();     // Returns a Summary instance
-echo $summary->metrics->executionTime; // Access execution time, CPU time, memory, etc.
+$span = $timeline->summarize();     // Returns a Span instance
+echo $span->metrics->executionTime; // Access execution time, CPU time, memory, etc.
 ```
-You can provide a custom label for the summary:
+You can provide a custom label for the span:
 
 ```php
-$summary = $timeline->summarize('full_request'); // Returns a Summary instance
+$span = $timeline->summarize('full_request'); // Returns a Span instance
 ```
 
 If needed, you can measure the profiling data between two specific labels:
 
 ```php
-$delta = $timeline->delta('init', 'render'); // Returns Summary
+$delta = $timeline->delta('init', 'render'); // Returns Span
 $executionTime = $timeline->metrics('init', 'render'); // Returns a Metrics object
 ```
 
@@ -66,22 +66,22 @@ $timeline->metrics('init');
 You can iterate over each successive pair of snapshots to return the consecutive deltas:
 
 ```php
-foreach ($timeline->deltas() as $summary) {
-    echo $summary->label . ': ' . $summary->metrics->forHuman('execution_time') . PHP_EOL;
+foreach ($timeline->deltas() as $span) {
+    echo $span->label . ': ' . $span->metrics->forHuman('execution_time') . PHP_EOL;
 }
 ```
 
-You can also take a snapshot and directly return the calculated summary between the `Timeline`
+You can also take a snapshot and directly return the calculated `Span` between the `Timeline`
 first snapshot and the one you just take using the `take` method
 
 ```php
-$summary = $timeline->take('done'); // takes a snapshot labeled 'done' and returns a Summary instance
+$span = $timeline->take('done'); // takes a snapshot labeled 'done' and returns a Span instance
 ```
 
-Just like with the `summary` method you can provide an optional custom label for the summary report:
+Just like with the `summarize` method you can provide an optional custom label for the `Span` instance:
 
 ```php
-$summary = $timeline->take(label: 'done', summaryLabel: 'total');
+$span = $timeline->take(label: 'done', spanLabel: 'total');
 ```
 
 ## Finalizing the Timeline
@@ -115,7 +115,7 @@ $timeline->first();              // returns the first snapshot taken
 $timeline->latest();             // returns the most recent snapshot
 $timeline->hasNoSnapshot();      // returns true when no snapshot has been taken
 $timeline->hasSnapshots();       // returns true when snapshots are available
-$timeline->hasEnoughSnapshots(); // returns true if the timeline can safely generate a report/summary
+$timeline->hasEnoughSnapshots(); // returns true if the timeline can safely generate a report/span
 $timeline->toArray();            // returns all snapshots as structured arrays
 $timeline->isComplete();         // tells whether the timeline is complete
 $timeline->reset();              // Reset the timeline to its initial state open and with no snapshot
@@ -140,8 +140,8 @@ $result = $timeline->take('response');
 $timeline->complete();
 
 // Printing full report
-foreach ($timeline->deltas() as $summary) {
-    echo "{$summary->label}: {$summary->metrics->forHuman('execution_time')}";
+foreach ($timeline->deltas() as $span) {
+    echo "{$span->label}: {$span->metrics->forHuman('execution_time')}";
 }
 ```
 

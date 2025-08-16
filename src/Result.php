@@ -8,7 +8,7 @@ final class Result
 {
     public function __construct(
         public readonly mixed $returnValue,
-        public readonly Summary $summary
+        public readonly Span $span
     ) {
     }
 }

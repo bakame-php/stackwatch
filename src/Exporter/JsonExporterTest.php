@@ -9,8 +9,8 @@ use Bakame\Stackwatch\Metrics;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Result;
 use Bakame\Stackwatch\Snapshot;
+use Bakame\Stackwatch\Span;
 use Bakame\Stackwatch\Statistics;
-use Bakame\Stackwatch\Summary;
 use Bakame\Stackwatch\Timeline;
 use Bakame\Stackwatch\Unit;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -103,7 +103,7 @@ final class JsonExporterTest extends TestCase
     #[Test]
     public function it_handles_result_summary_export(): void
     {
-        $data = new Summary('test', Snapshot::now(), Snapshot::now());
+        $data = new Span('test', Snapshot::now(), Snapshot::now());
         $result = new Result(42, $data);
         $exporter = new JsonExporter($this->tmpFile, 0);
         $exporter->exportSummary($result);

@@ -21,7 +21,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Removed
 
-- None
+- **BC BREAK:** `Summary` renamed `Span`.
 
 ## [0.13.0 - Marrakesh](https://github.com/bakame-php/stackwatch/compare/0.12.0...0.13.0) - 2025-08-14
 

@@ -20,7 +20,7 @@ use function usleep;
 #[CoversClass(Result::class)]
 #[CoversClass(LabelGenerator::class)]
 /**
- * @phpstan-import-type SummaryMap from Summary
+ * @phpstan-import-type SummaryMap from Span
  */
 final class ProfilerTest extends TestCase
 {
@@ -60,8 +60,8 @@ final class ProfilerTest extends TestCase
         self::assertSame('result', $result);
         self::assertCount(1, $profiler);
 
-        $summary = $profiler->latest();
-        self::assertInstanceOf(Summary::class, $summary);
+        $span = $profiler->latest();
+        self::assertInstanceOf(Span::class, $span);
         self::assertSame($profiler->latest(), $profiler->first());
     }
 
@@ -73,8 +73,8 @@ final class ProfilerTest extends TestCase
         $profiler(3);
 
         self::assertCount(2, $profiler);
-        foreach ($profiler as $summary) {
-            self::assertIsFloat($summary->metrics->executionTime);
+        foreach ($profiler as $span) {
+            self::assertIsFloat($span->metrics->executionTime);
         }
     }
 
@@ -84,9 +84,9 @@ final class ProfilerTest extends TestCase
         $profiler = new Profiler(fn () => 42);
         $profiler->profile('custom_label');
 
-        $summary = $profiler->latest();
-        self::assertInstanceOf(Summary::class, $summary);
-        self::assertSame('custom_label', $summary->label);
+        $span = $profiler->latest();
+        self::assertInstanceOf(Span::class, $span);
+        self::assertSame('custom_label', $span->label);
     }
 
     #[Test]
@@ -111,12 +111,12 @@ final class ProfilerTest extends TestCase
         $json = json_encode($profiler);
         /** @var array<SummaryMap> $data */
         $data = json_decode($json, true); /** @phpstan-ignore-line */
-        /** @var SummaryMap $SummaryMaps */
-        $SummaryMaps = $data['summaries'][0];  /* @phpstan-ignore-line */
+        /** @var SummaryMap $spanMaps */
+        $spanMaps = $data['summaries'][0];  /* @phpstan-ignore-line */
 
-        self::assertIsArray($SummaryMaps);
-        self::assertArrayHasKey('label', $SummaryMaps);
-        self::assertArrayHasKey('metrics', $SummaryMaps);
+        self::assertIsArray($spanMaps);
+        self::assertArrayHasKey('label', $spanMaps);
+        self::assertArrayHasKey('metrics', $spanMaps);
     }
 
     #[Test]
@@ -130,7 +130,7 @@ final class ProfilerTest extends TestCase
 
         self::assertCount(4, $profiler);
         self::assertCount(2, $profiler->getAll('custom_label'));
-        self::assertInstanceOf(Summary::class, $profiler->get('custom_label'));
+        self::assertInstanceOf(Span::class, $profiler->get('custom_label'));
         self::assertNull($profiler->get('foo_bar'));
         self::assertCount(0, $profiler->getAll('foo_bar'));
         self::assertTrue($profiler->has('custom_label'));

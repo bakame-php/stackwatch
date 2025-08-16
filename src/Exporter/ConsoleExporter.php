@@ -12,8 +12,8 @@ use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Report;
 use Bakame\Stackwatch\Result;
 use Bakame\Stackwatch\Snapshot;
+use Bakame\Stackwatch\Span;
 use Bakame\Stackwatch\Statistics;
-use Bakame\Stackwatch\Summary;
 use Bakame\Stackwatch\Timeline;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
@@ -32,13 +32,13 @@ final class ConsoleExporter implements Exporter
     {
     }
 
-    public function exportSummary(Result|Summary $summary, Profiler|Timeline|null $parent = null): void
+    public function exportSummary(Result|Span $span, Profiler|Timeline|null $parent = null): void
     {
-        if ($summary instanceof Result) {
-            $summary = $summary->summary;
+        if ($span instanceof Result) {
+            $span = $span->span;
         }
 
-        $this->createSummaryTable([$summary], $parent)->render();
+        $this->createSummaryTable([$span], $parent)->render();
     }
 
     public function exportProfiler(Profiler $profiler, ?string $label = null): void
@@ -65,14 +65,14 @@ final class ConsoleExporter implements Exporter
             return;
         }
 
-        /** @var Summary $summary */
-        $summary = $timeline->summarize();
+        /** @var Span $span */
+        $span = $timeline->summarize();
 
         $this
             ->createSummaryTable($timeline->deltas())
             ->setHeaderTitle(' '.$timeline->identifier().' ')
             ->addRow(new TableSeparator())
-            ->addRow($this->metricsToRow('<fg=green>Summary</>', $summary->metrics))
+            ->addRow($this->metricsToRow('<fg=green>Summary</>', $span->metrics))
             ->render();
     }
 
@@ -91,7 +91,7 @@ final class ConsoleExporter implements Exporter
     }
 
     /**
-     * @param iterable<Summary> $summaries
+     * @param iterable<Span> $summaries
      */
     private function createSummaryTable(iterable $summaries, Profiler|Timeline|null $parent = null): Table
     {
@@ -100,8 +100,8 @@ final class ConsoleExporter implements Exporter
             $table->setHeaderTitle(' '.$parent->identifier().' ');
         }
 
-        foreach ($summaries as $summary) {
-            $table->addRow($this->metricsToRow($summary->label, $summary->metrics));
+        foreach ($summaries as $span) {
+            $table->addRow($this->metricsToRow($span->label, $span->metrics));
         }
 
         return $table;
@@ -160,12 +160,12 @@ final class ConsoleExporter implements Exporter
             ->render();
     }
 
-    public function exportMetrics(Result|Summary|Metrics $metrics): void
+    public function exportMetrics(Result|Span|Metrics $metrics): void
     {
         /** @var MetricsHumanReadable $stats */
         $stats = (match (true) {
-            $metrics instanceof Result => $metrics->summary->metrics,
-            $metrics instanceof Summary => $metrics->metrics,
+            $metrics instanceof Result => $metrics->span->metrics,
+            $metrics instanceof Span => $metrics->metrics,
             default => $metrics,
         })->forHuman();
 

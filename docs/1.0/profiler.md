@@ -128,7 +128,7 @@ Use this structure to analyze performance in depth, log profiles, or visualize t
 
 Finally, the static method `Profiler::execute` allows you to retrieve both the result of a callback
 execution and its profiling data. It returns a `ProfiledResult` instance, where the `result`
-property contains the callback’s return value, and the `summary` property holds the
+property contains the callback’s return value, and the `span` property holds the
 profiling metrics collected during the call.
 
 ```php
@@ -136,11 +136,11 @@ use Bakame\Stackwatch\Profiler;
 
 $result = Profiler::execute($service->calculateHeavyStuff(...));
 $result->returnValue;      // the result of executing the `calculateHeavyStuff` method
-$result->summary;          // the profiling data associated with the call.
-$result->summary->metrics; // returns a Metrics instance
-$result->summary->start;   // returns a Snapshot instance
-$result->summary->end;     // returns a Snapshot instance
-$result->summary->label;   // returns an identifier as a string
+$result->span;          // the profiling data associated with the call.
+$result->span->metrics; // returns a Metrics instance
+$result->span->start;   // returns a Snapshot instance
+$result->span->end;     // returns a Snapshot instance
+$result->span->label;   // returns an identifier as a string
 ````
 
 ## Metrics recording
@@ -159,9 +159,9 @@ $profiler = new Profiler($service->calculateHeavyStuff(...));
 $result = $profiler->run(new DateTimeImmutable('2024-12-24'));
 // you can use `__invoke` as a syntactic sugar method.
 
-$summary = $profiler->latest(); // returns the Summary from the last call
-// the $summary->metrics property returns a Metrics instance
-$metrics = $summary->metrics;
+span = $profiler->latest(); // returns the Span from the last call
+// the $span->metrics property returns a Metrics instance
+$metrics = $span->metrics;
 
 $metrics->executionTime;
 $metrics->cpuTime; 
@@ -180,22 +180,22 @@ $result2 = $profiler(new DateTimeImmutable('2025-03-02'));
 $result3 = $profiler(new DateTimeImmutable('2024-05-11'));
 
 count($profiler);          // the number of summaries already recorded
-$profiler->latest();       // returns the Summary from the last call
-$profiler->nth(-1);        // returns the same Summary as Profile::last
-$profiler->first();        // returns the first Summary ever generated
-$profiler->isEmpty();      // returns true when the profiler contains no summary
-$profiler->hasSummaries(); // returns true when at least on Summary is present
+$profiler->latest();       // returns the Span from the last call
+$profiler->nth(-1);        // returns the same Span as Profile::last
+$profiler->first();        // returns the first Span ever generated
+$profiler->isEmpty();      // returns true when the profiler contains no span
+$profiler->hasSummaries(); // returns true when at least on Span is present
 $profiler->average();      // returns the average Metrics of all the calls
 ```
 
-You can access any `Summary` by index using the `nth` method, or use the `first` and `latest` methods
-to quickly retrieve the first and last recorded `Summary`. The `nth` method also accepts negative
+You can access any `Span` by index using the `nth` method, or use the `first` and `latest` methods
+to quickly retrieve the first and last recorded `Span`. The `nth` method also accepts negative
 integers to simplify access from the end of the list.
 
 ## Using labels
 
 To add a custom label to each run, use the `profile` method. This method works like the
-`run` method but allows you to assign a custom label to the returned `Summary` object
+`run` method but allows you to assign a custom label to the returned `Span` object
 via its first argument.
 
 ```php
@@ -209,9 +209,9 @@ $callback = function (int ...$args): int|float => {
 
 $profiler = new Profiler($callback);
 $profiler(1, 2, 3); // returns 6
-$summary = $profiler->latest();            // returns the last Summary object from the last call
+$span = $profiler->latest();            // returns the last Span object from the last call
 $profiler->profile('my_test', 7, 8, 9);    // returns 24
-$namedSummary = $profiler->get('my_test'); // returns the associated Summary
+$namedSpan = $profiler->get('my_test'); // returns the associated Span
 
 $profiler->get('foobar');      // returns null because the `foobar` label does not exist
 $profiler->has('foobar');      // returns false because the label does not exist
@@ -229,7 +229,7 @@ which returns `true` if the label has been recorded, or `false` otherwise.
 
 ## Resetting the Profiler
 
-At any given time you can reset the <code>Profiler</code> by clearing all the `Summary` already recorded.
+At any given time you can reset the <code>Profiler</code> by clearing all the `Span` already recorded.
 
 ```php
 use Bakame\Stackwatch\Profiler;

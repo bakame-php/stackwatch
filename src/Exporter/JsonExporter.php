@@ -11,8 +11,8 @@ use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Report;
 use Bakame\Stackwatch\Result;
 use Bakame\Stackwatch\Snapshot;
+use Bakame\Stackwatch\Span;
 use Bakame\Stackwatch\Statistics;
-use Bakame\Stackwatch\Summary;
 use Bakame\Stackwatch\Timeline;
 use JsonException;
 use RuntimeException;
@@ -114,13 +114,13 @@ final class JsonExporter implements Exporter
         $this->write($metrics);
     }
 
-    public function exportSummary(Result|Summary $summary, Timeline|Profiler|null $parent = null): void
+    public function exportSummary(Result|Span $span, Timeline|Profiler|null $parent = null): void
     {
-        if ($summary instanceof Result) {
-            $summary = $summary->summary;
+        if ($span instanceof Result) {
+            $span = $span->span;
         }
 
-        $this->write($summary);
+        $this->write($span);
     }
 
     public function exportProfiler(Profiler $profiler, ?string $label = null): void

@@ -15,7 +15,7 @@ This allows you to serialize profiling data for inspection, storage, or transmis
 Calling `json_encode($profiler)` will produce a JSON object containing:
 
 - `identifier`: the profiler's unique identifier
-- `summaries`: an array of summary entries, **ordered from oldest to latest**
+- `spans`: an array of summary entries, **ordered from oldest to latest**
 
 Each summary entry includes:
 

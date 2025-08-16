@@ -8,10 +8,10 @@ use Bakame\Stackwatch\DurationUnit;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Result;
 use Bakame\Stackwatch\Snapshot;
-use Bakame\Stackwatch\Summary;
+use Bakame\Stackwatch\Span;
 use Bakame\Stackwatch\Timeline;
 use DateTimeInterface;
-use OpenTelemetry\API\Trace\Span;
+use OpenTelemetry\API\Trace\Span as OtlSpan;
 use OpenTelemetry\API\Trace\SpanKind;
 use OpenTelemetry\API\Trace\TracerInterface;
 use OpenTelemetry\Context\Context;
@@ -28,38 +28,38 @@ final class OpenTelemetryExporter implements Exporter
         $this->tracer = $this->tracerProvider->getTracer('profiler-exporter');
     }
 
-    public function exportSummary(Result|Summary $summary, Profiler|Timeline|null $parent = null): void
+    public function exportSummary(Result|Span $span, Profiler|Timeline|null $parent = null): void
     {
-        if ($summary instanceof Result) {
-            $summary = $summary->summary;
+        if ($span instanceof Result) {
+            $span = $span->span;
         }
 
-        $start = $summary->start;
-        $end = $summary->end;
+        $start = $span->start;
+        $end = $span->end;
 
-        $span = $this->tracer
-            ->spanBuilder($summary->label)
+        $otlspan = $this->tracer
+            ->spanBuilder($span->label)
             ->setSpanKind(SpanKind::KIND_INTERNAL)
             ->setStartTimestamp(DurationUnit::Millisecond->convertToNano((int) $start->timestamp->format('Uu')))
             ->startSpan();
 
         $this->exportSnapshot($start);
-        $metrics = $summary->metrics;
+        $metrics = $span->metrics;
         if (null !== $parent) {
-            $span->setAttribute('profiler.identifier', $parent->identifier());
+            $otlspan->setAttribute('profiler.identifier', $parent->identifier());
         }
 
-        $span->setAttribute('export.status', 'success');
-        $span->setAttribute('profiler.label', $summary->label);
-        $span->setAttribute('profiler.status', 'ended');
-        $span->setAttribute('cpu.time', $metrics->cpuTime);
-        $span->setAttribute('execution.time', $metrics->executionTime);
-        $span->setAttribute('memory.usage', $metrics->memoryUsage);
-        $span->setAttribute('memory.usage.real', $metrics->realMemoryUsage);
-        $span->setAttribute('memory.peak', $metrics->peakMemoryUsage);
-        $span->setAttribute('memory.peak.real', $metrics->realPeakMemoryUsage);
+        $otlspan->setAttribute('export.status', 'success');
+        $otlspan->setAttribute('profiler.label', $span->label);
+        $otlspan->setAttribute('profiler.status', 'ended');
+        $otlspan->setAttribute('cpu.time', $metrics->cpuTime);
+        $otlspan->setAttribute('execution.time', $metrics->executionTime);
+        $otlspan->setAttribute('memory.usage', $metrics->memoryUsage);
+        $otlspan->setAttribute('memory.usage.real', $metrics->realMemoryUsage);
+        $otlspan->setAttribute('memory.peak', $metrics->peakMemoryUsage);
+        $otlspan->setAttribute('memory.peak.real', $metrics->realPeakMemoryUsage);
         $this->exportSnapshot($end);
-        $span->end(DurationUnit::Millisecond->convertToNano((int) $end->timestamp->format('Uu')));
+        $otlspan->end(DurationUnit::Millisecond->convertToNano((int) $end->timestamp->format('Uu')));
     }
 
     public function exportProfiler(Profiler $profiler, ?string $label = null): void
@@ -71,8 +71,8 @@ final class OpenTelemetryExporter implements Exporter
         $input = null === $label ? $profiler : $profiler->getAll($label);
 
         try {
-            foreach ($input as $summary) {
-                $this->exportSummary($summary, $profiler);
+            foreach ($input as $span) {
+                $this->exportSummary($span, $profiler);
             }
         } finally {
             $parent->end();
@@ -82,7 +82,7 @@ final class OpenTelemetryExporter implements Exporter
 
     public function exportSnapshot(Snapshot $snapshot): void
     {
-        $activeSpan = Span::fromContext(Context::getCurrent());
+        $activeSpan = OtlSpan::fromContext(Context::getCurrent());
         if (!$activeSpan->isRecording()) {
             return;
         }
@@ -117,8 +117,8 @@ final class OpenTelemetryExporter implements Exporter
         $scope = $parent->activate();
 
         try {
-            foreach ($timeline->deltas() as $summary) {
-                $this->exportSummary($summary, $timeline);
+            foreach ($timeline->deltas() as $span) {
+                $this->exportSummary($span, $timeline);
             }
         } finally {
             $parent->end();

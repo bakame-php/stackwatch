@@ -57,8 +57,8 @@ final class ConsoleExporterTest extends TestCase
         $output = new BufferedOutput();
         $renderer = new ConsoleExporter($output);
 
-        $summary = Profiler::execute(fn () => usleep(1000));
-        $renderer->exportSummary($summary);
+        $span = Profiler::execute(fn () => usleep(1000));
+        $renderer->exportSummary($span);
         $content = $output->fetch();
 
         self::assertStringContainsString('Label', $content);
@@ -76,7 +76,7 @@ final class ConsoleExporterTest extends TestCase
         $renderer = new ConsoleExporter($output);
 
         $profilled = Profiler::execute(fn () => usleep(1000));
-        $renderer->exportSnapshot($profilled->summary->start);
+        $renderer->exportSnapshot($profilled->span->start);
         $content = $output->fetch();
 
         self::assertStringContainsString('Timestamp', $content);
@@ -185,8 +185,8 @@ final class ConsoleExporterTest extends TestCase
         $output = new BufferedOutput();
         $renderer = new ConsoleExporter($output);
 
-        $summary = Profiler::execute(fn () => usleep(1000));
-        $renderer->exportMetrics($summary);
+        $span = Profiler::execute(fn () => usleep(1000));
+        $renderer->exportMetrics($span);
         $content = $output->fetch();
 
         self::assertStringContainsString('CPU Time', $content);

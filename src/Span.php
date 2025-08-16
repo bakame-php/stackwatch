@@ -22,7 +22,7 @@ use function implode;
  *     metrics: MetricsMap,
  * }
  */
-final class Summary implements JsonSerializable
+final class Span implements JsonSerializable
 {
     public readonly Metrics $metrics;
     public readonly Snapshot $start;

@@ -167,7 +167,7 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
      *
      * @throws InvalidArgument If the labels could not be found
      */
-    public function delta(string $from, ?string $to = null): Summary
+    public function delta(string $from, ?string $to = null): Span
     {
         $this->hasLabel($from) || throw new InvalidArgument('The label "'.$from.'" do not exist.');
         $keys = $this->labels();
@@ -178,13 +178,13 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
             }
 
             if (null === $to) {
-                return new Summary($from.'_'.$from, $this->snapshots[$from], $this->snapshots[$from]);
+                return new Span($from.'_'.$from, $this->snapshots[$from], $this->snapshots[$from]);
             }
         }
 
         $this->hasLabel($to) || throw new InvalidArgument('The label "'.$to.'" do not exist.');
 
-        return new Summary($from.'_'.$to, $this->snapshots[$from], $this->snapshots[$to]);
+        return new Span($from.'_'.$to, $this->snapshots[$from], $this->snapshots[$to]);
     }
 
     public function metrics(string $from, ?string $to = null): Metrics
@@ -195,7 +195,7 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
     /**
      *  Returns a sequence of Summary instances computed from each successive pair of snapshots.
      *
-     * @return iterable<Summary>
+     * @return iterable<Span>
      */
     public function deltas(): iterable
     {
@@ -257,12 +257,12 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
      *
      * @param ?non-empty-string $label
      */
-    public function summarize(?string $label = null): Summary
+    public function summarize(?string $label = null): Span
     {
         $from = array_key_first($this->snapshots);
         $to = array_key_last($this->snapshots);
 
-        return new Summary(LabelGenerator::sanitize($label ?? $from.'_'.$to), $this->snapshots[$from], $this->snapshots[$to]);
+        return new Span(LabelGenerator::sanitize($label ?? $from.'_'.$to), $this->snapshots[$from], $this->snapshots[$to]);
     }
 
     /**
@@ -283,16 +283,16 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
      * Takes a snapshot and returns the summary profiling data from the start until the new label.
      *
      * @param non-empty-string $label
-     * @param ?non-empty-string $summaryLabel
+     * @param ?non-empty-string $spanLabel
      *
      * @throws UnableToProfile if the timeline is in complete state
      * @throws InvalidArgument if labels are invalid
      */
-    public function take(string $label, ?string $summaryLabel = null): Summary
+    public function take(string $label, ?string $spanLabel = null): Span
     {
         $this->capture($label);
 
-        return $this->summarize($summaryLabel);
+        return $this->summarize($spanLabel);
     }
 
     /**

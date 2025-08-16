@@ -133,7 +133,7 @@ final class TimelineTest extends TestCase
         self::assertCount(2, $reports);
 
         foreach ($reports as $data) {
-            self::assertInstanceOf(Summary::class, $data);
+            self::assertInstanceOf(Span::class, $data);
         }
 
         foreach ($this->timeline as $snapshot) {
@@ -177,10 +177,10 @@ final class TimelineTest extends TestCase
         usleep(100);
         $timeline->capture('shutdown');
         self::assertFalse($timeline->isComplete());
-        $summary = $timeline->summarize();
+        $span = $timeline->summarize();
         $timeline->complete();
         self::assertTrue($timeline->isComplete());
-        self::assertEquals($summary, $timeline->summarize());
+        self::assertEquals($span, $timeline->summarize());
 
         $this->expectException(UnableToProfile::class);
         $timeline->take('boot', 'boot_shutdown');
@@ -193,10 +193,10 @@ final class TimelineTest extends TestCase
         usleep(100);
         $timeline->capture('shutdown');
         self::assertFalse($timeline->isComplete());
-        $summary = $timeline->summarize();
+        $span = $timeline->summarize();
         $timeline->complete();
         self::assertTrue($timeline->isComplete());
-        self::assertEquals($summary, $timeline->summarize());
+        self::assertEquals($span, $timeline->summarize());
 
         $timeline->reset();
         self::assertFalse($timeline->isComplete());
@@ -205,25 +205,25 @@ final class TimelineTest extends TestCase
     public function testDeltaWithExplicitTo(): void
     {
         $timeline = $this->makeTimeline(['start', 'middle', 'end']);
-        $summary = $timeline->delta('start', 'end');
+        $span = $timeline->delta('start', 'end');
 
-        self::assertSame('start_end', $summary->label);
+        self::assertSame('start_end', $span->label);
     }
 
     public function testDeltaWithoutToUsesNextLabel(): void
     {
         $timeline = $this->makeTimeline(['start', 'middle', 'end']);
-        $summary = $timeline->delta('start');
+        $span = $timeline->delta('start');
 
-        self::assertSame('start_middle', $summary->label);
+        self::assertSame('start_middle', $span->label);
     }
 
     public function testDeltaWithoutToAndFromIsLastLabel(): void
     {
         $timeline = $this->makeTimeline(['start', 'middle', 'end']);
-        $summary = $timeline->delta('end');
+        $span = $timeline->delta('end');
 
-        self::assertSame('end_end', $summary->label);
+        self::assertSame('end_end', $span->label);
     }
 
     public function testDeltaThrowsWhenFromDoesNotExist(): void

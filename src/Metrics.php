@@ -111,30 +111,30 @@ final class Metrics implements JsonSerializable
         }
     }
 
-    public static function average(Profiler|Result|Summary|Metrics ...$metrics): self
+    public static function average(Profiler|Result|Span|Metrics ...$metrics): self
     {
         /** @var array<Metrics> $metricList */
-        $metricList = array_reduce($metrics, function (array $carry, Profiler|Result|Summary|Metrics $metric) {
+        $metricList = array_reduce($metrics, function (array $carry, Profiler|Result|Span|Metrics $metric) {
             if ($metric instanceof Metrics) {
                 $carry[] = $metric;
 
                 return $carry;
             }
 
-            if ($metric instanceof Summary) {
+            if ($metric instanceof Span) {
                 $carry[] = $metric->metrics;
 
                 return $carry;
             }
 
             if ($metric instanceof Result) {
-                $carry[] = $metric->summary->metrics;
+                $carry[] = $metric->span->metrics;
 
                 return $carry;
             }
 
-            foreach ($metric as $summary) {
-                $carry[] = $summary->metrics;
+            foreach ($metric as $span) {
+                $carry[] = $span->metrics;
             }
 
             return $carry;

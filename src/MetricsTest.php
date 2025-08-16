@@ -18,11 +18,11 @@ final class MetricsTest extends TestCase
     /**
      * @param non-empty-string $label
      */
-    private function createSummary(string $label): Summary
+    private function createSummary(string $label): Span
     {
         $start = new Snapshot('start', new DateTimeImmutable(), hrtime(true), 10001, 1001, 1000, 2000, 3000, 4000);
         $end = new Snapshot('end', new DateTimeImmutable(), hrtime(true) + 1, 1001, 1001, 1100, 2100, 3100, 4100);
-        return new Summary($label, $start, $end);
+        return new Span($label, $start, $end);
     }
 
     #[Test]
@@ -37,24 +37,24 @@ final class MetricsTest extends TestCase
     #[Test]
     public function it_can_do_the_avegare_using_the_profiling_data(): void
     {
-        $summary = $this->createSummary('empty_label');
+        $span = $this->createSummary('empty_label');
 
-        self::assertEquals($summary->metrics, Metrics::average($summary));
+        self::assertEquals($span->metrics, Metrics::average($span));
     }
 
     #[Test]
     public function it_can_calculate_the_average_using_the_profiler(): void
     {
-        $summary1 = $this->createSummary('profile1');
-        $summary2 = $this->createSummary('profile2');
+        $span1 = $this->createSummary('profile1');
+        $span2 = $this->createSummary('profile2');
 
         $profiler = new Profiler(fn () => null);
         $reflection = new ReflectionClass($profiler);
-        $reflection->getProperty('summaries')->setValue($profiler, [$summary1, $summary2]);
+        $reflection->getProperty('spans')->setValue($profiler, [$span1, $span2]);
 
         self::assertEquals(
             Metrics::average($profiler),
-            Metrics::average($summary1, $summary2),
+            Metrics::average($span1, $span2),
         );
     }
 

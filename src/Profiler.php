@@ -22,8 +22,8 @@ use function count;
 use function trim;
 
 /**
- * @implements IteratorAggregate<int, Summary>
- * @phpstan-import-type SummaryMap from Summary
+ * @implements IteratorAggregate<int, Span>
+ * @phpstan-import-type SummaryMap from Span
  */
 final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 {
@@ -31,8 +31,8 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     private readonly string $identifier;
     private readonly Closure $callback;
     private readonly ?LoggerInterface $logger;
-    /** @var list<Summary> */
-    private array $summaries;
+    /** @var list<Span> */
+    private array $spans;
 
     /**
      * @param ?non-empty-string $identifier
@@ -65,7 +65,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     public function reset(): void
     {
-        $this->summaries = [];
+        $this->spans = [];
     }
 
     private static function warmup(int $warmup, callable $callback): void
@@ -110,10 +110,10 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
             $start = Snapshot::now('start');
             $returnValue = ($callback)(...$args);
             $end = Snapshot::now('end');
-            $summary = new Summary($label, $start, $end);
-            $logger?->info('Profiler ['.$identifier.'] ending profiling for label: '.$label.'.', [...['identifier' => $identifier], ...$summary->toArray()]);
+            $span = new Span($label, $start, $end);
+            $logger?->info('Profiler ['.$identifier.'] ending profiling for label: '.$label.'.', [...['identifier' => $identifier], ...$span->toArray()]);
 
-            return new Result($returnValue, $summary);
+            return new Result($returnValue, $span);
         } catch (Throwable $exception) {
             $logger?->error('Profiler ['.$identifier.'] profiling aborted for label: '.$label.' due to an error in the executed code.', ['identifier' => $identifier, 'label' => $label, 'exception' => $exception]);
 
@@ -156,7 +156,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         self::warmup($warmup, $callback);
         $metrics = [];
         for ($i = 0; $i < $iterations; ++$i) {
-            $metrics[] = self::execute($callback, $logger)->summary->metrics;
+            $metrics[] = self::execute($callback, $logger)->span->metrics;
         }
 
         return Report::fromMetrics(...$metrics);
@@ -195,22 +195,22 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     public function profile(string $label, mixed ...$args): mixed
     {
         $profiled = self::profileOnce($this->identifier, $label, $this->callback, $this->logger, ...$args);
-        $this->summaries[] = $profiled->summary;
+        $this->spans[] = $profiled->span;
 
         return $profiled->returnValue;
     }
 
     public function count(): int
     {
-        return count($this->summaries);
+        return count($this->spans);
     }
 
     /**
-     * @return Traversable<Summary>
+     * @return Traversable<Span>
      */
     public function getIterator(): Traversable
     {
-        yield from $this->summaries;
+        yield from $this->spans;
     }
 
     /**
@@ -223,27 +223,27 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     {
         return [
             'identifier' => $this->identifier,
-            'summaries' => array_map(fn (Summary $summary): array => $summary->toArray(), $this->summaries),
+            'summaries' => array_map(fn (Span $span): array => $span->toArray(), $this->spans),
         ];
     }
 
     /**
      * @return array{
      *     identifier: non-empty-string,
-     *     summaries: list<Summary>
+     *     summaries: list<Span>
      * }
      */
     public function jsonSerialize(): array
     {
         return [
             'identifier' => $this->identifier,
-            'summaries' => $this->summaries,
+            'summaries' => $this->spans,
         ];
     }
 
     public function isEmpty(): bool
     {
-        return [] === $this->summaries;
+        return [] === $this->spans;
     }
 
     public function hasSummaries(): bool
@@ -251,12 +251,12 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
         return ! $this->isEmpty();
     }
 
-    public function latest(): ?Summary
+    public function latest(): ?Span
     {
         return $this->nth(-1);
     }
 
-    public function first(): ?Summary
+    public function first(): ?Span
     {
         return $this->nth(0);
     }
@@ -266,13 +266,13 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * Negative offsets are supported
      */
-    public function nth(int $offset): ?Summary
+    public function nth(int $offset): ?Span
     {
         if ($offset < 0) {
-            $offset += count($this->summaries);
+            $offset += count($this->spans);
         }
 
-        return $this->summaries[$offset] ?? null;
+        return $this->spans[$offset] ?? null;
     }
 
     /**
@@ -280,8 +280,8 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function has(string $label): bool
     {
-        foreach ($this->summaries as $summary) {
-            if ($summary->label === $label) {
+        foreach ($this->spans as $span) {
+            if ($span->label === $label) {
                 return true;
             }
         }
@@ -292,7 +292,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     /**
      * Returns the last Profile with the provided label.
      */
-    public function get(string $label): ?Summary
+    public function get(string $label): ?Span
     {
         $res = $this->getAll($label);
 
@@ -302,11 +302,11 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     /**
      * Returns all the Profiles with the provided label.
      *
-     * @return list<Summary>
+     * @return list<Span>
      */
     public function getAll(string $label): array
     {
-        return $this->filter(fn (Summary $summary): bool => $summary->label === $label);
+        return $this->filter(fn (Span $span): bool => $span->label === $label);
     }
 
     /**
@@ -322,13 +322,13 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     }
 
     /**
-     * @param callable(Summary): bool $filter
+     * @param callable(Span): bool $filter
      *
-     * @return list<Summary>
+     * @return list<Span>
      */
     public function filter(callable $filter): array
     {
-        return array_values(array_filter($this->summaries, $filter));
+        return array_values(array_filter($this->spans, $filter));
     }
 
     /**
@@ -340,7 +340,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     {
         return array_values(
             array_unique(
-                array_column($this->summaries, 'label')
+                array_column($this->spans, 'label')
             )
         );
     }

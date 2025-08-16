@@ -14,13 +14,13 @@ use function usleep;
 /**
  * @phpstan-import-type SnapshotMap from Snapshot
  * @phpstan-import-type MetricsMap from Metrics
- * @phpstan-import-type SummaryMap from Summary
+ * @phpstan-import-type SummaryMap from Span
  */
-#[CoversClass(Summary::class)]
+#[CoversClass(Span::class)]
 #[CoversClass(Metrics::class)]
 #[CoversClass(CallLocation::class)]
 #[CoversClass(CallRange::class)]
-final class SummaryTest extends TestCase
+final class SpanTest extends TestCase
 {
     #[Test]
     public function it_has_a_specific_lifecycle(): void
@@ -29,15 +29,15 @@ final class SummaryTest extends TestCase
         usleep(1000);
         $end = Snapshot::now();
 
-        $summary = new Summary('test', $start, $end);
+        $span = new Span('test', $start, $end);
 
-        self::assertSame('test', $summary->label);
-        self::assertGreaterThan(0, $summary->metrics->executionTime);
-        self::assertGreaterThanOrEqual(0, $summary->metrics->cpuTime);
-        self::assertGreaterThanOrEqual(0, $summary->metrics->memoryUsage);
-        self::assertGreaterThanOrEqual(0, $summary->metrics->realMemoryUsage);
-        self::assertGreaterThanOrEqual(0, $summary->metrics->peakMemoryUsage);
-        self::assertGreaterThanOrEqual(0, $summary->metrics->realPeakMemoryUsage);
+        self::assertSame('test', $span->label);
+        self::assertGreaterThan(0, $span->metrics->executionTime);
+        self::assertGreaterThanOrEqual(0, $span->metrics->cpuTime);
+        self::assertGreaterThanOrEqual(0, $span->metrics->memoryUsage);
+        self::assertGreaterThanOrEqual(0, $span->metrics->realMemoryUsage);
+        self::assertGreaterThanOrEqual(0, $span->metrics->peakMemoryUsage);
+        self::assertGreaterThanOrEqual(0, $span->metrics->realPeakMemoryUsage);
     }
 
     #[Test]
@@ -46,8 +46,8 @@ final class SummaryTest extends TestCase
         $start = Snapshot::now();
         usleep(1000);
         $end = Snapshot::now();
-        $summary = new Summary('test', $start, $end);
-        $stats = $summary->toArray();
+        $span = new Span('test', $start, $end);
+        $stats = $span->toArray();
 
         self::assertArrayHasKey('label', $stats);
         self::assertArrayHasKey('snapshots', $stats);
@@ -64,9 +64,9 @@ final class SummaryTest extends TestCase
     {
         $start = Snapshot::now();
         usleep(1000);
-        $summary = new Summary('test', $start, Snapshot::now());
+        $span = new Span('test', $start, Snapshot::now());
 
-        self::assertEquals($summary, Summary::fromArray($summary->toArray()));
+        self::assertEquals($span, Span::fromArray($span->toArray()));
     }
 
     #[Test]
@@ -75,10 +75,10 @@ final class SummaryTest extends TestCase
         $start = Snapshot::now();
         usleep(1000);
         $end = Snapshot::now();
-        $summary = new Summary('test', $start, $end);
+        $span = new Span('test', $start, $end);
 
         /** @var non-empty-string $json */
-        $json = json_encode($summary);
+        $json = json_encode($span);
         self::assertJson($json);
 
         /** @var SummaryMap $decoded */
@@ -95,7 +95,7 @@ final class SummaryTest extends TestCase
         usleep(1000);
         $end = Snapshot::now();
 
-        new Summary('_123invalid', $start, $end);
+        new Span('_123invalid', $start, $end);
     }
 
     public function testRangeIsDerivedFromSnapshots(): void
@@ -128,21 +128,21 @@ final class SummaryTest extends TestCase
             originLine: 20
         );
 
-        $summary = new Summary('test_summary', $startSnapshot, $endSnapshot);
+        $span = new Span('test_summary', $startSnapshot, $endSnapshot);
 
         // Check that start and end of the range match the snapshots
-        self::assertSame($startSnapshot->originPath, $summary->range->start->path);
-        self::assertSame($startSnapshot->originLine, $summary->range->start->line);
-        self::assertSame($endSnapshot->originPath, $summary->range->end->path);
-        self::assertSame($endSnapshot->originLine, $summary->range->end->line);
+        self::assertSame($startSnapshot->originPath, $span->range->start->path);
+        self::assertSame($startSnapshot->originLine, $span->range->start->line);
+        self::assertSame($endSnapshot->originPath, $span->range->end->path);
+        self::assertSame($endSnapshot->originLine, $span->range->end->line);
 
         // Check computed properties
-        self::assertTrue($summary->range->isSameFile());
-        self::assertTrue($summary->range->hasStart());
-        self::assertTrue($summary->range->hasEnd());
-        self::assertTrue($summary->range->isComplete());
-        self::assertTrue($summary->range->isForward());
-        self::assertSame(11, $summary->range->lineSpan());
+        self::assertTrue($span->range->isSameFile());
+        self::assertTrue($span->range->hasStart());
+        self::assertTrue($span->range->hasEnd());
+        self::assertTrue($span->range->isComplete());
+        self::assertTrue($span->range->isForward());
+        self::assertSame(11, $span->range->lineSpan());
     }
 
     public function testRangeIsNullWhenSnapshotsFromDifferentFiles(): void
@@ -175,9 +175,9 @@ final class SummaryTest extends TestCase
             originLine: 15
         );
 
-        $summary = new Summary('cross-file-summary', $startSnapshot, $endSnapshot);
+        $span = new Span('cross-file-summary', $startSnapshot, $endSnapshot);
 
-        self::assertFalse($summary->range->isSameFile());
-        self::assertNull($summary->range->lineSpan());
+        self::assertFalse($span->range->isSameFile());
+        self::assertNull($span->range->lineSpan());
     }
 }
