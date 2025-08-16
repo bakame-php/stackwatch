@@ -69,4 +69,41 @@ final class CallLocationTest extends TestCase
 
         self::assertLessThan($step->originLine, $start->originLine);
     }
+
+    public function testIsEmpty(): void
+    {
+        $location = new CallLocation();
+
+        self::assertTrue($location->isEmpty());
+        self::assertFalse($location->isComplete());
+    }
+
+    public function testIsComplete(): void
+    {
+        $location = new CallLocation(path: '/tmp/foo.php', line: 42);
+
+        self::assertFalse($location->isEmpty());
+        self::assertTrue($location->isComplete());
+    }
+
+    public function testFromArrayEmpty(): void
+    {
+        self::assertTrue(CallLocation::fromArray([])->isEmpty());
+    }
+
+    public function testFromArrayComplete(): void
+    {
+        self::assertTrue(CallLocation::fromArray(['path' => '/tmp/foo.php', 'line' => 123])->isComplete());
+    }
+
+    public function testEquals(): void
+    {
+        $a = new CallLocation(path: '/tmp/foo.php', line: 10);
+        $b = new CallLocation(path: '/tmp/foo.php', line: 10);
+        $c = new CallLocation(path: '/tmp/bar.php', line: 20);
+
+        self::assertTrue($a->equals($b));
+        self::assertFalse($a->equals($c));
+        self::assertFalse($a->equals(null));
+    }
 }

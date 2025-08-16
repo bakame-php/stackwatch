@@ -6,18 +6,22 @@ namespace Bakame\Stackwatch;
 
 use JsonSerializable;
 
+use function array_keys;
 use function defined;
 use function filter_var;
 use function getenv;
 use function gethostname;
+use function implode;
 use function ini_get;
 use function max;
 use function php_sapi_name;
 use function php_uname;
 use function phpversion;
+use function preg_replace;
 use function restore_error_handler;
 use function set_error_handler;
 use function shell_exec;
+use function strtolower;
 use function trim;
 
 use const FILTER_VALIDATE_INT;
@@ -26,7 +30,7 @@ use const PHP_OS;
 use const PHP_OS_FAMILY;
 
 /**
- * @phpstan-type EnvironmentStats array{
+ * @phpstan-type EnvironmentMap array{
  *     os: string,
  *     osFamily: string,
  *     hostname: string,
@@ -40,6 +44,21 @@ use const PHP_OS_FAMILY;
  *     cpuCores: int,
  *     totalDisk: float,
  *     freeDisk: float,
+ * }
+ * @phpstan-type EnvironmentHumanReadable array{
+ *    os: string,
+ *     osFamily: string,
+ *     hostname: string,
+ *     machine: string,
+ *     phpIntSize: string,
+ *     phpArchitecture: string,
+ *     phpVersion: string,
+ *     sapi: string,
+ *     memoryLimit: string,
+ *     rawMemoryLimit: string,
+ *     cpuCores: string,
+ *     totalDisk: string,
+ *     freeDisk: string,
  * }
  */
 final class Environment implements JsonSerializable
@@ -211,7 +230,7 @@ final class Environment implements JsonSerializable
      *  - `memoryLimit`: int|null — bytes, -1 if unlimited, null if undetected
      *  - `rawMemoryLimit`: string — raw INI string, e.g., "512M" or "-1".
      *
-     * @return EnvironmentStats
+     * @return EnvironmentMap
      */
     public function toArray(): array
     {
@@ -233,7 +252,39 @@ final class Environment implements JsonSerializable
     }
 
     /**
-     * @return EnvironmentStats
+     * @return EnvironmentHumanReadable|string
+     */
+    public function forHuman(?string $property = null): array|string
+    {
+        $humans = [
+            'os' => $this->os,
+            'osFamily' => $this->osFamily,
+            'hostname' => $this->hostname,
+            'machine' => $this->machine,
+            'phpIntSize' => (string) $this->phpIntSize,
+            'phpArchitecture' => $this->phpArchitecture,
+            'sapi' => $this->sapi,
+            'phpVersion' => $this->phpVersion,
+            'memoryLimit' => is_int($this->memoryLimit) && ! $this->unlimitedMemory() ? MemoryUnit::format($this->memoryLimit) : (string) $this->memoryLimit,
+            'rawMemoryLimit' => $this->rawMemoryLimit,
+            'cpuCores' => (string) $this->cpuCores,
+            'totalDisk' => MemoryUnit::format($this->totalDisk, 0),
+            'freeDisk' => MemoryUnit::format($this->freeDisk, 0),
+        ];
+
+        if (null === $property) {
+            return $humans;
+        }
+
+        $propertyNormalized = strtolower((string) preg_replace('/[\s_\-]+/', '_', $property));
+
+        return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown environment name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
+
+    }
+
+
+    /**
+     * @return EnvironmentMap
      */
     public function jsonSerialize(): array
     {

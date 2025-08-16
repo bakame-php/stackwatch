@@ -64,8 +64,7 @@ final class CallLocation implements JsonSerializable
     }
 
     /**
-     * @param CallLocationMap $data
-     *
+     * @param CallLocationMap|array{} $data
      */
     public static function fromArray(array $data): self
     {
@@ -102,12 +101,6 @@ final class CallLocation implements JsonSerializable
     {
         return null === $this->path
             && null === $this->line;
-    }
-
-    public function isPartial(): bool
-    {
-        return null !== $this->path
-            && null !== $this->line;
     }
 
     public function isComplete(): bool

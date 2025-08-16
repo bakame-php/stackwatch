@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch\Console;
 
 use Bakame\Stackwatch\Environment;
+use Bakame\Stackwatch\Exporter\LeaderPrinter;
 use Bakame\Stackwatch\Version;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\StreamOutput;
 
+/**
+ * @phpstan-import-type EnvironmentHumanReadable from Environment
+ */
 final class ConsoleHandler implements Handler
 {
     public function __construct(
@@ -38,7 +42,11 @@ final class ConsoleHandler implements Handler
         if ($input->infoSection->isVisible()) {
             $processor = $profiler->processor;
             if ($processor instanceof ConsoleProcessor) {
-                $processor->exporter->exportEnvironment($this->environment);
+                $leaderPrinter = new LeaderPrinter(filler: '.', padExtra: 1);
+                /** @var EnvironmentHumanReadable $data */
+                $data = $this->environment->forHuman();
+                $processor->exporter->output->writeln($leaderPrinter->render($data));
+                $processor->exporter->output->writeln('');
             }
         } else {
             $output->writeln('<fg=green>Runtime:</> PHP '.$this->environment->phpVersion.' <fg=green>OS:</> '.$this->environment->os.' <fg=green>Memory Limit:</> '.$this->environment->rawMemoryLimit);
