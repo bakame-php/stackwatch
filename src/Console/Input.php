@@ -38,6 +38,8 @@ use const FILTER_VALIDATE_INT;
  *     x?: string|false,
  *     depth?: string|false,
  *     d?: string|false,
+ *     no-recursion?: string|false,
+ *     n?: string|false,
  *     tags?: string|false,
  *     t?: string|false,
  *     dry-run?: string|false,
