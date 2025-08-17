@@ -32,33 +32,33 @@ use const PHP_OS_FAMILY;
 /**
  * @phpstan-type EnvironmentMap array{
  *     os: string,
- *     osFamily: string,
+ *     os_family: string,
  *     hostname: string,
  *     machine: string,
- *     phpIntSize: int,
- *     phpArchitecture: string,
- *     phpVersion: string,
+ *     php_int_size: int,
+ *     php_architecture: string,
+ *     php_version: string,
  *     sapi: string,
- *     memoryLimit: ?int,
- *     rawMemoryLimit: string,
- *     cpuCores: int,
- *     totalDisk: float,
- *     freeDisk: float,
+ *     memory_limit: ?int,
+ *     raw_memory_limit: string,
+ *     cpu_cores: int,
+ *     total_disk: float,
+ *     free_disk: float,
  * }
  * @phpstan-type EnvironmentHumanReadable array{
- *    os: string,
- *     osFamily: string,
+ *     os: string,
+ *     os_family: string,
  *     hostname: string,
  *     machine: string,
- *     phpIntSize: string,
- *     phpArchitecture: string,
- *     phpVersion: string,
+ *     php_int_size: string,
+ *     php_architecture: string,
+ *     php_version: string,
  *     sapi: string,
- *     memoryLimit: string,
- *     rawMemoryLimit: string,
- *     cpuCores: string,
- *     totalDisk: string,
- *     freeDisk: string,
+ *     memory_limit: string,
+ *     raw_memory_limit: string,
+ *     cpu_cores: string,
+ *     total_disk: string,
+ *     free_disk: string,
  * }
  */
 final class Environment implements JsonSerializable
@@ -236,18 +236,18 @@ final class Environment implements JsonSerializable
     {
         return [
             'os' => $this->os,
-            'osFamily' => $this->osFamily,
+            'os_family' => $this->osFamily,
             'hostname' => $this->hostname,
             'machine' => $this->machine,
-            'phpIntSize' => $this->phpIntSize,
-            'phpArchitecture' => $this->phpArchitecture,
-            'phpVersion' => $this->phpVersion,
+            'php_int_size' => $this->phpIntSize,
+            'php_architecture' => $this->phpArchitecture,
+            'php_version' => $this->phpVersion,
             'sapi' => $this->sapi,
-            'memoryLimit' => $this->memoryLimit,
-            'rawMemoryLimit' => $this->rawMemoryLimit,
-            'cpuCores' => $this->cpuCores,
-            'totalDisk' => $this->totalDisk,
-            'freeDisk' => $this->freeDisk,
+            'memory_limit' => $this->memoryLimit,
+            'raw_memory_limit' => $this->rawMemoryLimit,
+            'cpu_cores' => $this->cpuCores,
+            'total_disk' => $this->totalDisk,
+            'free_disk' => $this->freeDisk,
         ];
     }
 
@@ -258,18 +258,18 @@ final class Environment implements JsonSerializable
     {
         $humans = [
             'os' => $this->os,
-            'osFamily' => $this->osFamily,
+            'os_family' => $this->osFamily,
             'hostname' => $this->hostname,
             'machine' => $this->machine,
-            'phpIntSize' => (string) $this->phpIntSize,
-            'phpArchitecture' => $this->phpArchitecture,
+            'php_int_size' => (string) $this->phpIntSize,
+            'php_architecture' => $this->phpArchitecture,
             'sapi' => $this->sapi,
-            'phpVersion' => $this->phpVersion,
-            'memoryLimit' => is_int($this->memoryLimit) && ! $this->unlimitedMemory() ? MemoryUnit::format($this->memoryLimit) : (string) $this->memoryLimit,
-            'rawMemoryLimit' => $this->rawMemoryLimit,
-            'cpuCores' => (string) $this->cpuCores,
-            'totalDisk' => MemoryUnit::format($this->totalDisk, 0),
-            'freeDisk' => MemoryUnit::format($this->freeDisk, 0),
+            'php_version' => $this->phpVersion,
+            'memory_limit' => is_int($this->memoryLimit) && ! $this->unlimitedMemory() ? MemoryUnit::format($this->memoryLimit) : (string) $this->memoryLimit,
+            'raw_memory_limit' => $this->rawMemoryLimit,
+            'cpu_cores' => (string) $this->cpuCores,
+            'total_disk' => MemoryUnit::format($this->totalDisk, 0),
+            'free_disk' => MemoryUnit::format($this->freeDisk, 0),
         ];
 
         if (null === $property) {
@@ -279,7 +279,6 @@ final class Environment implements JsonSerializable
         $propertyNormalized = strtolower((string) preg_replace('/[\s_\-]+/', '_', $property));
 
         return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown environment name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
-
     }
 
 

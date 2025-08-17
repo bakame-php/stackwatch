@@ -6,7 +6,6 @@ namespace Bakame\Stackwatch\Exporter;
 
 use Bakame\Stackwatch\Console\Exporter;
 use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\MemoryUnit;
 use Bakame\Stackwatch\Metrics;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Report;
@@ -25,6 +24,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * @phpstan-import-type MetricsHumanReadable from Metrics
  * @phpstan-import-type SnapshotHumanReadable from Snapshot
  * @phpstan-import-type StatsHumanReadable from Statistics
+ * @phpstan-import-type EnvironmentHumanReadable from Environment
  */
 final class ConsoleExporter implements Exporter
 {
@@ -38,7 +38,7 @@ final class ConsoleExporter implements Exporter
             $span = $span->span;
         }
 
-        $this->createSummaryTable([$span], $parent)->render();
+        $this->createSpanTable([$span], $parent)->render();
     }
 
     public function exportProfiler(Profiler $profiler, ?string $label = null): void
@@ -46,7 +46,7 @@ final class ConsoleExporter implements Exporter
         $input = null === $label ? $profiler : $profiler->getAll($label);
 
         $this
-            ->createSummaryTable($input)
+            ->createSpanTable($input)
             ->setHeaderTitle(' '.$profiler->identifier().' ')
             ->addRow(new TableSeparator())
             ->addRow($this->metricsToRow('<fg=green>Average</>', $profiler->average($label)))
@@ -69,7 +69,7 @@ final class ConsoleExporter implements Exporter
         $span = $timeline->summarize();
 
         $this
-            ->createSummaryTable($timeline->deltas())
+            ->createSpanTable($timeline->deltas())
             ->setHeaderTitle(' '.$timeline->identifier().' ')
             ->addRow(new TableSeparator())
             ->addRow($this->metricsToRow('<fg=green>Summary</>', $span->metrics))
@@ -91,16 +91,16 @@ final class ConsoleExporter implements Exporter
     }
 
     /**
-     * @param iterable<Span> $summaries
+     * @param iterable<Span> $spans
      */
-    private function createSummaryTable(iterable $summaries, Profiler|Timeline|null $parent = null): Table
+    private function createSpanTable(iterable $spans, Profiler|Timeline|null $parent = null): Table
     {
         $table = $this->createTable();
         if (null !== $parent) {
             $table->setHeaderTitle(' '.$parent->identifier().' ');
         }
 
-        foreach ($summaries as $span) {
+        foreach ($spans as $span) {
             $table->addRow($this->metricsToRow($span->label, $span->metrics));
         }
 
@@ -162,8 +162,8 @@ final class ConsoleExporter implements Exporter
 
     public function exportMetrics(Result|Span|Metrics $metrics): void
     {
-        /** @var MetricsHumanReadable $stats */
-        $stats = (match (true) {
+        /** @var MetricsHumanReadable $map */
+        $map = (match (true) {
             $metrics instanceof Result => $metrics->span->metrics,
             $metrics instanceof Span => $metrics->metrics,
             default => $metrics,
@@ -179,12 +179,12 @@ final class ConsoleExporter implements Exporter
                 'Real Peak Memory Usage',
             ])
             ->addRow([
-                $stats['execution_time'],
-                $stats['cpu_time'],
-                $stats['memory_usage'],
-                $stats['real_memory_usage'],
-                $stats['peak_memory_usage'],
-                $stats['real_peak_memory_usage'],
+                $map['execution_time'],
+                $map['cpu_time'],
+                $map['memory_usage'],
+                $map['real_memory_usage'],
+                $map['peak_memory_usage'],
+                $map['real_peak_memory_usage'],
             ])
             ->setVertical()
             ->render();
@@ -192,8 +192,8 @@ final class ConsoleExporter implements Exporter
 
     public function exportStatistics(Statistics $statistics): void
     {
-        /** @var StatsHumanReadable $stats */
-        $stats = $statistics->forHuman();
+        /** @var StatsHumanReadable $map */
+        $map = $statistics->forHuman();
 
         (new Table($this->output))
             ->setHeaders([
@@ -209,16 +209,16 @@ final class ConsoleExporter implements Exporter
                 'Coef Var',
             ])
             ->addRow([
-                $stats['count'],
-                $stats['minimum'],
-                $stats['maximum'],
-                $stats['median'],
-                $stats['sum'],
-                $stats['range'],
-                $stats['average'],
-                $stats['variance'],
-                $stats['std_dev'],
-                $stats['coef_var'],
+                $map['count'],
+                $map['minimum'],
+                $map['maximum'],
+                $map['median'],
+                $map['sum'],
+                $map['range'],
+                $map['average'],
+                $map['variance'],
+                $map['std_dev'],
+                $map['coef_var'],
             ])
             ->setVertical()
             ->render();
@@ -280,10 +280,8 @@ final class ConsoleExporter implements Exporter
 
     public function exportEnvironment(Environment $environment): void
     {
-        $memoryLimit = $environment->memoryLimit;
-        if (null !== $memoryLimit && 0 < $memoryLimit) {
-            $memoryLimit = MemoryUnit::format($memoryLimit);
-        }
+        /** @var EnvironmentHumanReadable $map */
+        $map = $environment->forHuman();
 
         (new Table($this->output))
             ->setHeaders([
@@ -302,19 +300,19 @@ final class ConsoleExporter implements Exporter
                 'Free Disk Space',
             ])
             ->addRow([
-                $environment->os,
-                $environment->osFamily,
-                $environment->hostname,
-                $environment->machine,
-                $environment->phpIntSize,
-                $environment->phpArchitecture,
-                $environment->sapi,
-                $environment->phpVersion,
-                $memoryLimit,
-                $environment->rawMemoryLimit,
-                $environment->cpuCores,
-                MemoryUnit::format($environment->totalDisk, 1),
-                MemoryUnit::format($environment->freeDisk, 1),
+                $map['os'],
+                $map['os_family'],
+                $map['hostname'],
+                $map['machine'],
+                $map['php_int_size'],
+                $map['php_architecture'],
+                $map['sapi'],
+                $map['php_version'],
+                $map['memory_limit'],
+                $map['raw_memory_limit'],
+                $map['cpu_cores'],
+                $map['total_disk'],
+                $map['free_disk'],
             ])
             ->setVertical()
             ->render();
