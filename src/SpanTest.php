@@ -14,7 +14,7 @@ use function usleep;
 /**
  * @phpstan-import-type SnapshotMap from Snapshot
  * @phpstan-import-type MetricsMap from Metrics
- * @phpstan-import-type SummaryMap from Span
+ * @phpstan-import-type SpanMap from Span
  */
 #[CoversClass(Span::class)]
 #[CoversClass(Metrics::class)]
@@ -81,7 +81,7 @@ final class SpanTest extends TestCase
         $json = json_encode($span);
         self::assertJson($json);
 
-        /** @var SummaryMap $decoded */
+        /** @var SpanMap $decoded */
         $decoded = json_decode($json, true);
         self::assertArrayHasKey('label', $decoded);
     }

@@ -20,7 +20,7 @@ use function usleep;
 #[CoversClass(Result::class)]
 #[CoversClass(LabelGenerator::class)]
 /**
- * @phpstan-import-type SummaryMap from Span
+ * @phpstan-import-type SpanMap from Span
  */
 final class ProfilerTest extends TestCase
 {
@@ -109,9 +109,9 @@ final class ProfilerTest extends TestCase
         $profiler();
         /** @var non-empty-string $json */
         $json = json_encode($profiler);
-        /** @var array<SummaryMap> $data */
+        /** @var array<SpanMap> $data */
         $data = json_decode($json, true); /** @phpstan-ignore-line */
-        /** @var SummaryMap $spanMaps */
+        /** @var SpanMap $spanMaps */
         $spanMaps = $data['summaries'][0];  /* @phpstan-ignore-line */
 
         self::assertIsArray($spanMaps);

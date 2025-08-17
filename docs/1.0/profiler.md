@@ -19,11 +19,15 @@ Let's adapt the first example using the <code>Profiler</code> class.
 
 ```php
 use Bakame\Stackwatch\Profiler;
+use Bakame\Stackwatch\DurationUnit;
 
+// $duration is the execution time in nanosecond using hrtime instead of microtime
 $duration = Profiler::metrics(
     $service->calculateHeavyStuff(...)
 )->executionTime;
-// $duration is the execution time in nanosecond using hrtime instead of microtime
+
+// Convert the value to a more readable form using DurationUnit
+echo DurationUnit::format($duration); //returns "1.271 ms"
 ````
 
 The method returns a `Metrics` class with readonly properties for each metric.
@@ -127,26 +131,27 @@ Use this structure to analyze performance in depth, log profiles, or visualize t
 ## Accessing the result
 
 Finally, the static method `Profiler::execute` allows you to retrieve both the result of a callback
-execution and its profiling data. It returns a `ProfiledResult` instance, where the `result`
+execution and its profiling data. It returns a `ProfiledResult` instance, where the `returnValue`
 property contains the callback’s return value, and the `span` property holds the
-profiling metrics collected during the call.
+profiling data collected during the call.
 
 ```php
 use Bakame\Stackwatch\Profiler;
 
 $result = Profiler::execute($service->calculateHeavyStuff(...));
-$result->returnValue;      // the result of executing the `calculateHeavyStuff` method
+$result->returnValue;   // the result of executing the `calculateHeavyStuff` method
 $result->span;          // the profiling data associated with the call.
 $result->span->metrics; // returns a Metrics instance
 $result->span->start;   // returns a Snapshot instance
 $result->span->end;     // returns a Snapshot instance
 $result->span->label;   // returns an identifier as a string
+$result->span->range;   // returns a CallRange instance containing information where the profiling occurs
 ````
 
 ## Metrics recording
 
-Beyond its static methods, the <code>Profiler</code> also supports recording multiple individual calls.
-To enable this, create a new <code>Profiler</code> instance by passing in the callback you wish to profile.
+Beyond its static methods, the `Profiler` also supports recording multiple individual calls.
+To enable this, create a new `Profiler` instance by passing in the callback you wish to profile.
 
 ```php
 use Bakame\Stackwatch\Profiler;
@@ -159,7 +164,7 @@ $profiler = new Profiler($service->calculateHeavyStuff(...));
 $result = $profiler->run(new DateTimeImmutable('2024-12-24'));
 // you can use `__invoke` as a syntactic sugar method.
 
-span = $profiler->latest(); // returns the Span from the last call
+$span = $profiler->latest(); // returns the Span from the last call
 // the $span->metrics property returns a Metrics instance
 $metrics = $span->metrics;
 
@@ -171,7 +176,7 @@ $metrics->realMemoryUsage;
 $metrics->realPeakMemoryUsage;
 ````
 
-You can execute the <code>Profiler</code> instance as many times as needed — it will record all
+You can execute the `Profiler` instance as many times as needed — it will record all
 execution metrics each time.
 
 ```php
@@ -179,7 +184,7 @@ $result1 = $profiler(new DateTimeImmutable('2024-12-24'));
 $result2 = $profiler(new DateTimeImmutable('2025-03-02'));
 $result3 = $profiler(new DateTimeImmutable('2024-05-11'));
 
-count($profiler);          // the number of summaries already recorded
+count($profiler);          // the number of Span instances already recorded
 $profiler->latest();       // returns the Span from the last call
 $profiler->nth(-1);        // returns the same Span as Profile::last
 $profiler->first();        // returns the first Span ever generated
@@ -229,7 +234,7 @@ which returns `true` if the label has been recorded, or `false` otherwise.
 
 ## Resetting the Profiler
 
-At any given time you can reset the <code>Profiler</code> by clearing all the `Span` already recorded.
+At any given time you can reset the `Profiler` by clearing all the `Span` already recorded.
 
 ```php
 use Bakame\Stackwatch\Profiler;
@@ -256,7 +261,7 @@ $profiler->isEmpty(); // return true
 
 ## Identifier
 
-Every <code>Profiler</code> instance has a unique identifier accessible via the `identifier` method.
+Every `Profiler` instance has a unique identifier accessible via the `identifier` method.
 
 ```php
 use Bakame\Stackwatch\Profiler;
@@ -269,7 +274,7 @@ $profiler = new Profiler(function (): string {
 echo $profiler->identifier(); // 'user_export
 ```
 
-If not provided, an internal generated unique identifer will be assigned to the property.
+If not provided, an internal generated unique identifier will be assigned to the property.
 The identifier can be used for logging, debugging or for correlation when
 multiple profilers and/or timelines are running in parallel.
 
@@ -277,7 +282,8 @@ multiple profilers and/or timelines are running in parallel.
 
 You can optionally log profiling activity using any logger that implements `Psr\Log\LoggerInterface`.
 
-To enable this feature, you need to provide your instance to the <code>Profiler</code> constructor
+To enable this feature, you need to provide your instance to the `Profiler` constructor. Below
+an example using `Monolog`.
 
 ```php
 use Bakame\Stackwatch\Profiler;

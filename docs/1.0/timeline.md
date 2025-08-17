@@ -8,8 +8,12 @@ title: Timeline-Based Profiling
 In situation where you can't work with callbacks you can alternatively use the `Timeline` class.
 
 The `Timeline` class profiles across labeled checkpoints ("snapshots") in your
-code. A `Timeline` class is a sequence of snapshots of your codebase.
+code. A `Timeline` class is a sequence of snapshots taken over your codebase.
 You can start a new `Timeline` using the static method `start`:
+
+The `Timeline` class lets you profile your code by capturing labeled checkpoints, called “snapshots.”
+Each `Timeline` is an ordered sequence of snapshots, and you can start a new one using the
+static method `Timeline::start`:
 
 ```php
 use App\Profiler\Timeline;
@@ -17,13 +21,15 @@ use App\Profiler\Timeline;
 $timeline = Timeline::start('boot');
 ```
 
-When starting a timeline with the `start` method, you initiate a new `Timeline` class but you
+When starting a timeline with the `start` method, you initiate a new `Timeline` class; and you
 also immediately capture a significant point in your code also known as a snapshot.
 
 ## Taking Snapshots
 
-Use `capture()` to mark significant points in your code. Those points must each have a unique identifier
-called `label`. Labels are automatically normalized (e.g., trimmed, validated).
+Use `capture()` to mark important points in your code. Each point needs a unique label,
+which is automatically normalized. Labels can include lowercase letters, digits, dots, underscores,
+and hyphens—but cannot start or end with a symbol, nor have consecutive symbols.
+This ensures all labels are **safe, consistent, and easy to reference** throughout your timeline.
 
 ```php
 $timeline->capture('init');
@@ -47,7 +53,7 @@ You can provide a custom label for the span:
 $span = $timeline->summarize('full_request'); // Returns a Span instance
 ```
 
-If needed, you can measure the profiling data between two specific labels:
+If needed, you can measure the profiling data (`Span`) between two specific labels:
 
 ```php
 $delta = $timeline->delta('init', 'render'); // Returns Span
@@ -153,15 +159,24 @@ $service->calculateHeavyStuff();
 echo microtime(true) - $start; // the execution time of your code
 ```
 
-We can adapt this example using the `Timeline` class this time.
+Using the `Timeline` class, the same example can be written as:
 
 ```php
+use Bakame\Stackwatch\DurationUnit;
 use Bakame\Stackwatch\Timeline;
 
+//Start a new Timeline
 $timeline = Timeline::start('start');
+
+// Code to profile
 $service->calculateHeavyStuff();
-$duration = $timeline->take('end')->metrics->executionTime;
+
+// Take a snapshot at the end and get execution time
+$duration = $timeline->take('end')->metrics->executionTime; // returns 1271000
+
 // $duration is expressed in nanoseconds
+// // Convert the value to a more readable form using DurationUnit
+echo DurationUnit::format($duration); //returns "1.271 ms"
 ````
 
 #### Identifier

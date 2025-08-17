@@ -23,7 +23,7 @@ use function trim;
 
 /**
  * @implements IteratorAggregate<int, Span>
- * @phpstan-import-type SummaryMap from Span
+ * @phpstan-import-type SpanMap from Span
  */
 final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 {
@@ -216,7 +216,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     /**
      * @return array{
      *     identifier: non-empty-string,
-     *     summaries: list<SummaryMap>
+     *     summaries: list<SpanMap>
      * }
      */
     public function toArray(): array

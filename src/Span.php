@@ -15,7 +15,7 @@ use function implode;
  * @phpstan-import-type CallRangeMap from CallRange
  * @phpstan-import-type MetricsMap from Metrics
  * @phpstan-import-type SnapshotMap from Snapshot
- * @phpstan-type SummaryMap array{
+ * @phpstan-type SpanMap array{
  *     label: non-empty-string,
  *     snapshots: array{0: SnapshotMap, 1: SnapshotMap},
  *     range: CallRangeMap,
@@ -38,15 +38,15 @@ final class Span implements JsonSerializable
      */
     public function __construct(string $label, Snapshot $start, Snapshot $end)
     {
-        $this->metrics = Metrics::fromSnapshots($start, $end);
+        $this->label = LabelGenerator::sanitize($label);
         $this->start = $start;
         $this->end = $end;
-        $this->label = LabelGenerator::sanitize($label);
+        $this->metrics = Metrics::fromSnapshots($start, $end);
         $this->range = CallRange::fromSnapshots($start, $end);
     }
 
     /**
-     * @return SummaryMap
+     * @return SpanMap
      */
     public function toArray(): array
     {
@@ -62,7 +62,7 @@ final class Span implements JsonSerializable
     }
 
     /**
-     * @param SummaryMap $data
+     * @param SpanMap $data
      */
     public static function fromArray(array $data): self
     {
