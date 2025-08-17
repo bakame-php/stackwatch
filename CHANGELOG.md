@@ -2,18 +2,20 @@
 
 All Notable changes to `bakame/stackwatch` will be documented in this file.
 
-## [Next - African City](https://github.com/bakame-php/stackwatch/compare/0.13.0...main) - TBD
+## [0.14.0 - Nouakchott](https://github.com/bakame-php/stackwatch/compare/0.13.0...main) - TBD
 
 ### Added
 
 - `CallLocation` class to allow recording where the package `Snapshot` was called from [#8](https://github.com/bakame-php/stackwatch/pull/8)
 - `CallRange` class to allow manipulating location range within the `Summary` class.
+- `Environment::forHuman` method
 
 ### Fixed
 
 -  `UnitOfWork` internal code improvement.
 - **BC BREAK:** `Snapshot::forHuman` properties key have been updated to remove JSON like string representation.
 - **BC BREAK:** `Snapshot::cpu` property is replaced by 2 properties `Snapshot::cpuUserTime` and `Snapshot::cpuSystemTime`.
+- `LabelGenerator::generate` now also accepts the `-` character.
 
 ### Deprecated
 

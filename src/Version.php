@@ -11,8 +11,8 @@ use function json_encode;
 final class Version implements Stringable
 {
     private const NAME = 'stackwatch';
-    private const VERSION_ID = '0.13.0';
-    private const VERSION_NAME = 'Marrakesh';
+    private const VERSION_ID = '0.14.0';
+    private const VERSION_NAME = 'Nouakchott';
     private const AUTHOR = 'Ignace Nyamagana Butera';
 
     public static function name(): string
