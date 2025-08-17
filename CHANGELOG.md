@@ -9,6 +9,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - `CallLocation` class to allow recording where the package `Snapshot` was called from [#8](https://github.com/bakame-php/stackwatch/pull/8)
 - `CallRange` class to allow manipulating location range within the `Summary` class.
 - `Environment::forHuman` method
+- `--dry-run` option to `stackwatch` command
 
 ### Fixed
 

@@ -9,7 +9,7 @@ use Throwable;
 
 final class JsonProcessor implements Processor
 {
-    public function __construct(public readonly JsonExporter $exporter)
+    public function __construct(public readonly JsonExporter $exporter, public readonly State $dryRun = State::Disabled)
     {
     }
 
@@ -22,7 +22,9 @@ final class JsonProcessor implements Processor
     {
         $path = null;
         foreach ($unitOfWorks as $unitOfWork) {
-            $unitOfWork->run();
+            if (State::Disabled === $this->dryRun) {
+                $unitOfWork->run();
+            }
             $path ??= $unitOfWork->path();
         }
 

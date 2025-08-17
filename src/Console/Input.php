@@ -40,6 +40,7 @@ use const FILTER_VALIDATE_INT;
  *     d?: string|false,
  *     tags?: string|false,
  *     t?: string|false,
+ *     dry-run?: string|false,
  * }
  */
 final class Input
@@ -59,6 +60,7 @@ final class Input
         public readonly ?string $output = null,
         public readonly State $jsonPrettyPrint = State::Disabled,
         public readonly State $inIsolation = State::Disabled,
+        public readonly State $dryRun = State::Disabled,
         public readonly int $depth = -1,
         public readonly array $tags = [],
     ) {
@@ -82,6 +84,7 @@ final class Input
             output: self::getFirstValue($input, 'output', 'o'),
             jsonPrettyPrint: State::fromBool(self::hasFlag($input, 'pretty', 'P')),
             inIsolation: State::fromBool(self::hasFlag($input, 'isolation', 'x')),
+            dryRun: State::fromBool(self::hasFlag($input, 'dry-run')),
             depth: self::resolveDepth($input),
             tags: self::resolveTags($input),
         );
@@ -132,6 +135,7 @@ final class Input
                 'pretty',
                 'isolation',
                 'no-recursion',
+                'dry-run',
             ]
         );
 
@@ -218,7 +222,7 @@ final class Input
 
     public static function usage(): string
     {
-        return '--path=PATH [--output=OUTPUT] [--format=FORMAT] [--depth=DEPTH] [--tags=TAG] [--no-recursion] [--isolation] [--pretty] [--info] [--help] [--version]';
+        return '--path=PATH [options]';
     }
 
     public static function consoleDescription(): string
@@ -231,6 +235,7 @@ final class Input
 <fg=green>  -f, --format=FORMAT</>   Output format: 'table' or 'json' (default: 'table')
 <fg=green>  -o, --output=OUTPUT</>   Path to store the profiling output (optional)
 <fg=green>  -P, --pretty</>          Pretty-print the JSON/NDJSON output (json only; optional)
+<fg=green>  --dry-run</>             List profiling targets without executing them
 <fg=green>  -i, --info</>            Show additional system/environment information (optional)
 <fg=green>  -h, --help</>            Display this help message (optional)
 <fg=green>  -V, --version</>         Display the version and exit (optional)

@@ -28,6 +28,7 @@ php vendor/bin/stackwatch --path=PATH [options]
 | `-d, --depth=DEPTH`   | Recursion depth (`0` = current dir only, default: unlimited) (optional) |
 | `-n, --no-recursion`  | Disable directory recursion (optional)                                  |
 | `-x, --isolation`     | Enable profiling each file in a separate process                        |
+| `--dry-run`           | List profiling targets without executing them                           |
 | `-P, --pretty`        | Pretty-print the JSON/NDJSON output (json only)                         |
 | `-i, --info`          | Show additional system/environment information                          |
 | `-h, --help`          | Display the help message                                                |

@@ -45,6 +45,7 @@ final class PathProfiler
         public readonly LoggerInterface $logger = new NullLogger(),
         public readonly int $depth = -1,
         public readonly State $isInIsolation = State::Disabled,
+        public readonly State $dryRun = State::Disabled,
         public readonly array $tags = [],
     ) {
     }
@@ -56,10 +57,11 @@ final class PathProfiler
     ): self {
         return new self(
             new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
-            new ConsoleProcessor(new ConsoleExporter($output)),
+            new ConsoleProcessor(exporter: new ConsoleExporter($output), dryRun: $input->dryRun),
             $logger,
             $input->depth,
             $input->inIsolation,
+            $input->dryRun,
             $input->tags,
         );
     }
@@ -75,10 +77,11 @@ final class PathProfiler
     ): self {
         return new self(
             new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
-            new JsonProcessor(new JsonExporter($path, $jsonOptions)),
+            new JsonProcessor(new JsonExporter($path, $jsonOptions), $input->dryRun),
             $logger,
             $input->depth,
             $input->inIsolation,
+            $input->dryRun,
             $input->tags,
         );
     }
@@ -111,7 +114,6 @@ final class PathProfiler
                 return !in_array($filesize, [false, 0], true);
             }
         );
-
 
         foreach ($phpFiles as $phpFile) {
             $this->handleFile($phpFile);
@@ -150,6 +152,10 @@ final class PathProfiler
             $arguments[] = implode(',', $this->tags);
         }
 
+        if (State::Enabled === $this->dryRun) {
+            $arguments[] = '--dry-run';
+        }
+
         $process = new Process($arguments);
         $process->run();
         $process->isSuccessful() || throw new UnableToProfile($process->getErrorOutput());
@@ -173,7 +179,7 @@ final class PathProfiler
      *
      * @return iterable<UnitOfWork>
      */
-    public function createUnitOfWorks(SplFileInfo $path): iterable
+    private function createUnitOfWorks(SplFileInfo $path): iterable
     {
         $realPath = $path->getRealPath();
         try {
