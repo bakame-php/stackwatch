@@ -6,6 +6,7 @@ namespace Bakame\Stackwatch;
 
 use JsonSerializable;
 
+use function abs;
 use function array_diff_key;
 use function array_keys;
 use function implode;
@@ -62,14 +63,12 @@ final class CallRange implements JsonSerializable
 
     public function isCrossFile(): bool
     {
-        return ! $this->isSameFile();
+        return $this->start->isCrossFile($this->end);
     }
 
     public function isSameFile(): bool
     {
-        return null !== $this->start->path
-            && null !== $this->end->path
-            && $this->start->path === $this->end->path;
+        return $this->start->isSameFile($this->end);
     }
 
     public function hasStart(): bool
@@ -94,7 +93,22 @@ final class CallRange implements JsonSerializable
             && $this->end->isEmpty();
     }
 
+    /**
+     * Returns the inclusive line span of the range (number of lines covered, including start and end).
+     * Returns null if the range is cross-file or either line is undefined.
+     */
     public function lineSpan(): ?int
+    {
+        $length = $this->length();
+
+        return null !== $length ? abs($length) + 1 : $length;
+    }
+
+    /**
+     * Returns the exclusive length of the range (number of lines between start and end).
+     * Returns null if the range is cross-file or either line is undefined.
+     */
+    public function length(): ?int
     {
         if ($this->isCrossFile()) {
             return null;
@@ -104,13 +118,19 @@ final class CallRange implements JsonSerializable
             return null;
         }
 
-        return abs($this->end->line - $this->start->line) + 1;
+        return $this->end->line - $this->start->line;
     }
 
     public function isForward(): bool
     {
         return $this->isSameFile()
             && $this->end->line >= $this->start->line;
+    }
+
+    public function isBackward(): bool
+    {
+        return $this->isSameFile()
+            && $this->end->line < $this->start->line;
     }
 
     /**

@@ -123,4 +123,56 @@ final class CallRangeTest extends TestCase
         $decoded = json_decode($json, true);
         self::assertSame($range->toArray(), $decoded);
     }
+
+    public function testLengthAndLineSpanForward(): void
+    {
+        $range = new CallRange(
+            new CallLocation('/file.php', 10),
+            new CallLocation('/file.php', 12)
+        );
+
+        self::assertSame(2, $range->length());       // exclusive
+        self::assertSame(3, $range->lineSpan());     // inclusive
+        self::assertTrue($range->isForward());
+        self::assertFalse($range->isBackward());
+    }
+
+    public function testLengthAndLineSpanBackward(): void
+    {
+        $range = new CallRange(
+            new CallLocation('/file.php', 12),
+            new CallLocation('/file.php', 10)
+        );
+
+        self::assertSame(-2, $range->length());      // exclusive (signed)
+        self::assertSame(3, $range->lineSpan());     // inclusive
+        self::assertFalse($range->isForward());
+        self::assertTrue($range->isBackward());
+    }
+
+    public function testLengthAndLineSpanSameLine(): void
+    {
+        $range = new CallRange(
+            new CallLocation('/file.php', 5),
+            new CallLocation('/file.php', 5)
+        );
+
+        self::assertSame(0, $range->length());
+        self::assertSame(1, $range->lineSpan());
+        self::assertTrue($range->isForward());
+        self::assertFalse($range->isBackward());
+    }
+
+    public function testLengthAndLineSpanCrossFile(): void
+    {
+        $range = new CallRange(
+            new CallLocation('/file1.php', 5),
+            new CallLocation('/file2.php', 10)
+        );
+
+        self::assertNull($range->length());
+        self::assertNull($range->lineSpan());
+        self::assertFalse($range->isForward());
+        self::assertFalse($range->isBackward());
+    }
 }

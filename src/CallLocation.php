@@ -97,6 +97,18 @@ final class CallLocation implements JsonSerializable
             && $value->line === $this->line;
     }
 
+    public function isSameFile(mixed $value): bool
+    {
+        return $value instanceof CallLocation
+            && $value->path === $this->path;
+    }
+
+    public function isCrossFile(mixed $value): bool
+    {
+        return $value instanceof CallLocation
+            && $value->path !== $this->path;
+    }
+
     public function isEmpty(): bool
     {
         return null === $this->path
