@@ -17,7 +17,7 @@ use const DEBUG_BACKTRACE_IGNORE_ARGS;
  */
 final class CallLocation implements JsonSerializable
 {
-    private const DEBUG_BACKTRACE_LIMIT = 5;
+    private const DEBUG_BACKTRACE_LIMIT = 4;
 
     public function __construct(
         public readonly ?string $path = null,
