@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
+use Bakame\Stackwatch\Cloak;
 use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\Exporter\LeaderPrinter;
 use Bakame\Stackwatch\Version;
@@ -29,9 +30,8 @@ final class ConsoleHandler implements Handler
         $output = $this->stdout;
 
         if (null !== $input->output) {
-            set_error_handler(fn () => true);
-            $handler = fopen($input->output, 'w');
-            restore_error_handler();
+            /** @var resource|false $handler */
+            $handler = Cloak::call(fopen(...), $input->output, 'w');
             false !== $handler || throw new RuntimeException('Unable to open the file for storing the output.');
             $output = new StreamOutput($handler);
         }

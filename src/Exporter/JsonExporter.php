@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Exporter;
 
+use Bakame\Stackwatch\Cloak;
 use Bakame\Stackwatch\Console\Exporter;
 use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\Metrics;
@@ -24,8 +25,6 @@ use function fwrite;
 use function is_resource;
 use function is_string;
 use function json_encode;
-use function restore_error_handler;
-use function set_error_handler;
 use function stream_get_meta_data;
 
 use const JSON_THROW_ON_ERROR;
@@ -81,9 +80,8 @@ final class JsonExporter implements Exporter
 
                 public function fwrite(string $data): int|false
                 {
-                    set_error_handler(fn (int $errno, string $errstr, string $errfile, int $errline) => true);
-                    $bytes = fwrite($this->resource, $data);
-                    restore_error_handler();
+                    /** @var int|false $bytes */
+                    $bytes = Cloak::call(fwrite(...), $this->resource, $data);
 
                     return $bytes;
                 }

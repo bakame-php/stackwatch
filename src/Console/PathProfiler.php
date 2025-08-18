@@ -36,17 +36,11 @@ use const PHP_BINARY;
  */
 final class PathProfiler
 {
-    /**
-     * @param list<non-empty-string> $tags
-     */
     public function __construct(
         public readonly UnitOfWorkGenerator $unitOfWorkGenerator,
         public readonly Processor $processor,
+        public readonly Input $input,
         public readonly LoggerInterface $logger = new NullLogger(),
-        public readonly int $depth = -1,
-        public readonly State $isInIsolation = State::Disabled,
-        public readonly State $dryRun = State::Disabled,
-        public readonly array $tags = [],
     ) {
     }
 
@@ -58,11 +52,8 @@ final class PathProfiler
         return new self(
             new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
             new ConsoleProcessor(exporter: new ConsoleExporter($output), dryRun: $input->dryRun),
+            $input,
             $logger,
-            $input->depth,
-            $input->inIsolation,
-            $input->dryRun,
-            $input->tags,
         );
     }
 
@@ -78,11 +69,8 @@ final class PathProfiler
         return new self(
             new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
             new JsonProcessor(new JsonExporter($path, $jsonOptions), $input->dryRun),
+            $input,
             $logger,
-            $input->depth,
-            $input->inIsolation,
-            $input->dryRun,
-            $input->tags,
         );
     }
 
@@ -95,7 +83,7 @@ final class PathProfiler
         $files = new ArrayIterator([$filePath]);
         if ($filePath->isDir()) {
             $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($filePath->getPathname(), FilesystemIterator::SKIP_DOTS));
-            $files->setMaxDepth($this->depth);
+            $files->setMaxDepth($this->input->depth);
         }
 
         /** @var iterable<SplFileInfo> $phpFiles */
@@ -125,7 +113,7 @@ final class PathProfiler
      */
     public function handleFile(SplFileInfo $path): void
     {
-        $units = match ($this->isInIsolation) {
+        $units = match ($this->input->inIsolation) {
             State::Enabled => $this->createUnitOfWorksInIsolation($path),
             State::Disabled => $this->createUnitOfWorks($path),
         };
@@ -147,13 +135,21 @@ final class PathProfiler
         false !== $stackwatchPath || throw new RuntimeException('Could not resolve stackwatch path.');
 
         $arguments = [PHP_BINARY, $stackwatchPath, '-p', $realPath, '-f', 'json', '-n'];
-        if ([] !== $this->tags) {
+        if ([] !== $this->input->tags) {
             $arguments[] = '-t';
-            $arguments[] = implode(',', $this->tags);
+            $arguments[] = implode(',', $this->input->tags);
         }
 
-        if (State::Enabled === $this->dryRun) {
+        if (State::Enabled === $this->input->dryRun) {
             $arguments[] = '--dry-run';
+        }
+
+        if (null !== $this->input->memoryLimit) {
+            $arguments[] = '--memory-limit='.$this->input->memoryLimit;
+        }
+
+        if (null !== $this->input->logFile) {
+            $arguments[] = '--log='.$this->input->logFile;
         }
 
         $process = new Process($arguments);
@@ -183,7 +179,7 @@ final class PathProfiler
     {
         $realPath = $path->getRealPath();
         try {
-            return $this->unitOfWorkGenerator->generate($realPath, $this->tags);
+            return $this->unitOfWorkGenerator->generate($realPath, $this->input->tags);
         } catch (Throwable $exception) {
             $this->logger->notice('The file '.$realPath.' can not be profiled.', ['path' => $realPath, 'exception' => $exception]);
 

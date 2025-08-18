@@ -39,6 +39,7 @@ final class PathProfilerTest extends TestCase
         $this->command = new PathProfiler(
             new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
             new ConsoleProcessor(new ConsoleExporter($this->stdout)),
+            Input::fromInput(['path' => '/tmp']),
             $logger
         );
     }

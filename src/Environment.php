@@ -18,8 +18,6 @@ use function php_sapi_name;
 use function php_uname;
 use function phpversion;
 use function preg_replace;
-use function restore_error_handler;
-use function set_error_handler;
 use function shell_exec;
 use function strtolower;
 use function trim;
@@ -90,13 +88,13 @@ final class Environment implements JsonSerializable
     public static function current(): self
     {
         /** @var float|false $totalDisk */
-        $totalDisk = self::cloak(disk_total_space(...), '/');
+        $totalDisk = Cloak::call(disk_total_space(...), '/');
         if (false === $totalDisk) {
             $totalDisk = 0;
         }
 
         /** @var float|false $freeDisk */
-        $freeDisk = self::cloak(disk_free_space(...), '/');
+        $freeDisk = Cloak::call(disk_free_space(...), '/');
         if (false === $freeDisk) {
             $freeDisk = 0;
         }
@@ -139,23 +137,28 @@ final class Environment implements JsonSerializable
 
     public static function detectCpuCores(): int
     {
-        $shellExec = static fn (string $cmd): string => trim((string) shell_exec($cmd));
         if (self::isWindowsPlatform()) {
             return self::getCpuCoresCount(getenv('NUMBER_OF_PROCESSORS'));
         }
 
+        $shellExec = static function (string $cmd): string {
+            /** @var string|false $returnValue */
+            $returnValue = Cloak::call(shell_exec(...), $cmd);
+
+            return trim((string) $returnValue);
+        };
+
         /** @var bool $isReadable */
-        $isReadable = self::cloak(is_readable(...), '/proc/cpuinfo');
+        $isReadable = Cloak::call(is_readable(...), '/proc/cpuinfo');
         if ($isReadable) {
-            /** @var string $cores */
-            $cores = self::cloak($shellExec, 'nproc');
+            $cores = $shellExec('nproc');
 
             return self::getCpuCoresCount($cores);
         }
 
         if (self::isMacPlatform()) {
             /** @var string $cores */
-            $cores = self::cloak($shellExec, 'sysctl -n hw.ncpu');
+            $cores = $shellExec('sysctl -n hw.ncpu');
 
             return self::getCpuCoresCount($cores);
         }
@@ -288,20 +291,5 @@ final class Environment implements JsonSerializable
     public function jsonSerialize(): array
     {
         return $this->toArray();
-    }
-
-    /**
-     * Calls a callback suppressing PHP warnings/notices during its execution.
-     *
-     * @param callable $callback The function to call.
-     * @param mixed ...$args Arguments to pass to the callback.
-     */
-    private static function cloak(callable $callback, mixed ...$args): mixed
-    {
-        set_error_handler(fn (int $errno, string $errstr, string $errfile, int $errline) => true);
-        $result = $callback(...$args);
-        restore_error_handler();
-
-        return $result;
     }
 }

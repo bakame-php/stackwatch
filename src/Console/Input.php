@@ -43,6 +43,8 @@ use const FILTER_VALIDATE_INT;
  *     tags?: string|false,
  *     t?: string|false,
  *     dry-run?: string|false,
+ *     memory-limit?: string|false,
+ *     log?: string|false,
  * }
  */
 final class Input
@@ -65,6 +67,8 @@ final class Input
         public readonly State $dryRun = State::Disabled,
         public readonly int $depth = -1,
         public readonly array $tags = [],
+        public readonly ?string $memoryLimit = null,
+        public readonly ?string $logFile = null,
     ) {
         in_array($this->format, [self::JSON_FORMAT, self::TABLE_FORMAT], true) || throw new InvalidArgument('Output format is not supported');
         null === $this->path || '' !== trim($this->path) || throw new InvalidArgument('path format is not valid');
@@ -89,6 +93,8 @@ final class Input
             dryRun: State::fromBool(self::hasFlag($input, 'dry-run')),
             depth: self::resolveDepth($input),
             tags: self::resolveTags($input),
+            memoryLimit: self::getFirstValue($input, 'memory-limit'),
+            logFile: self::getFirstValue($input, 'memory-limit'),
         );
     }
 
@@ -138,6 +144,8 @@ final class Input
                 'isolation',
                 'no-recursion',
                 'dry-run',
+                'memory-limit:',
+                'log:',
             ]
         );
 
@@ -230,18 +238,20 @@ final class Input
     public static function consoleDescription(): string
     {
         return <<<HELP
-<fg=green>  -p, --path=PATH</>       Path to scan for PHP files to profile (required)
-<fg=green>  -d, --depth=DEPTH</>     Recursion depth (0 = current dir only, default: unlimited) (optional)
-<fg=green>  -n, --no-recursion</>    Disable directory recursion (optional)
-<fg=green>  -x, --isolation</>       Profile by isolation each file (optional)
-<fg=green>  -f, --format=FORMAT</>   Output format: 'table' or 'json' (default: 'table')
-<fg=green>  -o, --output=OUTPUT</>   Path to store the profiling output (optional)
-<fg=green>  -P, --pretty</>          Pretty-print the JSON/NDJSON output (json only; optional)
-<fg=green>  --dry-run</>             List profiling targets without executing them
-<fg=green>  -i, --info</>            Show additional system/environment information (optional)
-<fg=green>  -h, --help</>            Display this help message (optional)
-<fg=green>  -V, --version</>         Display the version and exit (optional)
-<fg=green>  -t, --tags</>            Only run the script when one of the listed tag is present in the attribute tag should be separated by a comma (optional)
+<fg=green>  -p, --path=PATH</>             Path to scan for PHP files to profile <fg=yellow>(required)</>
+<fg=green>  -d, --depth=DEPTH</>           Recursion depth <fg=yellow>(0 = current dir only, default: unlimited)</>
+<fg=green>  -f, --format=FORMAT</>         Output format: 'table' or 'json' <fg=yellow>(default: 'table')</>
+<fg=green>  -o, --output=OUTPUT</>         Path to store the profiling output
+<fg=green>  --memory-limit=MEMORY-LIMIT</> Memory limit for analysis
+<fg=green>  --log=FILE</>                  Writes log in the specified file
+<fg=green>  -n, --no-recursion</>          Disable directory recursion
+<fg=green>  -x, --isolation</>             Profile by isolation each file
+<fg=green>  --dry-run</>                   List profiling targets without performing the profile
+<fg=green>  -P, --pretty</>                Pretty-print the JSON/NDJSON output <fg=yellow>(json only)</>
+<fg=green>  -i, --info</>                  Show additional system/environment information
+<fg=green>  -h, --help</>                  Display this help message
+<fg=green>  -V, --version</>               Display the version and exit
+<fg=green>  -t, --tags=TAGS</>             Only run the profiles for the listed tag(s)
 
 HELP;
     }

@@ -4,15 +4,19 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
+use Bakame\Stackwatch\Cloak;
 use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\Version;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Output\StreamOutput;
 use Throwable;
 
 use function ini_set;
 use function preg_match;
+
+use const STDERR;
 
 final class Stackwatch
 {
@@ -31,6 +35,35 @@ final class Stackwatch
                 break;
             }
         }
+    }
+
+    /**
+     * @param array<string> $argv
+     */
+    public static function resolveLogger(array $argv = [], ?StreamOutput $default = null): LoggerInterface
+    {
+        $logFile = null;
+        foreach ($argv as $i => $arg) {
+            if (str_starts_with($arg, '--log=')) {
+                $logFile = substr($arg, strlen('--log='));
+                break;
+            }
+
+            if ('--log' === $arg && isset($argv[$i + 1])) {
+                $logFile = $argv[$i + 1];
+                break;
+            }
+        }
+
+        if (null === $logFile) {
+            return new Logger($default ?? new StreamOutput(STDERR));
+        }
+
+        /** @var resource|false $handler */
+        $handler = Cloak::call(fopen(...), $logFile, 'a');
+        false !== $handler || throw new RuntimeException('Unable to open the file for storing the output.');
+
+        return new Logger(new StreamOutput($handler));
     }
 
     public function __construct(

@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Bakame\Stackwatch\Console\Logger;
 use Bakame\Stackwatch\Console\Stackwatch;
 use Bakame\Stackwatch\Environment;
 use Symfony\Component\Console\Output\StreamOutput;
@@ -31,12 +30,11 @@ if ('cli' !== PHP_SAPI) {
 }
 
 Stackwatch::setMemoryLimit($argv);
-
 $stderr = new StreamOutput(STDERR);
 
 return new Stackwatch(
     stdout: new StreamOutput(STDOUT),
     stderr: $stderr,
-    logger: new Logger($stderr),
+    logger: Stackwatch::resolveLogger($argv, $stderr),
     environment: Environment::current()
 );

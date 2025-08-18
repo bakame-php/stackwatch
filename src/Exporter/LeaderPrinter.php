@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Exporter;
 
+use Bakame\Stackwatch\Cloak;
+
 final class LeaderPrinter
 {
-    public function __construct(
-        private string $filler = '.',
-        private int $padExtra = 1,
-    ) {
+    public function __construct(private string $filler = '.', private int $padExtra = 1)
+    {
     }
 
     /**
@@ -52,25 +52,20 @@ final class LeaderPrinter
      */
     public static function detectTerminalWidth(int $fallback = 80): int
     {
-        $exec = function (string $command): string|false {
-            set_error_handler(fn () => true);
-            $result = exec($command);
-            restore_error_handler();
-
-            return $result;
-        };
-
-        $cols = $exec('tput cols 2>/dev/null');
+        /** @var string|false $cols */
+        $cols = Cloak::call(exec(...), 'tput cols 2>/dev/null');
         if (is_numeric($cols) && $cols > 0) {
             return (int) $cols;
         }
 
-        $stty = $exec('stty size 2>/dev/null');
+        /** @var string|false $stty */
+        $stty = Cloak::call(exec(...), 'stty size 2>/dev/null');
         if (false !== $stty && 1 === preg_match('/^\d+\s+(?<size>\d+)$/', trim($stty), $match)) {
             return (int) $match['size'];
         }
 
-        $mode = $exec('mode con');
+        /** @var string|false $mode */
+        $mode = Cloak::call(exec(...), 'mode con');
         if (false !== $mode && 1 === preg_match('/Columns:\s+(?<size>\d+)/i', $mode, $match)) {
             return (int) $match['size'];
         }

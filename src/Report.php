@@ -77,7 +77,7 @@ final class Report implements JsonSerializable
         ];
     }
 
-    public static function fromMetrics(Metrics ...$metrics): self
+    public static function fromMetrics(Timeline|Profiler|Span|Metrics ...$metrics): self
     {
         $statistics = [
             'cpuTime' => [],
@@ -88,7 +88,7 @@ final class Report implements JsonSerializable
             'realPeakMemoryUsage' => [],
         ];
 
-        foreach ($metrics as $metric) {
+        foreach (Metrics::yieldFrom(...$metrics) as $metric) {
             $statistics['cpuTime'][] = $metric->cpuTime;
             $statistics['executionTime'][] = $metric->executionTime;
             $statistics['memoryUsage'][] = $metric->memoryUsage;

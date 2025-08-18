@@ -17,8 +17,9 @@ use function implode;
  *     start_line: ?int,
  *     end_path: ?string,
  *     end_line: ?int,
- *     same_file: bool,
+ *     length: ?int,
  *     line_span: ?int,
+ *     same_file: bool,
  *     complete: bool,
  *     forward: bool,
  * }
@@ -143,8 +144,9 @@ final class CallRange implements JsonSerializable
             'start_line' => $this->start->line,
             'end_path' => $this->end->path,
             'end_line' => $this->end->line,
-            'same_file' => $this->isSameFile(),
+            'length' => $this->length(),
             'line_span' => $this->lineSpan(),
+            'same_file' => $this->isSameFile(),
             'complete' => $this->isComplete(),
             'forward' => $this->isForward(),
         ];

@@ -19,6 +19,7 @@ final class CallRangeTest extends TestCase
             'end_path' => '/path/to/start.php',
             'end_line' => 20,
             'same_file' => true,
+            'length' => 10,
             'line_span' => 11,
             'complete' => true,
             'forward' => true,

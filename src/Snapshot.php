@@ -185,6 +185,22 @@ final class Snapshot implements JsonSerializable
         ];
     }
 
+    public function equals(mixed $other): bool
+    {
+        return $other instanceof self
+            && $other->label === $this->label
+            && $this->hrtime === $other->hrtime
+            && $this->cpuUserTime === $other->cpuUserTime
+            && $this->cpuSystemTime === $other->cpuSystemTime
+            && $this->memoryUsage === $other->memoryUsage
+            && $this->peakMemoryUsage === $other->peakMemoryUsage
+            && $this->realMemoryUsage === $other->realMemoryUsage
+            && $this->realPeakMemoryUsage === $other->realPeakMemoryUsage
+            && $this->timestamp->format('U.u') === $other->timestamp->format('U.u')
+            && $this->originPath === $other->originPath
+            && $this->originLine === $other->originLine;
+    }
+
     /**
      * @return SnapshotMap
      */
@@ -211,22 +227,6 @@ final class Snapshot implements JsonSerializable
             'origin_path' => $this->originPath,
             'origin_line' => $this->originLine,
         ];
-    }
-
-    public function equals(mixed $other): bool
-    {
-        return $other instanceof self
-            && $other->label === $this->label
-            && $this->hrtime === $other->hrtime
-            && $this->cpuUserTime === $other->cpuUserTime
-            && $this->cpuSystemTime === $other->cpuSystemTime
-            && $this->memoryUsage === $other->memoryUsage
-            && $this->peakMemoryUsage === $other->peakMemoryUsage
-            && $this->realMemoryUsage === $other->realMemoryUsage
-            && $this->realPeakMemoryUsage === $other->realPeakMemoryUsage
-            && $this->timestamp->format('U.u') === $other->timestamp->format('U.u')
-            && $this->originPath === $other->originPath
-            && $this->originLine === $other->originLine;
     }
 
     /**

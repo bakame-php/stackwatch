@@ -46,22 +46,6 @@ final class Span implements JsonSerializable
     }
 
     /**
-     * @return SpanMap
-     */
-    public function toArray(): array
-    {
-        return [
-            'label' => $this->label,
-            'snapshots' => [
-                $this->start->toArray(),
-                $this->end->toArray(),
-            ],
-            'range' => $this->range->toArray(),
-            'metrics' => $this->metrics->toArray(),
-        ];
-    }
-
-    /**
      * @param SpanMap $data
      */
     public static function fromArray(array $data): self
@@ -79,6 +63,22 @@ final class Span implements JsonSerializable
         } catch (Throwable $exception) {
             throw new InvalidArgument('Unable to create a summary from the payload', previous: $exception);
         }
+    }
+
+    /**
+     * @return SpanMap
+     */
+    public function toArray(): array
+    {
+        return [
+            'label' => $this->label,
+            'snapshots' => [
+                $this->start->toArray(),
+                $this->end->toArray(),
+            ],
+            'range' => $this->range->toArray(),
+            'metrics' => $this->metrics->toArray(),
+        ];
     }
 
     /**

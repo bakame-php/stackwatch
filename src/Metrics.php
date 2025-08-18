@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch;
 
+use Generator;
 use JsonSerializable;
 use Throwable;
 
 use function array_diff_key;
 use function array_keys;
-use function array_reduce;
-use function count;
+use function array_map;
 use function implode;
+use function iterator_to_array;
 use function preg_replace;
 use function strtolower;
 
@@ -70,7 +71,7 @@ final class Metrics implements JsonSerializable
         ($excutionTime = $end->hrtime - $start->hrtime) >= 0 || throw new UnableToProfile('The ending snapshot was taken before the starting snapshot.');
 
         return new self(
-            cpuTime: self::calculateCpuTime($start, $end),
+            cpuTime: $end->cpuUserTime + $end->cpuSystemTime - $start->cpuUserTime - $start->cpuSystemTime,
             executionTime: $excutionTime,
             memoryUsage: $end->memoryUsage - $start->memoryUsage,
             peakMemoryUsage: $end->peakMemoryUsage - $start->peakMemoryUsage,
@@ -111,39 +112,26 @@ final class Metrics implements JsonSerializable
         }
     }
 
-    public static function average(Profiler|Result|Span|Metrics ...$metrics): self
+    public static function sum(Timeline|Profiler|Result|Span|Metrics ...$items): self
     {
-        /** @var array<Metrics> $metricList */
-        $metricList = array_reduce($metrics, function (array $carry, Profiler|Result|Span|Metrics $metric) {
-            if ($metric instanceof Metrics) {
-                $carry[] = $metric;
+        $sum = self::none();
+        foreach (self::yieldFrom(...$items) as $metric) {
+            $sum = $sum->add($metric);
+        }
 
-                return $carry;
-            }
+        return $sum;
+    }
 
-            if ($metric instanceof Span) {
-                $carry[] = $metric->metrics;
+    public static function average(Timeline|Profiler|Result|Span|Metrics ...$metrics): self
+    {
+        $sum = self::none();
+        $count = 0;
+        foreach (self::yieldFrom(...$metrics) as $metric) {
+            $sum = $sum->add($metric);
+            $count++;
+        }
 
-                return $carry;
-            }
-
-            if ($metric instanceof Result) {
-                $carry[] = $metric->span->metrics;
-
-                return $carry;
-            }
-
-            foreach ($metric as $span) {
-                $carry[] = $span->metrics;
-            }
-
-            return $carry;
-        }, []);
-
-        $count = count($metricList);
-        $sum = self::sum(...$metricList);
-
-        return 2 > $count ? $sum : new Metrics(
+        return 2 > $count ? $sum : new self(
             cpuTime: $sum->cpuTime / $count,
             executionTime: $sum->executionTime / $count,
             memoryUsage: $sum->memoryUsage / $count,
@@ -153,18 +141,44 @@ final class Metrics implements JsonSerializable
         );
     }
 
-    public static function sum(Metrics ...$metrics): self
+    /**
+     * Lazily yields Metrics instances from one or more input objects.
+     *
+     * This method accepts any combination of the following types:
+     * - `Metrics` — yields the object itself.
+     * - `Span` — yields the `metrics` property.
+     * - `Result` — yields the `metrics` of its `span`.
+     * - `Profiler` — yields the `metrics` of each contained `Span`.
+     * - `Timeline` — yields the `metrics` of each `Span` returned by `deltas()`.
+     *
+     * The returned generator is **lazy**, meaning no arrays are built internally,
+     * and metrics are yielded as they are iterated.
+     *
+     * @return Generator<Metrics>
+     */
+    public static function yieldFrom(Timeline|Profiler|Result|Span|Metrics ...$metrics): Generator
     {
-        return array_reduce(
-            $metrics,
-            fn (Metrics $sum, Metrics $metric): Metrics => $sum->add($metric),
-            Metrics::none()
-        );
+        foreach ($metrics as $metric) {
+            yield from match ($metric::class) {
+                Metrics::class  => [$metric],
+                Span::class => [$metric->metrics],
+                Result::class => [$metric->span->metrics],
+                Profiler::class => array_map(fn (Span $span) => $span->metrics, iterator_to_array($metric, false)),
+                Timeline::class => array_map(fn (Span $span) => $span->metrics, iterator_to_array($metric->deltas(), false)),
+            };
+        }
     }
 
-    private static function calculateCpuTime(Snapshot $start, Snapshot $end): float
+    public function add(Metrics $metric): self
     {
-        return $end->cpuUserTime + $end->cpuSystemTime - $start->cpuUserTime - $start->cpuSystemTime;
+        return new self(
+            cpuTime: $this->cpuTime + $metric->cpuTime,
+            executionTime: $this->executionTime + $metric->executionTime,
+            memoryUsage: $this->memoryUsage + $metric->memoryUsage,
+            peakMemoryUsage: $this->peakMemoryUsage + $metric->peakMemoryUsage,
+            realMemoryUsage: $this->realMemoryUsage + $metric->realMemoryUsage,
+            realPeakMemoryUsage: $this->realPeakMemoryUsage + $metric->realPeakMemoryUsage,
+        );
     }
 
     /**
@@ -213,17 +227,5 @@ final class Metrics implements JsonSerializable
         $propertyNormalized = strtolower((string) preg_replace('/[\s_\-]+/', '_', $property));
 
         return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown metrics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
-    }
-
-    public function add(Metrics $metric): self
-    {
-        return new self(
-            cpuTime: $this->cpuTime + $metric->cpuTime,
-            executionTime: $this->executionTime + $metric->executionTime,
-            memoryUsage: $this->memoryUsage + $metric->memoryUsage,
-            peakMemoryUsage: $this->peakMemoryUsage + $metric->peakMemoryUsage,
-            realMemoryUsage: $this->realMemoryUsage + $metric->realMemoryUsage,
-            realPeakMemoryUsage: $this->realPeakMemoryUsage + $metric->realPeakMemoryUsage,
-        );
     }
 }

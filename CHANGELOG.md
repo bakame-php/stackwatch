@@ -9,14 +9,18 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - `CallLocation` class to allow recording where the package `Snapshot` was called from [#8](https://github.com/bakame-php/stackwatch/pull/8)
 - `CallRange` class to allow manipulating location range within the `Summary` class.
 - `Environment::forHuman` method
-- `--dry-run` option to `stackwatch` command
+- `Metrics::yieldFrom` to lazily yield Metrics from other objects (`Report`, `Timeline`, `Profiler`, `Span` and `Metrics`)
+- `--dry-run` option to `stackwatch` command to list profiling targets without performing the profile
+- `--log` option to `stackwatch` command to specify the logfile where error logs are being stored
+- **BC BREAK:** `Summary` is renamed `Span`.
 
 ### Fixed
 
 -  `UnitOfWork` internal code improvement.
 - **BC BREAK:** `Snapshot::forHuman` properties key have been updated to remove JSON like string representation.
 - **BC BREAK:** `Snapshot::cpu` property is replaced by 2 properties `Snapshot::cpuUserTime` and `Snapshot::cpuSystemTime`.
-- `LabelGenerator::generate` now also accepts the `-` character.
+- `LabelGenerator::generate` now also accepts the hyphen (`-`) character.
+- Adding support for `Timeline` on `Metrics::sum` and `Metrics::average` static methods.
 
 ### Deprecated
 
@@ -24,7 +28,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Removed
 
-- **BC BREAK:** `Summary` renamed `Span`.
+- **BC BREAK:** `Summary` is removed and replaced by `Span`.
 
 ## [0.13.0 - Marrakesh](https://github.com/bakame-php/stackwatch/compare/0.12.0...0.13.0) - 2025-08-14
 
