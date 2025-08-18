@@ -20,21 +20,58 @@ This is especially useful for:
 php vendor/bin/stackwatch --path=PATH [options]
 ```
 
-| Option                | Description                                                             |
-|-----------------------|-------------------------------------------------------------------------|
-| `-p, --path=PATH`     | Path to scan for PHP files to profile (required)                        |
-| `-o, --output=OUTPUT` | Path to store the profiling output (optional)                           |
-| `-f, --format=FORMAT` | Output format: `table` or `json` (default: `table`)                     |
-| `-d, --depth=DEPTH`   | Recursion depth (`0` = current dir only, default: unlimited) (optional) |
-| `-n, --no-recursion`  | Disable directory recursion (optional)                                  |
-| `-x, --isolation`     | Enable profiling each file in a separate process                        |
-| `--dry-run`           | List profiling targets without executing them                           |
-| `-P, --pretty`        | Pretty-print the JSON/NDJSON output (json only)                         |
-| `-i, --info`          | Show additional system/environment information                          |
-| `-h, --help`          | Display the help message                                                |
-| `-V, --version`       | Display the version and exit                                            |
-| `-t, --tags`          | filter the target to profile using tags (ie --tags=web) (optional)      |
-| `--memory-limit`      | change the memory usage of the main process (optional)                  |
+### Command Line Options
+
+#### Configuration
+
+**`-p, --path=PATH`**  
+Path to scan for PHP files to profile. **Required.** The path can be a file or a directory.
+If it is a directory it will be recursively scan.
+
+**`-i, --info`**  
+Show additional system and environment information.
+
+**`-h, --help`**  
+Display the help message.
+
+**`-V, --version`**  
+Display the version and exit.
+
+#### Output
+
+**`-f, --format=FORMAT`**  
+Output format. Can be either `'table'` or `'json'`. Default is `'table'`.
+
+**`-o, --output=OUTPUT`**  
+Path to store the profiling output.
+
+**`--log=FILE`**  
+Writes log information to the specified file. By default the log are written to the **`STDERR`** stream.
+
+**`-P, --pretty`**  
+Pretty-print the JSON/NDJSON output. **JSON only.**
+
+#### Selection
+
+**`-t, --tags=TAGS`**  
+Only run the profiles for the listed tag(s).
+
+**`-d, --depth=DEPTH`**  
+Recursion depth. `0` means scan only the current directory. By default, recursion is unlimited.
+
+**`-n, --no-recursion`**  
+Disable directory recursion an alias to `--depth=0`
+
+#### Execution
+
+**`-x, --isolation`**  
+Profile each file in isolation.
+
+**`--dry-run`**  
+List profiling targets without actually performing the profiling.
+
+**`--memory-limit=MEMORY-LIMIT`**  
+Memory limit to use for the analysis.
 
 ## Example
 
