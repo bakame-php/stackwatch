@@ -7,75 +7,15 @@ title: Attribute-Driven CLI Profiling
 
 Outside the `Profiler`and the `Timeline` you can use the package features through a CLI command.
 A CLI Command is available to allow you to benchmark PHP **functions and methods** located in a
-specific file or directory using the custom `#[Bakame\Stackwatch\Profile]` attribute.
-
-This is especially useful for:
+specific file or directory using the custom `#[Bakame\Stackwatch\Profile]` attribute. This is
+especially useful for:
 
 - Automating performance regressions in CI pipelines
 - Profiling code outside the context of an application
 
-## Usage
-
-```bash
-php vendor/bin/stackwatch --path=PATH [options]
-```
-
-### Command Line Options
-
-#### Configuration
-
-**`-p, --path=PATH`**  
-Path to scan for PHP files to profile. **Required.** The path can be a file or a directory.
-If it is a directory it will be recursively scan.
-
-**`-i, --info`**  
-Show additional system and environment information.
-
-**`-h, --help`**  
-Display the help message.
-
-**`-V, --version`**  
-Display the version and exit.
-
-#### Output
-
-**`-f, --format=FORMAT`**  
-Output format. Can be either `'table'` or `'json'`. Default is `'table'`.
-
-**`-o, --output=OUTPUT`**  
-Path to store the profiling output.
-
-**`--log=FILE`**  
-Writes log information to the specified file. By default the log are written to the **`STDERR`** stream.
-
-**`-P, --pretty`**  
-Pretty-print the JSON/NDJSON output. **JSON only.**
-
-#### Selection
-
-**`-t, --tags=TAGS`**  
-Only run the profiles for the listed tag(s).
-
-**`-d, --depth=DEPTH`**  
-Recursion depth. `0` means scan only the current directory. By default, recursion is unlimited.
-
-**`-n, --no-recursion`**  
-Disable directory recursion an alias to `--depth=0`
-
-#### Execution
-
-**`-x, --isolation`**  
-Profile each file in isolation.
-
-**`--dry-run`**  
-List profiling targets without actually performing the profiling.
-
-**`--memory-limit=MEMORY-LIMIT`**  
-Memory limit to use for the analysis.
-
 ## Example
 
-let's assume you have the following file located in `/path/profiler/test.php`.
+First, let's assume you have the following file located in `/path/profiler/test.php`.
 
 ```php
 <?php
@@ -121,7 +61,6 @@ php vendor/bin/stackwatch --path=/path/profiler/test.php
 It will output the following:
 
 ```bash
-```bash
 stackwatch v0.13.0 (Marrakesh) by Ignace Nyamagana Butera and contributors.
 
 Runtime: PHP 8.3.24 OS: Linux Memory Limit: 64M
@@ -152,6 +91,8 @@ Real Peak Memory Usage ................................................... 0.0 B
 - the table shows the fully detailed report on the function `test`.
 
 ## The Profile attribute
+
+To work as shown, the command line relies on the presence of the `#[Bakame\Stackwatch\Profile]` attribute.
 
 The `#[Profile]` attribute marks a function, method, or class for performance profiling during execution.
 When applied, the profiler will repeatedly execute the target code to collect detailed runtime metrics,
@@ -237,6 +178,69 @@ Be mindful of the performance impact during profiling, especially with high iter
 <div class="message-info">
 All required dependencies should be loaded in the target file (use `require`, `include` or Composer autoload).
 </div>
+
+## Command Line Usage
+
+The `Stackwatch` command-line profile runner can be invoked through the `stackwatch` command.
+The following code shows how to run profiling with the `stackwatch` command-line profile runner:
+
+```bash
+php vendor/bin/stackwatch --path=PATH [options]
+```
+Apart from the `path` argument, all the other command line options **are optional**.
+
+### Command Line Options
+
+#### Configuration
+
+**`-p, --path=PATH`**  
+Path to scan for PHP files to profile. **Required.** The path can be a file or a directory.
+If it is a directory it will be recursively scan.
+
+**`-i, --info`**  
+Show additional system and environment information.
+
+**`-h, --help`**  
+Display the help message.
+
+**`-V, --version`**  
+Display the version and exit.
+
+#### Output
+
+**`-f, --format=FORMAT`**  
+Output format. Can be either `'table'` or `'json'`. Default is `'table'`.
+
+**`-o, --output=OUTPUT`**  
+Path to store the profiling output.
+
+**`--log=FILE`**  
+Writes log information to the specified file. By default the log are written to the **`STDERR`** stream.
+
+**`-P, --pretty`**  
+Pretty-print the JSON/NDJSON output. **JSON only.**
+
+#### Selection
+
+**`-t, --tags=TAGS`**  
+Only run the profiles for the listed tag(s).
+
+**`-d, --depth=DEPTH`**  
+Recursion depth. `0` means scan only the current directory. By default, recursion is unlimited.
+
+**`-n, --no-recursion`**  
+Disable directory recursion an alias to `--depth=0`
+
+#### Execution
+
+**`-x, --isolation`**  
+Profile each file in isolation.
+
+**`--dry-run`**  
+List profiling targets without actually performing the profiling.
+
+**`--memory-limit=MEMORY-LIMIT`**  
+Memory limit to use for the analysis.
 
 ## Integration into CI
 
