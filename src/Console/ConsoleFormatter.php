@@ -8,22 +8,18 @@ use Bakame\Stackwatch\Exporter\ConsoleExporter;
 use Bakame\Stackwatch\Exporter\LeaderPrinter;
 use Bakame\Stackwatch\Metrics;
 use Bakame\Stackwatch\Report;
-use Closure;
 use Throwable;
 
 /**
  * @phpstan-import-type MetricsHumanReadable from Metrics
  */
-final class ConsoleProcessor implements Processor
+final class ConsoleFormatter implements Formatter
 {
-    private Closure $process;
-
     public function __construct(
         public readonly ConsoleExporter $exporter,
         public readonly LeaderPrinter $leaderPrinter = new LeaderPrinter(),
-        State $dryRun = State::Disabled,
+        public readonly State $dryRun = State::Disabled,
     ) {
-        $this->process = State::Enabled === $dryRun ? $this->dryRun(...) : $this->execute(...);
     }
 
     /**
@@ -31,34 +27,27 @@ final class ConsoleProcessor implements Processor
      *
      * @throws Throwable
      */
-    public function process(iterable $unitOfWorks): void
+    public function format(iterable $unitOfWorks): void
     {
         foreach ($unitOfWorks as $unitOfWork) {
-            ($this->process)($unitOfWork);
-        }
-    }
+            $this->exporter->output->writeln($unitOfWork->toConsoleString());
+            if ($this->dryRun->isEnabled()) {
+                continue;
+            }
 
-    private function dryRun(UnitOfWork $unitOfWork): void
-    {
-        $this->exporter->output->writeln($unitOfWork->toConsoleString());
-    }
-
-    private function execute(UnitOfWork $unitOfWork): void
-    {
-        $unitOfWork->run();
-        $stats = $unitOfWork->result();
-        $this->exporter->output->writeln($unitOfWork->toConsoleString());
-        $this->exporter->output->writeln('');
-        if ($stats instanceof Report) {
-            $this->exporter->exportReport($stats);
             $this->exporter->output->writeln('');
-            return;
-        }
+            $stats = $unitOfWork->result();
+            if ($stats instanceof Report) {
+                $this->exporter->exportReport($stats);
+                $this->exporter->output->writeln('');
+                continue;
+            }
 
-        /** @var MetricsHumanReadable $data */
-        $data = $stats->forHuman();
-        $this->exporter->output->writeln($this->leaderPrinter->render(self::exchangeKeys($data)));
-        $this->exporter->output->writeln('');
+            /** @var MetricsHumanReadable $data */
+            $data = $stats->forHuman();
+            $this->exporter->output->writeln($this->leaderPrinter->render(self::exchangeKeys($data)));
+            $this->exporter->output->writeln('');
+        }
     }
 
     /**

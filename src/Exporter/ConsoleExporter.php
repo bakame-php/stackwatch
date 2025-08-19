@@ -239,8 +239,8 @@ final class ConsoleExporter implements Exporter
             'cpuTime' => $report->cpuTime->forHuman(),
             'executionTime' => $report->executionTime->forHuman(),
             'memoryUsage' => $report->memoryUsage->forHuman(),
-            'peakMemoryUsage' => $report->peakMemoryUsage->forHuman(),
             'realMemoryUsage' => $report->realMemoryUsage->forHuman(),
+            'peakMemoryUsage' => $report->peakMemoryUsage->forHuman(),
             'realPeakMemoryUsage' => $report->realPeakMemoryUsage->forHuman(),
         ];
 

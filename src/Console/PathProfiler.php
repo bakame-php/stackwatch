@@ -7,6 +7,7 @@ namespace Bakame\Stackwatch\Console;
 use ArrayIterator;
 use Bakame\Stackwatch\Exporter\ConsoleExporter;
 use Bakame\Stackwatch\Exporter\JsonExporter;
+use Bakame\Stackwatch\Exporter\LeaderPrinter;
 use Bakame\Stackwatch\Profile;
 use Bakame\Stackwatch\UnableToProfile;
 use CallbackFilterIterator;
@@ -17,6 +18,7 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;
 use SplFileInfo;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
@@ -25,6 +27,7 @@ use Throwable;
 use function array_map;
 use function in_array;
 use function is_array;
+use function iterator_count;
 use function strtolower;
 
 use const PHP_BINARY;
@@ -38,7 +41,7 @@ final class PathProfiler
 {
     public function __construct(
         public readonly UnitOfWorkGenerator $unitOfWorkGenerator,
-        public readonly Processor $processor,
+        public readonly Formatter $formatter,
         public readonly Input $input,
         public readonly LoggerInterface $logger = new NullLogger(),
     ) {
@@ -51,7 +54,7 @@ final class PathProfiler
     ): self {
         return new self(
             new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
-            new ConsoleProcessor(exporter: new ConsoleExporter($output), dryRun: $input->dryRun),
+            new ConsoleFormatter(new ConsoleExporter($output), new LeaderPrinter(), $input->dryRun),
             $input,
             $logger,
         );
@@ -68,14 +71,18 @@ final class PathProfiler
     ): self {
         return new self(
             new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
-            new JsonProcessor(new JsonExporter($path, $jsonOptions), $input->dryRun),
+            new JsonFormatter(new JsonExporter($path, $jsonOptions)),
             $input,
             $logger,
         );
     }
 
-    public function handle(string $path): void
+    public function handle(?string $path): void
     {
+        if (null === $path) {
+            return;
+        }
+
         $filePath = new SplFileInfo($path);
         $filePath->isFile() || $filePath->isDir() || throw new RuntimeException("Unable to locate the path $path");
         $filePath->isReadable() || throw new RuntimeException("Unable to access for read the path $path");
@@ -112,24 +119,35 @@ final class PathProfiler
             }
         );
 
-        foreach ($phpFiles as $phpFile) {
-            $this->handleFile($phpFile);
+        $output = new ConsoleOutput();
+        if ($this->formatter instanceof ConsoleFormatter) {
+            /** @var OutputInterface $output */
+            $output = $this->formatter->exporter->output;
         }
-    }
 
-    /**
-     * @throws Throwable
-     */
-    public function handleFile(SplFileInfo $path): void
-    {
-        $units = match ($this->input->inIsolation) {
-            State::Enabled => $this->createUnitOfWorksInIsolation($path),
-            State::Disabled => $this->createUnitOfWorks($path),
-        };
+        $accumulator = [];
+        $progress = $this->input->progressBar->isVisible() ? new ProgressBar($output, iterator_count($phpFiles)) : null;
+        foreach (($progress?->iterate($phpFiles) ?? $phpFiles) as $phpFile) {
+            $unitOfWorks = match ($this->input->inIsolation) {
+                State::Enabled => $this->createUnitOfWorksInIsolation($phpFile),
+                State::Disabled => $this->createUnitOfWorks($phpFile),
+            };
 
-        if ([] !== $units) {
-            $this->processor->process($units);
+            foreach ($unitOfWorks as $unitOfWork) {
+                if ($this->input->dryRun->isDisabled()) {
+                    $unitOfWork->run();
+                }
+                $accumulator[] = $unitOfWork;
+            }
         }
+
+        $progress?->finish();
+        if ($this->input->progressBar->isVisible()) {
+            $output->writeln('');
+            $output->writeln('');
+        }
+
+        $this->formatter->format($accumulator);
     }
 
     /**
@@ -147,7 +165,8 @@ final class PathProfiler
             ->withFormat(Input::JSON_FORMAT)
             ->withPath($realPath)
             ->withDepth(0)
-            ->withInIsolation(State::Disabled);
+            ->withInIsolation(State::Disabled)
+            ->withProgressBar(Visibility::Hide);
         ;
 
         $arguments = array_merge([PHP_BINARY, $stackwatchPath], $input->toArguments());

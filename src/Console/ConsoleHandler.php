@@ -38,21 +38,19 @@ final class ConsoleHandler implements Handler
         $output->writeln(Version::toConsoleString());
 
         if ($input->infoSection->isVisible()) {
-            $processor = $profiler->processor;
-            if ($processor instanceof ConsoleProcessor) {
+            $formatter = $profiler->formatter;
+            if ($formatter instanceof ConsoleFormatter) {
                 $leaderPrinter = new LeaderPrinter(filler: '.', padExtra: 1);
                 /** @var EnvironmentHumanReadable $data */
                 $data = $this->environment->forHuman();
-                $processor->exporter->output->writeln($leaderPrinter->render($data));
-                $processor->exporter->output->writeln('');
+                $formatter->exporter->output->writeln($leaderPrinter->render($data));
+                $formatter->exporter->output->writeln('');
             }
         } else {
             $output->writeln('<fg=green>Runtime:</> PHP '.$this->environment->phpVersion.' <fg=green>OS:</> '.$this->environment->os.' <fg=green>Memory Limit:</> '.$this->environment->rawMemoryLimit);
         }
 
         $output->writeln('');
-        if (null !== $input->path) {
-            $profiler->handle($input->path);
-        }
+        $profiler->handle($input->path);
     }
 }

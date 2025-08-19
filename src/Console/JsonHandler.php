@@ -27,14 +27,12 @@ final class JsonHandler implements Handler
         $stream = $input->output ?? STDOUT;
         $profiler = PathProfiler::forJson($input, $stream, $jsonOptions, $this->logger);
         if ($input->infoSection->isVisible()) {
-            $processor = $profiler->processor;
-            if ($processor instanceof JsonProcessor) {
-                $processor->exporter->writeln($this->environment);
+            $formatter = $profiler->formatter;
+            if ($formatter instanceof JsonFormatter) {
+                $formatter->exporter->writeln($this->environment);
             }
         }
 
-        if (null !== $input->path) {
-            $profiler->handle($input->path);
-        }
+        $profiler->handle($input->path);
     }
 }

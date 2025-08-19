@@ -219,6 +219,9 @@ Writes log information to the specified file. By default the log are written to 
 **`-P, --pretty`**  
 Pretty-print the JSON/NDJSON output. **JSON only.**
 
+**`--no-progress`**  
+Hides the progress bar
+
 #### Selection
 
 **`-d, --depth=DEPTH`**  

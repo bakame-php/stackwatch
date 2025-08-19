@@ -50,6 +50,7 @@ use const FILTER_VALIDATE_INT;
  *     log?: string|false,
  *     file-suffix?: string|false,
  *     method-visibility?: string|false,
+ *     no-progress?: string|false,
  * }
  */
 final class Input
@@ -78,6 +79,7 @@ final class Input
         public readonly ?string $logFile = null,
         public readonly array $fileSuffixes = [],
         public readonly array $methodVisibilityList = [],
+        public readonly Visibility $progressBar = Visibility::Show,
     ) {
         in_array($this->format, [self::JSON_FORMAT, self::TABLE_FORMAT], true) || throw new InvalidArgument('Output format is not supported');
         null === $this->path || '' !== trim($this->path) || throw new InvalidArgument('path format is not valid');
@@ -110,6 +112,7 @@ final class Input
             $this->logFile,
             $this->fileSuffixes,
             $this->methodVisibilityList,
+            $this->progressBar,
         );
     }
 
@@ -135,6 +138,7 @@ final class Input
             $this->logFile,
             $this->fileSuffixes,
             $this->methodVisibilityList,
+            $this->progressBar,
         );
     }
 
@@ -160,6 +164,7 @@ final class Input
             $this->logFile,
             $this->fileSuffixes,
             $this->methodVisibilityList,
+            $this->progressBar,
         );
     }
 
@@ -185,6 +190,7 @@ final class Input
             $this->logFile,
             $this->fileSuffixes,
             $this->methodVisibilityList,
+            $this->progressBar,
         );
     }
 
@@ -212,6 +218,7 @@ final class Input
             $this->logFile,
             $this->fileSuffixes,
             $this->methodVisibilityList,
+            $this->progressBar,
         );
     }
 
@@ -242,6 +249,7 @@ final class Input
             $this->logFile,
             $this->fileSuffixes,
             $this->methodVisibilityList,
+            $this->progressBar,
         );
     }
 
@@ -267,6 +275,7 @@ final class Input
             $this->logFile,
             $this->fileSuffixes,
             $this->methodVisibilityList,
+            $this->progressBar,
         );
     }
 
@@ -292,6 +301,7 @@ final class Input
             $this->logFile,
             $this->fileSuffixes,
             $this->methodVisibilityList,
+            $this->progressBar,
         );
     }
 
@@ -317,6 +327,7 @@ final class Input
             $this->logFile,
             $this->fileSuffixes,
             $this->methodVisibilityList,
+            $this->progressBar,
         );
     }
 
@@ -344,6 +355,7 @@ final class Input
             $this->logFile,
             $this->fileSuffixes,
             $this->methodVisibilityList,
+            $this->progressBar,
         );
     }
 
@@ -384,6 +396,7 @@ final class Input
             $this->logFile,
             $this->fileSuffixes,
             $this->methodVisibilityList,
+            $this->progressBar,
         );
     }
 
@@ -414,6 +427,7 @@ final class Input
             $this->logFile,
             $this->fileSuffixes,
             $this->methodVisibilityList,
+            $this->progressBar,
         );
     }
 
@@ -444,6 +458,7 @@ final class Input
             $logFile,
             $this->fileSuffixes,
             $this->methodVisibilityList,
+            $this->progressBar,
         );
     }
 
@@ -484,6 +499,7 @@ final class Input
             $this->logFile,
             $suffixes,
             $this->methodVisibilityList,
+            $this->progressBar,
         );
     }
 
@@ -529,6 +545,33 @@ final class Input
             $this->logFile,
             $this->fileSuffixes,
             $visibilities,
+            $this->progressBar,
+        );
+    }
+
+    public function withProgressBar(Visibility $visibility): self
+    {
+        if ($visibility === $this->progressBar) {
+            return $this;
+        }
+
+        return new self(
+            $this->path,
+            $this->helpSection,
+            $this->infoSection,
+            $this->versionSection,
+            $this->format,
+            $this->output,
+            $this->jsonPrettyPrint,
+            $this->inIsolation,
+            $this->dryRun,
+            $this->depth,
+            $this->tags,
+            $this->memoryLimit,
+            $this->logFile,
+            $this->fileSuffixes,
+            $this->methodVisibilityList,
+            $visibility,
         );
     }
 
@@ -605,6 +648,10 @@ final class Input
             $arguments[] = $this->memoryLimit;
         }
 
+        if ($this->progressBar->isHidden()) {
+            $arguments[] = '--no-progress';
+        }
+
         return $arguments;
     }
 
@@ -613,7 +660,7 @@ final class Input
      */
     public static function fromInput(array|InputInterface $input): self
     {
-        return new self(
+        $instance = new self(
             path: self::getFirstValue($input, 'path', 'p'),
             helpSection: Visibility::fromBool(self::hasFlag($input, 'help', 'h')),
             infoSection: Visibility::fromBool(self::hasFlag($input, 'info', 'i')),
@@ -629,7 +676,10 @@ final class Input
             logFile: self::getFirstValue($input, 'memory-limit'),
             fileSuffixes: self::getNonEmptyStringList($input, 'file-suffix'),
             methodVisibilityList: self::resolveMethodVisibility($input),
+            progressBar: Visibility::fromBool(! self::hasFlag($input, 'no-progress')),
         );
+
+        return $instance;
     }
 
     /**
@@ -726,6 +776,7 @@ final class Input
                 'log:',
                 'file-suffix:',
                 'method-visibility:',
+                'no-progress',
             ]
         );
 
@@ -803,6 +854,7 @@ final class Input
 <fg=green>  -t, --tags=TAGS</>                Only run the profiles for the listed tag(s)
 <fg=green>  --file-suffix=SUFFIX</>           Only run the profiles for the listed file enditng with the listed suffxies
 <fg=green>  --method-visibility=VISIBILITY</> Only run the profiles for the method with the listed visibility (public, protected, private), (default: all)
+<fg=green>  --no-progress</>                  Disable output of profiling execution progress
 
 HELP;
     }

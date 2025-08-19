@@ -7,9 +7,9 @@ namespace Bakame\Stackwatch\Console;
 use Bakame\Stackwatch\Exporter\JsonExporter;
 use Throwable;
 
-final class JsonProcessor implements Processor
+final class JsonFormatter implements Formatter
 {
-    public function __construct(public readonly JsonExporter $exporter, public readonly State $dryRun = State::Disabled)
+    public function __construct(public readonly JsonExporter $exporter)
     {
     }
 
@@ -18,14 +18,12 @@ final class JsonProcessor implements Processor
      *
      * @throws Throwable
      */
-    public function process(iterable $unitOfWorks): void
+    public function format(iterable $unitOfWorks): void
     {
         $path = null;
         foreach ($unitOfWorks as $unitOfWork) {
-            if (State::Disabled === $this->dryRun) {
-                $unitOfWork->run();
-            }
             $path ??= $unitOfWork->path();
+            break;
         }
 
         $this->exporter->writeln(null === $path ? [] : ['path' => $path, 'data' => $unitOfWorks]);

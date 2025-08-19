@@ -359,7 +359,7 @@ final class UnitOfWork implements JsonSerializable
         /** @var string $template */
         static $template = 'Target: {name}; Path: {file}; Iterations: {iterations}; Warmup: {warmup};';
 
-        $this->template ??= Profile::DETAILED === $this->profile->type ? '(Detailed) '.$template : '(Average) '.$template;
+        $this->template ??= Profile::DETAILED === $this->profile->type ? '(Detailed) '.$template : '(Summary) '.$template;
 
         return $this->template;
     }

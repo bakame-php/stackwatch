@@ -18,8 +18,8 @@ use function tempnam;
 #[CoversClass(PathProfiler::class)]
 #[CoversClass(Profile::class)]
 #[CoversClass(PathInspector::class)]
-#[CoversClass(JsonProcessor::class)]
-#[CoversClass(ConsoleProcessor::class)]
+#[CoversClass(JsonFormatter::class)]
+#[CoversClass(ConsoleFormatter::class)]
 #[CoversClass(UnitOfWorkGenerator::class)]
 #[CoversClass(State::class)]
 #[CoversClass(Visibility::class)]
@@ -38,8 +38,8 @@ final class PathProfilerTest extends TestCase
         $logger = new Logger($this->stderr);
         $this->command = new PathProfiler(
             new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
-            new ConsoleProcessor(new ConsoleExporter($this->stdout)),
-            Input::fromInput(['path' => '/tmp']),
+            new ConsoleFormatter(new ConsoleExporter($this->stdout)),
+            Input::fromInput(['path' => '/tmp'])->withProgressBar(Visibility::Hide),
             $logger
         );
     }
@@ -86,7 +86,7 @@ PHP;
         $output = $this->stdout->fetch();
         $errorOutput = $this->stderr->fetch();
 
-        self::assertStringContainsString('(Average)', $output);
+        self::assertStringContainsString('(Summary)', $output);
         self::assertStringContainsString('(Detailed)', $output);
 
         self::assertEmpty($errorOutput, 'No errors expected');
@@ -182,7 +182,7 @@ PHP;
     }
 
     #[Test]
-    public function it_will_skip_non_static_methds_when_the_class_constructor_requires_arguments(): void
+    public function it_will_skip_non_static_methods_when_the_class_constructor_requires_arguments(): void
     {
         $content = <<<'PHP'
 <?php
