@@ -21,8 +21,8 @@ use function tempnam;
 #[CoversClass(JsonFormatter::class)]
 #[CoversClass(ConsoleFormatter::class)]
 #[CoversClass(UnitOfWorkGenerator::class)]
-#[CoversClass(State::class)]
-#[CoversClass(Visibility::class)]
+#[CoversClass(Feature::class)]
+#[CoversClass(Display::class)]
 final class PathProfilerTest extends TestCase
 {
     private string $tmpFile;
@@ -39,7 +39,7 @@ final class PathProfilerTest extends TestCase
         $this->command = new PathProfiler(
             new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
             new ConsoleFormatter(new ConsoleExporter($this->stdout)),
-            Input::fromInput(['path' => '/tmp'])->withProgressBar(Visibility::Hide),
+            Input::fromInput(['path' => '/tmp'])->withProgressBar(Display::Hidden),
             $logger
         );
     }

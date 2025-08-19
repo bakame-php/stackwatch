@@ -11,8 +11,8 @@ use PHPUnit\Framework\TestCase;
 use Symfony\Component\Console\Input\InputInterface;
 
 #[CoversClass(Input::class)]
-#[CoversClass(State::class)]
-#[CoversClass(Visibility::class)]
+#[CoversClass(Feature::class)]
+#[CoversClass(Display::class)]
 final class InputTest extends TestCase
 {
     /**
@@ -37,7 +37,7 @@ final class InputTest extends TestCase
         $obj = Input::fromInput($input);
 
         self::assertSame('/tmp', $obj->path);
-        self::assertSame(Input::TABLE_FORMAT, $obj->format);
+        self::assertSame(Input::TEXT_FORMAT, $obj->format);
         self::assertFalse($obj->helpSection->isVisible());
         self::assertSame(-1, $obj->depth);
     }
@@ -46,14 +46,14 @@ final class InputTest extends TestCase
     {
         $mockInput = $this->mockInputInterface([
             'path' => '/tmp',
-            'format' => 'table',
+            'format' => Input::TEXT_FORMAT,
             'depth' => '1',
         ]);
 
         $obj = Input::fromInput($mockInput);
 
         self::assertSame('/tmp', $obj->path);
-        self::assertSame(Input::TABLE_FORMAT, $obj->format);
+        self::assertSame(Input::TEXT_FORMAT, $obj->format);
         self::assertSame(1, $obj->depth);
     }
 
@@ -179,7 +179,7 @@ final class InputTest extends TestCase
             new Input(path: __DIR__.'/src'),
             [
                 '--path', __DIR__.'/src',
-                '--format', Input::TABLE_FORMAT,
+                '--format', Input::TEXT_FORMAT,
             ],
         ];
 
@@ -187,7 +187,7 @@ final class InputTest extends TestCase
             new Input(
                 path: __DIR__.'/src',
                 format: Input::JSON_FORMAT,
-                jsonPrettyPrint: State::Enabled,
+                jsonPrettyPrint: Feature::Enabled,
                 depth: 2,
             ),
             [
@@ -201,14 +201,14 @@ final class InputTest extends TestCase
         yield 'help visible with tags and suffixes' => [
             new Input(
                 path: __DIR__.'/src',
-                helpSection: Visibility::Show,
+                helpSection: Display::Visible,
                 tags: ['fast', 'db'],
                 fileSuffixes: ['Prof.php', 'Bench.php'],
             ),
             [
                 '--path', __DIR__.'/src',
                 '--help',
-                '--format', Input::TABLE_FORMAT,
+                '--format', Input::TEXT_FORMAT,
                 '--tags', 'fast,db',
                 '--file-suffix', 'Prof.php,Bench.php',
             ],
@@ -217,14 +217,14 @@ final class InputTest extends TestCase
         yield 'all options enabled' => [
             new Input(
                 path: '/tmp',
-                helpSection: Visibility::Show,
-                infoSection: Visibility::Show,
-                versionSection: Visibility::Show,
+                helpSection: Display::Visible,
+                infoSection: Display::Visible,
+                versionSection: Display::Visible,
                 format: Input::JSON_FORMAT,
                 output: 'out.txt',
-                jsonPrettyPrint: State::Enabled,
-                inIsolation: State::Enabled,
-                dryRun: State::Enabled,
+                jsonPrettyPrint: Feature::Enabled,
+                inIsolation: Feature::Enabled,
+                dryRun: Feature::Enabled,
                 depth: 5,
                 tags: ['t1', 't2'],
                 memoryLimit: '512M',
@@ -261,7 +261,7 @@ final class InputTest extends TestCase
         self::assertSame('/var/www', $modified->path);
 
         self::assertSame(
-            ['--path', '/var/www', '--format', Input::TABLE_FORMAT],
+            ['--path', '/var/www', '--format', Input::TEXT_FORMAT],
             $modified->toArguments()
         );
     }
@@ -271,7 +271,7 @@ final class InputTest extends TestCase
         $original = new Input(path: '/tmp');
         $modified = $original->withFormat(Input::JSON_FORMAT);
 
-        self::assertSame(Input::TABLE_FORMAT, $original->format);
+        self::assertSame(Input::TEXT_FORMAT, $original->format);
         self::assertSame(Input::JSON_FORMAT, $modified->format);
 
         self::assertSame(
@@ -283,10 +283,10 @@ final class InputTest extends TestCase
     public function testWithHelpSection(): void
     {
         $original = new Input(path: '/tmp');
-        $modified = $original->withHelpSection(Visibility::Show);
+        $modified = $original->withHelpSection(Display::Visible);
 
-        self::assertSame(Visibility::Hide, $original->helpSection);
-        self::assertSame(Visibility::Show, $modified->helpSection);
+        self::assertSame(Display::Hidden, $original->helpSection);
+        self::assertSame(Display::Visible, $modified->helpSection);
 
         self::assertContains('--help', $modified->toArguments());
         self::assertNotContains('--help', $original->toArguments());
@@ -295,10 +295,10 @@ final class InputTest extends TestCase
     public function testWithInfoSection(): void
     {
         $original = new Input(path: '/tmp');
-        $modified = $original->withInfoSection(Visibility::Show);
+        $modified = $original->withInfoSection(Display::Visible);
 
-        self::assertSame(Visibility::Hide, $original->infoSection);
-        self::assertSame(Visibility::Show, $modified->infoSection);
+        self::assertSame(Display::Hidden, $original->infoSection);
+        self::assertSame(Display::Visible, $modified->infoSection);
 
         self::assertContains('--info', $modified->toArguments());
     }
@@ -306,10 +306,10 @@ final class InputTest extends TestCase
     public function testWithVersionSection(): void
     {
         $original = new Input(path: '/tmp');
-        $modified = $original->withVersionSection(Visibility::Show);
+        $modified = $original->withVersionSection(Display::Visible);
 
-        self::assertSame(Visibility::Hide, $original->versionSection);
-        self::assertSame(Visibility::Show, $modified->versionSection);
+        self::assertSame(Display::Hidden, $original->versionSection);
+        self::assertSame(Display::Visible, $modified->versionSection);
 
         self::assertContains('--version', $modified->toArguments());
     }
@@ -323,7 +323,7 @@ final class InputTest extends TestCase
         self::assertSame('out.txt', $modified->output);
 
         self::assertSame(
-            ['--path', '/tmp', '--format', Input::TABLE_FORMAT, '--output', 'out.txt'],
+            ['--path', '/tmp', '--format', Input::TEXT_FORMAT, '--output', 'out.txt'],
             $modified->toArguments()
         );
     }
@@ -343,10 +343,10 @@ final class InputTest extends TestCase
     public function testWithJsonPrettyPrint(): void
     {
         $original = new Input(path: '/tmp');
-        $modified = $original->withJsnPrettyPrint(State::Enabled);
+        $modified = $original->withJsnPrettyPrint(Feature::Enabled);
 
-        self::assertSame(State::Disabled, $original->jsonPrettyPrint);
-        self::assertSame(State::Enabled, $modified->jsonPrettyPrint);
+        self::assertSame(Feature::Disabled, $original->jsonPrettyPrint);
+        self::assertSame(Feature::Enabled, $modified->jsonPrettyPrint);
 
         self::assertContains('--pretty', $modified->toArguments());
     }
@@ -354,10 +354,10 @@ final class InputTest extends TestCase
     public function testWithDryRun(): void
     {
         $original = new Input(path: '/tmp');
-        $modified = $original->withDryRun(State::Enabled);
+        $modified = $original->withDryRun(Feature::Enabled);
 
-        self::assertSame(State::Disabled, $original->dryRun);
-        self::assertSame(State::Enabled, $modified->dryRun);
+        self::assertSame(Feature::Disabled, $original->dryRun);
+        self::assertSame(Feature::Enabled, $modified->dryRun);
 
         self::assertContains('--dry-run', $modified->toArguments());
     }
@@ -365,10 +365,10 @@ final class InputTest extends TestCase
     public function testWithInIsolation(): void
     {
         $original = new Input(path: '/tmp');
-        $modified = $original->withInIsolation(State::Enabled);
+        $modified = $original->withInIsolation(Feature::Enabled);
 
-        self::assertSame(State::Disabled, $original->inIsolation);
-        self::assertSame(State::Enabled, $modified->inIsolation);
+        self::assertSame(Feature::Disabled, $original->inIsolation);
+        self::assertSame(Feature::Enabled, $modified->inIsolation);
 
         self::assertContains('--isolation', $modified->toArguments());
     }

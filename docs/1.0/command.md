@@ -181,7 +181,7 @@ All required dependencies should be loaded in the target file (use `require`, `i
 ## Command Line Usage
 
 The `Stackwatch` command-line profile runner can be invoked through the `stackwatch` command.
-The following code shows how to run profiling with the `stackwatch` command-line profile runner:
+The following code shows the generic way to run profiling with the `stackwatch` command-line:
 
 ```bash
 php vendor/bin/stackwatch --path=PATH [options]
@@ -208,7 +208,8 @@ Display the version and exit.
 #### Output
 
 **`-f, --format=FORMAT`**  
-Output format. Can be either `'table'` or `'json'`. Default is `'table'`.
+Output format. Can be either `'text'` or `'json'`. Default is `'text'`. Use `'text'` for human-readable
+output and `'json'` for newline-delimited JSON (NDJSON).
 
 **`-o, --output=OUTPUT`**  
 Path to store the profiling output.

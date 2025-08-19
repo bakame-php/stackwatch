@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch\Console;
 
 use Bakame\Stackwatch\InvalidArgument;
+use JsonSerializable;
 use Symfony\Component\Console\Input\InputInterface;
+use Throwable;
 
+use function array_diff_key;
 use function array_filter;
 use function array_keys;
 use function explode;
@@ -22,6 +25,24 @@ use function trim;
 use const FILTER_VALIDATE_INT;
 
 /**
+ * @phpstan-type InputMap array{
+ *      path: ?string,
+ *      depth: int,
+ *      format: string,
+ *      output: ?string,
+ *      memory_limit : ?string,
+ *      log_file: ?string,
+ *      help: string,
+ *      info: string,
+ *      version: string,
+ *      json_pretty_print: string,
+ *      tags: list<non-empty-string>,
+ *      isolation: string,
+ *      method_visibility: list<non-empty-string>,
+ *      progress_bar: string,
+ *      dry_run: string,
+ *      file_suffixes: list<non-empty-string>,
+ *  }
  * @phpstan-type OptionMap array{
  *     path?: string|false,
  *     p?: string|false,
@@ -53,10 +74,10 @@ use const FILTER_VALIDATE_INT;
  *     no-progress?: string|false,
  * }
  */
-final class Input
+final class Input implements JsonSerializable
 {
     public const JSON_FORMAT = 'json';
-    public const TABLE_FORMAT = 'table';
+    public const TEXT_FORMAT = 'text';
 
     /**
      * @param list<non-empty-string> $tags
@@ -65,26 +86,59 @@ final class Input
      */
     public function __construct(
         public readonly ?string $path,
-        public readonly Visibility $helpSection = Visibility::Hide,
-        public readonly Visibility $infoSection = Visibility::Hide,
-        public readonly Visibility $versionSection = Visibility::Hide,
-        public readonly string $format = self::TABLE_FORMAT,
+        public readonly Display $helpSection = Display::Hidden,
+        public readonly Display $infoSection = Display::Hidden,
+        public readonly Display $versionSection = Display::Hidden,
+        public readonly string $format = self::TEXT_FORMAT,
         public readonly ?string $output = null,
-        public readonly State $jsonPrettyPrint = State::Disabled,
-        public readonly State $inIsolation = State::Disabled,
-        public readonly State $dryRun = State::Disabled,
+        public readonly Feature $jsonPrettyPrint = Feature::Disabled,
+        public readonly Feature $inIsolation = Feature::Disabled,
+        public readonly Feature $dryRun = Feature::Disabled,
         public readonly int $depth = -1,
         public readonly array $tags = [],
         public readonly ?string $memoryLimit = null,
         public readonly ?string $logFile = null,
         public readonly array $fileSuffixes = [],
         public readonly array $methodVisibilityList = [],
-        public readonly Visibility $progressBar = Visibility::Show,
+        public readonly Display $progressBar = Display::Visible,
     ) {
-        in_array($this->format, [self::JSON_FORMAT, self::TABLE_FORMAT], true) || throw new InvalidArgument('Output format is not supported');
+        in_array($this->format, [self::JSON_FORMAT, self::TEXT_FORMAT], true) || throw new InvalidArgument('Output format is not supported');
         null === $this->path || '' !== trim($this->path) || throw new InvalidArgument('path format is not valid');
         ($this->helpSection->isVisible() || $this->infoSection->isVisible() || $this->versionSection->isVisible() || null !== $this->path) || throw new InvalidArgument('Missing required option: --path');
         -1 <= $this->depth || throw new InvalidArgument('depth option must be greater or equal to -1.');
+    }
+
+    /**
+     * @return InputMap
+     */
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
+    }
+
+    /**
+     * @return InputMap
+     */
+    public function toArray(): array
+    {
+        return [
+            'path' => $this->path,
+            'depth' => $this->depth,
+            'format' => $this->format,
+            'output' => $this->output,
+            'memory_limit' => $this->memoryLimit,
+            'log_file' => $this->logFile,
+            'help' => $this->helpSection->value,
+            'info' => $this->infoSection->value,
+            'version' => $this->versionSection->value,
+            'json_pretty_print' => $this->jsonPrettyPrint->value,
+            'tags' => $this->tags,
+            'isolation' => $this->inIsolation->value,
+            'method_visibility' => $this->methodVisibilityList,
+            'progress_bar' => $this->progressBar->value,
+            'dry_run' => $this->dryRun->value,
+            'file_suffixes' => $this->fileSuffixes,
+        ];
     }
 
     public function withPath(string $path): self
@@ -116,7 +170,7 @@ final class Input
         );
     }
 
-    public function withHelpSection(Visibility $visibility): self
+    public function withHelpSection(Display $visibility): self
     {
         if ($visibility === $this->helpSection) {
             return $this;
@@ -142,7 +196,7 @@ final class Input
         );
     }
 
-    public function withInfoSection(Visibility $visibility): self
+    public function withInfoSection(Display $visibility): self
     {
         if ($visibility === $this->infoSection) {
             return $this;
@@ -168,7 +222,7 @@ final class Input
         );
     }
 
-    public function withVersionSection(Visibility $visibility): self
+    public function withVersionSection(Display $visibility): self
     {
         if ($visibility === $this->versionSection) {
             return $this;
@@ -200,7 +254,7 @@ final class Input
             return $this;
         }
 
-        in_array($format, [self::JSON_FORMAT, self::TABLE_FORMAT], true) || throw new InvalidArgument(sprintf('Format %s is not supported', $format));
+        in_array($format, [self::JSON_FORMAT, self::TEXT_FORMAT], true) || throw new InvalidArgument(sprintf('Format %s is not supported', $format));
 
         return new self(
             $this->path,
@@ -253,7 +307,7 @@ final class Input
         );
     }
 
-    public function withJsnPrettyPrint(State $state): self
+    public function withJsnPrettyPrint(Feature $state): self
     {
         if ($state === $this->jsonPrettyPrint) {
             return $this;
@@ -279,7 +333,7 @@ final class Input
         );
     }
 
-    public function withInIsolation(State $state): self
+    public function withInIsolation(Feature $state): self
     {
         if ($state === $this->inIsolation) {
             return $this;
@@ -305,7 +359,7 @@ final class Input
         );
     }
 
-    public function withDryRun(State $state): self
+    public function withDryRun(Feature $state): self
     {
         if ($state === $this->dryRun) {
             return $this;
@@ -549,7 +603,7 @@ final class Input
         );
     }
 
-    public function withProgressBar(Visibility $visibility): self
+    public function withProgressBar(Display $visibility): self
     {
         if ($visibility === $this->progressBar) {
             return $this;
@@ -656,30 +710,78 @@ final class Input
     }
 
     /**
+     * @param InputMap $data
+     */
+    public static function fromArray(array $data): self
+    {
+        $missingKeys = array_diff_key([
+            'path' => 1,
+            'help' => 1,
+            'info' => 1,
+            'version' => 1,
+            'format' => 1,
+            'output' => 1,
+            'json_pretty_print' => 1,
+            'isolation' => 1,
+            'dry_run' => 1,
+            'depth' => 1,
+            'tags' => 1,
+            'memory_limit' => 1,
+            'log_file' => 1,
+            'file_suffixes' => 1,
+            'method_visibility' => 1,
+            'progress_bar' => 1,
+        ], $data);
+
+        [] === $missingKeys || throw new InvalidArgument('The payload is missing the following keys: '.implode(', ', array_keys($missingKeys)));
+
+        try {
+            return new self(
+                path: $data['path'],
+                helpSection: Display::from($data['help']),
+                infoSection: Display::from($data['info']),
+                versionSection: Display::from($data['version']),
+                format: $data['format'],
+                output: $data['output'],
+                jsonPrettyPrint: Feature::from($data['json_pretty_print']),
+                inIsolation: Feature::from($data['isolation']),
+                dryRun: Feature::from($data['dry_run']),
+                depth: $data['depth'],
+                tags: $data['tags'],
+                memoryLimit: $data['memory_limit'],
+                logFile: $data['log_file'],
+                fileSuffixes: $data['file_suffixes'],
+                methodVisibilityList: $data['method_visibility'],
+                progressBar: Display::from($data['progress_bar']),
+            );
+        } catch (Throwable $exception) {
+            throw new InvalidArgument('Unable to create a input from the payload', previous: $exception);
+        }
+    }
+
+    /**
      * @param OptionMap|InputInterface $input
      */
     public static function fromInput(array|InputInterface $input): self
     {
-        $instance = new self(
+        return new self(
             path: self::getFirstValue($input, 'path', 'p'),
-            helpSection: Visibility::fromBool(self::hasFlag($input, 'help', 'h')),
-            infoSection: Visibility::fromBool(self::hasFlag($input, 'info', 'i')),
-            versionSection: Visibility::fromBool(self::hasFlag($input, 'version', 'V')),
-            format: self::normalizeFormat(self::getFirstValue($input, 'format', 'f') ?? self::TABLE_FORMAT),
+            helpSection: Display::fromBool(self::hasFlag($input, 'help', 'h')),
+            infoSection: Display::fromBool(self::hasFlag($input, 'info', 'i')),
+            versionSection: Display::fromBool(self::hasFlag($input, 'version', 'V')),
+            format: self::normalizeFormat(self::getFirstValue($input, 'format', 'f') ?? self::TEXT_FORMAT),
             output: self::getFirstValue($input, 'output', 'o'),
-            jsonPrettyPrint: State::fromBool(self::hasFlag($input, 'pretty', 'P')),
-            inIsolation: State::fromBool(self::hasFlag($input, 'isolation', 'x')),
-            dryRun: State::fromBool(self::hasFlag($input, 'dry-run')),
+            jsonPrettyPrint: Feature::fromBool(self::hasFlag($input, 'pretty', 'P')),
+            inIsolation: Feature::fromBool(self::hasFlag($input, 'isolation', 'x')),
+            dryRun: Feature::fromBool(self::hasFlag($input, 'dry-run')),
             depth: self::resolveDepth($input),
             tags: self::getNonEmptyStringList($input, 'tags', 't'),
             memoryLimit: self::getFirstValue($input, 'memory-limit'),
             logFile: self::getFirstValue($input, 'memory-limit'),
             fileSuffixes: self::getNonEmptyStringList($input, 'file-suffix'),
             methodVisibilityList: self::resolveMethodVisibility($input),
-            progressBar: Visibility::fromBool(! self::hasFlag($input, 'no-progress')),
+            progressBar: Display::fromBool(! self::hasFlag($input, 'no-progress')),
         );
-
-        return $instance;
     }
 
     /**
@@ -825,7 +927,7 @@ final class Input
 
         return match ($format) {
             self::JSON_FORMAT => self::JSON_FORMAT,
-            self::TABLE_FORMAT => self::TABLE_FORMAT,
+            self::TEXT_FORMAT => self::TEXT_FORMAT,
             default => throw new InvalidArgument("Unsupported format: $format"),
         };
     }
@@ -840,7 +942,7 @@ final class Input
         return <<<HELP
 <fg=green>  -p, --path=PATH</>                Path to scan for PHP files to profile <fg=yellow>(required)</>
 <fg=green>  -d, --depth=DEPTH</>              Recursion depth <fg=yellow>(0 = current dir only, default: unlimited)</>
-<fg=green>  -f, --format=FORMAT</>            Output format: 'table' or 'json' <fg=yellow>(default: 'table')</>
+<fg=green>  -f, --format=FORMAT</>            Output format: 'text' or 'json' <fg=yellow>(default: 'text')</>
 <fg=green>  -o, --output=OUTPUT</>            Path to store the profiling output
 <fg=green>  --memory-limit=MEMORY-LIMIT</>    Memory limit for analysis
 <fg=green>  --log=FILE</>                     Writes log in the specified file

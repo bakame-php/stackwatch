@@ -4,24 +4,24 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
-enum Visibility
+enum Display: string
 {
-    case Show;
-    case Hide;
+    case Visible = 'visible';
+    case Hidden = 'hidden';
 
     public function isVisible(): bool
     {
-        return self::Show === $this;
+        return self::Visible === $this;
     }
 
     public function isHidden(): bool
     {
-        return self::Hide === $this;
+        return self::Hidden === $this;
     }
 
     public static function fromBool(bool $visible): self
     {
-        return $visible ? self::Show : self::Hide;
+        return $visible ? self::Visible : self::Hidden;
     }
 
     public function equals(mixed $visibility): bool

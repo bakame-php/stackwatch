@@ -20,8 +20,8 @@ use function unlink;
 #[CoversClass(Input::class)]
 #[CoversClass(Stackwatch::class)]
 #[CoversClass(UnitOfWork::class)]
-#[CoversClass(State::class)]
-#[CoversClass(Visibility::class)]
+#[CoversClass(Feature::class)]
+#[CoversClass(Display::class)]
 final class StackwatchTest extends TestCase
 {
     private BufferedOutput $stdout;

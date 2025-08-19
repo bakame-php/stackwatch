@@ -69,8 +69,8 @@ $snapshot->forHuman();
 //   "cpu_user_time" => "36.923 ms"
 //   "cpu_system_time" => "9.039 ms"
 //   "cpu_total_time" => "45.962 ms"
-//   "call_location_path" => "/path/to/the/profiled/code.php"
-//   "call_location_line" => "11"
+//   "origin_path" => "/path/to/the/profiled/code.php"
+//   "origin_line" => "11"
 // ]
 ```
 

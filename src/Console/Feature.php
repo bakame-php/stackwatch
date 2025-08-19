@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
-enum State
+enum Feature: string
 {
-    case Enabled;
-    case Disabled;
+    case Enabled = 'enabled';
+    case Disabled = 'disabled';
 
     public function isEnabled(): bool
     {

@@ -27,7 +27,6 @@ use Throwable;
 use function array_map;
 use function in_array;
 use function is_array;
-use function iterator_count;
 use function strtolower;
 
 use const PHP_BINARY;
@@ -126,11 +125,18 @@ final class PathProfiler
         }
 
         $accumulator = [];
-        $progress = $this->input->progressBar->isVisible() ? new ProgressBar($output, iterator_count($phpFiles)) : null;
+        $progress = $this->input->progressBar->isVisible() ? new ProgressBar($output) : null;
+        if (null !== $progress) {
+            $progress->setFormat('%bar%');
+            $progress->setBarCharacter('.');
+            $progress->setEmptyBarCharacter('');
+            $progress->setProgressCharacter('.');
+        }
+
         foreach (($progress?->iterate($phpFiles) ?? $phpFiles) as $phpFile) {
             $unitOfWorks = match ($this->input->inIsolation) {
-                State::Enabled => $this->createUnitOfWorksInIsolation($phpFile),
-                State::Disabled => $this->createUnitOfWorks($phpFile),
+                Feature::Enabled => $this->createUnitOfWorksInIsolation($phpFile),
+                Feature::Disabled => $this->createUnitOfWorks($phpFile),
             };
 
             foreach ($unitOfWorks as $unitOfWork) {
@@ -142,7 +148,7 @@ final class PathProfiler
         }
 
         $progress?->finish();
-        if ($this->input->progressBar->isVisible()) {
+        if (null !== $progress) {
             $output->writeln('');
             $output->writeln('');
         }
@@ -165,9 +171,8 @@ final class PathProfiler
             ->withFormat(Input::JSON_FORMAT)
             ->withPath($realPath)
             ->withDepth(0)
-            ->withInIsolation(State::Disabled)
-            ->withProgressBar(Visibility::Hide);
-        ;
+            ->withInIsolation(Feature::Disabled)
+            ->withProgressBar(Display::Hidden);
 
         $arguments = array_merge([PHP_BINARY, $stackwatchPath], $input->toArguments());
         $process = new Process($arguments);

@@ -13,10 +13,14 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - `Metrics::yieldFrom` to lazily yield Metrics from other objects (`Report`, `Timeline`, `Profiler`, `Span` and `Metrics`)
 - Added `withers` method on the `Input`
 - Added `Input::toArguments` to ease constructing the CLI command out of the `Input` instance.
+- Added `Input::fromArray`, `Input::toArray` and `Input` now implements the `JsonSerializable` interface
 - `--dry-run` option to `stackwatch` command to list profiling targets without performing the profile
 - `--log` option to `stackwatch` command to specify the logfile where error logs are being stored
 - `--file-suffix` to restrict files to be profiled based on their suffix.
 - `--method-visibiloty` to restrict methods to be profiled based on their visibility
+- **BC BREAK:** `Visibility` is renamed `Display`
+- **BC BREAK:** `State` is renamed `Feature`
+- **BC BREAK:** `Input::TABLE_FORMAT` is renamed `Input::TEXT_FORMAT`
 
 ### Fixed
 

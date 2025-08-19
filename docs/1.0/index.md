@@ -7,9 +7,9 @@ title: Installation
 
 ## System Requirements
 
-**PHP >= 8.1**  and `psr\log` package are required, but the latest stable version of both are recommended.
+**PHP >= 8.1**  and `psr/log` package are required, but the latest stable versions of both packages are recommended.
 
-The `symfony/console` and `symfony/process` packages are required if you want to use the CLI command and the **Exporters**.
+The `symfony/console` and `symfony/process` packages are required if you want to use: the CLI command and the **Exporters**.
 
 
 ## Installation

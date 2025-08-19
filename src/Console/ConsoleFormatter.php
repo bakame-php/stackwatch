@@ -18,7 +18,7 @@ final class ConsoleFormatter implements Formatter
     public function __construct(
         public readonly ConsoleExporter $exporter,
         public readonly LeaderPrinter $leaderPrinter = new LeaderPrinter(),
-        public readonly State $dryRun = State::Disabled,
+        public readonly Feature $dryRun = Feature::Disabled,
     ) {
     }
 
