@@ -92,9 +92,8 @@ Real Peak Memory Usage ................................................... 0.0 B
 
 ## The Profile attribute
 
-To work as shown, the command line relies on the presence of the `#[Bakame\Stackwatch\Profile]` attribute.
-
-The `#[Profile]` attribute marks a function, method, or class for performance profiling during execution.
+To work, the command line relies on the presence of the `#[Bakame\Stackwatch\Profile]` attribute. The
+attribute can mark a function, method, or class for performance profiling during execution.
 When applied, the profiler will repeatedly execute the target code to collect detailed runtime metrics,
 allowing developers to analyze and optimize code performance with statistically meaningful data.
 
@@ -222,14 +221,23 @@ Pretty-print the JSON/NDJSON output. **JSON only.**
 
 #### Selection
 
-**`-t, --tags=TAGS`**  
-Only run the profiles for the listed tag(s).
-
 **`-d, --depth=DEPTH`**  
 Recursion depth. `0` means scan only the current directory. By default, recursion is unlimited.
 
 **`-n, --no-recursion`**  
 Disable directory recursion an alias to `--depth=0`
+
+**`-t, --tags=TAGS`**  
+Only run the profiles for the listed tag(s). The tags are separated by a `,` and refers
+to the tags defined on the `#[Profile]` attribute.
+
+**`--file-suffix=SUFFIX`**  
+Only search for test in files with specified suffix(es). Default: `.php` The suffixes are separated by a `,`
+
+**`--method-visibility=VISIBILITY`**
+Only run the profiles for methods with the listed visibilities. The visibility is separated by a `,`
+And can only take `private`, `protected` or `public` values. By default, all methods are run
+regardless of their visibility status.
 
 #### Execution
 

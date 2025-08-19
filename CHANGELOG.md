@@ -6,13 +6,17 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Added
 
+- **BC BREAK:** `Summary` is renamed `Span`.
 - `CallLocation` class to allow recording where the package `Snapshot` was called from [#8](https://github.com/bakame-php/stackwatch/pull/8)
 - `CallRange` class to allow manipulating location range within the `Summary` class.
 - `Environment::forHuman` method
 - `Metrics::yieldFrom` to lazily yield Metrics from other objects (`Report`, `Timeline`, `Profiler`, `Span` and `Metrics`)
+- Added `withers` method on the `Input`
+- Added `Input::toArguments` to ease constructing the CLI command out of the `Input` instance.
 - `--dry-run` option to `stackwatch` command to list profiling targets without performing the profile
 - `--log` option to `stackwatch` command to specify the logfile where error logs are being stored
-- **BC BREAK:** `Summary` is renamed `Span`.
+- `--file-suffix` to restrict files to be profiled based on their suffix.
+- `--method-visibiloty` to restrict methods to be profiled based on their visibility
 
 ### Fixed
 

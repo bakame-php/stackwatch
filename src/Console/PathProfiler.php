@@ -90,16 +90,25 @@ final class PathProfiler
         $phpFiles = new CallbackFilterIterator(
             $files,
             function (SplFileInfo $file) {
-                $filesize = $file->getSize();
                 if (!$file->isFile() || !$file->isReadable()) {
                     return false;
                 }
 
-                if ('php' !== strtolower($file->getExtension())) {
+                if (in_array($file->getSize(), [false, 0], true)) {
                     return false;
                 }
 
-                return !in_array($filesize, [false, 0], true);
+                if ([] === $this->input->fileSuffixes) {
+                    return 'php' === strtolower($file->getExtension());
+                }
+
+                foreach ($this->input->fileSuffixes as $suffix) {
+                    if (str_ends_with($file->getPathname(), $suffix)) {
+                        return true;
+                    }
+                }
+
+                return false;
             }
         );
 
@@ -134,24 +143,14 @@ final class PathProfiler
         $stackwatchPath = realpath(__DIR__.'/../../bin/stackwatch');
         false !== $stackwatchPath || throw new RuntimeException('Could not resolve stackwatch path.');
 
-        $arguments = [PHP_BINARY, $stackwatchPath, '-p', $realPath, '-f', 'json', '-n'];
-        if ([] !== $this->input->tags) {
-            $arguments[] = '-t';
-            $arguments[] = implode(',', $this->input->tags);
-        }
+        $input = $this->input
+            ->withFormat(Input::JSON_FORMAT)
+            ->withPath($realPath)
+            ->withDepth(0)
+            ->withInIsolation(State::Disabled);
+        ;
 
-        if (State::Enabled === $this->input->dryRun) {
-            $arguments[] = '--dry-run';
-        }
-
-        if (null !== $this->input->memoryLimit) {
-            $arguments[] = '--memory-limit='.$this->input->memoryLimit;
-        }
-
-        if (null !== $this->input->logFile) {
-            $arguments[] = '--log='.$this->input->logFile;
-        }
-
+        $arguments = array_merge([PHP_BINARY, $stackwatchPath], $input->toArguments());
         $process = new Process($arguments);
         $process->run();
         $process->isSuccessful() || throw new UnableToProfile($process->getErrorOutput());
@@ -179,7 +178,7 @@ final class PathProfiler
     {
         $realPath = $path->getRealPath();
         try {
-            return $this->unitOfWorkGenerator->generate($realPath, $this->input->tags);
+            return $this->unitOfWorkGenerator->generate($realPath, $this->input);
         } catch (Throwable $exception) {
             $this->logger->notice('The file '.$realPath.' can not be profiled.', ['path' => $realPath, 'exception' => $exception]);
 

@@ -31,13 +31,11 @@ final class UnitOfWorkGenerator
     }
 
     /**
-     * @param list<non-empty-string> $tags
-     *
      * @throws ReflectionException|LogicException
      *
      * @return iterable<UnitOfWork>
      */
-    public function generate(string|SplFileInfo $realPath, array $tags = []): iterable
+    public function generate(string|SplFileInfo $realPath, Input $input): iterable
     {
         $splFileInfo = $this->filterPath($realPath);
         $realPath = $splFileInfo->getRealPath();
@@ -48,10 +46,10 @@ final class UnitOfWorkGenerator
         require_once $realPath;
 
         /** @var array<UnitOfWork> $unitOfWorks */
-        $unitOfWorks = array_reduce($tuples, function (array $unitOfWorks, array $tuple) use ($realPath, $tags): array {
+        $unitOfWorks = array_reduce($tuples, function (array $unitOfWorks, array $tuple) use ($realPath, $input): array {
             $unitOfWork = match ($tuple[0]) {
-                'function' => $this->prepareFunctionProcess($tuple[1], $tags),
-                'class' => $this->prepareMethodsProcess($tuple[1], $tags),
+                'function' => $this->prepareFunctionProcess($tuple[1], $input),
+                'class' => $this->prepareMethodsProcess($tuple[1], $input),
                 default => throw new LogicException("Unable to prepare process for target type $tuple[1] in $realPath"),
             };
 
@@ -82,13 +80,11 @@ final class UnitOfWorkGenerator
     }
 
     /**
-     * @param list<non-empty-string> $tags
-     *
      * @throws ReflectionException
      *
      * @return list<UnitOfWork>
      */
-    private function prepareMethodsProcess(string $className, array $tags = []): array
+    private function prepareMethodsProcess(string $className, Input $input): array
     {
         if (!class_exists($className)) {
             return [];
@@ -106,6 +102,7 @@ final class UnitOfWorkGenerator
                 continue;
             }
 
+            $tags = $input->tags;
             if ([] !== $tags) {
                 if ([] === $profile->tags) {
                     continue;
@@ -113,6 +110,20 @@ final class UnitOfWorkGenerator
 
                 $intersection = array_intersect($tags, $profile->tags);
                 if ([] === $intersection) {
+                    continue;
+                }
+            }
+
+            $methodVisibilities = $input->methodVisibilityList;
+            if ([] !== $methodVisibilities) {
+                $visibility = match (true) {
+                    $method->isPublic() => 'public',
+                    $method->isProtected() => 'protected',
+                    $method->isPrivate() => 'private',
+                    default => throw new LogicException("Unsupported method visibility for `$className::$method->name()`"),
+                };
+
+                if (!in_array($visibility, $methodVisibilities, true)) {
                     continue;
                 }
             }
@@ -155,10 +166,7 @@ final class UnitOfWorkGenerator
         return $results;
     }
 
-    /**
-     * @param list<non-empty-string> $tags
-     */
-    private function prepareFunctionProcess(string $functionName, array $tags = []): ?UnitOfWork
+    private function prepareFunctionProcess(string $functionName, Input $input): ?UnitOfWork
     {
         if (!function_exists($functionName)) {
             return null;
@@ -178,6 +186,7 @@ final class UnitOfWorkGenerator
             return null;
         }
 
+        $tags = $input->tags;
         if ([] !== $tags) {
             if ([] === $profile->tags) {
                 return null;
