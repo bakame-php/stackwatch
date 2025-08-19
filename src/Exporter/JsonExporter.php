@@ -81,7 +81,7 @@ final class JsonExporter implements Exporter
                 public function fwrite(string $data): int|false
                 {
                     /** @var int|false $bytes */
-                    $bytes = Cloak::call(fwrite(...), $this->resource, $data);
+                    $bytes = Cloak::warning(fwrite(...), $this->resource, $data);
 
                     return $bytes;
                 }

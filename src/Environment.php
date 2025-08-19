@@ -13,6 +13,7 @@ use function getenv;
 use function gethostname;
 use function implode;
 use function ini_get;
+use function is_readable;
 use function max;
 use function php_sapi_name;
 use function php_uname;
@@ -88,13 +89,13 @@ final class Environment implements JsonSerializable
     public static function current(): self
     {
         /** @var float|false $totalDisk */
-        $totalDisk = Cloak::call(disk_total_space(...), '/');
+        $totalDisk = Cloak::warning(disk_total_space(...), '/');
         if (false === $totalDisk) {
             $totalDisk = 0;
         }
 
         /** @var float|false $freeDisk */
-        $freeDisk = Cloak::call(disk_free_space(...), '/');
+        $freeDisk = Cloak::warning(disk_free_space(...), '/');
         if (false === $freeDisk) {
             $freeDisk = 0;
         }
@@ -141,16 +142,8 @@ final class Environment implements JsonSerializable
             return self::getCpuCoresCount(getenv('NUMBER_OF_PROCESSORS'));
         }
 
-        $shellExec = static function (string $cmd): string {
-            /** @var string|false $returnValue */
-            $returnValue = Cloak::call(shell_exec(...), $cmd);
-
-            return trim((string) $returnValue);
-        };
-
-        /** @var bool $isReadable */
-        $isReadable = Cloak::call(is_readable(...), '/proc/cpuinfo');
-        if ($isReadable) {
+        $shellExec = static fn (string $cmd): string => trim((string) shell_exec($cmd));
+        if (is_readable('/proc/cpuinfo')) {
             $cores = $shellExec('nproc');
 
             return self::getCpuCoresCount($cores);

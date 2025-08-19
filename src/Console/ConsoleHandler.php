@@ -31,7 +31,7 @@ final class ConsoleHandler implements Handler
 
         if (null !== $input->output) {
             /** @var resource|false $handler */
-            $handler = Cloak::call(fopen(...), $input->output, 'w');
+            $handler = Cloak::warning(fopen(...), $input->output, 'w');
             false !== $handler || throw new RuntimeException('Unable to open the file for storing the output.');
             $output = new StreamOutput($handler);
         }

@@ -60,7 +60,7 @@ final class Stackwatch
         }
 
         /** @var resource|false $handler */
-        $handler = Cloak::call(fopen(...), $logFile, 'a');
+        $handler = Cloak::warning(fopen(...), $logFile, 'a');
         false !== $handler || throw new RuntimeException('Unable to open the file for storing the output.');
 
         return new Logger(new StreamOutput($handler));
