@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
-use Bakame\Stackwatch\Cloak;
 use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\Exporter\LeaderPrinter;
 use Bakame\Stackwatch\Version;
+use Bakame\Stackwatch\Warning;
 use Psr\Log\LoggerInterface;
-use RuntimeException;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Output\StreamOutput;
 
@@ -30,9 +29,8 @@ final class ConsoleHandler implements Handler
         $output = $this->stdout;
 
         if (null !== $input->output) {
-            /** @var resource|false $handler */
-            $handler = Cloak::warning(fopen(...), $input->output, 'w');
-            false !== $handler || throw new RuntimeException('Unable to open the file for storing the output.');
+            /** @var resource $handler */
+            $handler = Warning::trap(fopen(...), $input->output, 'w');
             $output = new StreamOutput($handler);
         }
 

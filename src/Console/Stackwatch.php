@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
-use Bakame\Stackwatch\Cloak;
 use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\Version;
+use Bakame\Stackwatch\Warning;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -59,9 +59,8 @@ final class Stackwatch
             return new Logger($default ?? new StreamOutput(STDERR));
         }
 
-        /** @var resource|false $handler */
-        $handler = Cloak::warning(fopen(...), $logFile, 'a');
-        false !== $handler || throw new RuntimeException('Unable to open the file for storing the output.');
+        /** @var resource $handler */
+        $handler = Warning::trap(fopen(...), $logFile, 'a');
 
         return new Logger(new StreamOutput($handler));
     }

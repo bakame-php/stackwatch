@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Exporter;
 
-use Bakame\Stackwatch\Cloak;
 use Bakame\Stackwatch\Console\Exporter;
 use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\Metrics;
@@ -15,6 +14,8 @@ use Bakame\Stackwatch\Snapshot;
 use Bakame\Stackwatch\Span;
 use Bakame\Stackwatch\Statistics;
 use Bakame\Stackwatch\Timeline;
+use Bakame\Stackwatch\Warning;
+use ErrorException;
 use JsonException;
 use RuntimeException;
 use SplFileInfo;
@@ -60,7 +61,7 @@ final class JsonExporter implements Exporter
     }
 
     /**
-     * @throws JsonException|RuntimeException
+     * @throws JsonException|RuntimeException|ErrorException
      */
     private function writeJson(mixed $data, bool $appendNewline): int
     {
@@ -78,10 +79,15 @@ final class JsonExporter implements Exporter
                     $this->resource = $resource;
                 }
 
+                /**
+                 *
+                 * @throws ErrorException If the resource is invalid
+                 *
+                 */
                 public function fwrite(string $data): int|false
                 {
                     /** @var int|false $bytes */
-                    $bytes = Cloak::warning(fwrite(...), $this->resource, $data);
+                    $bytes = Warning::trap(fwrite(...), $this->resource, $data);
 
                     return $bytes;
                 }

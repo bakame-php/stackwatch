@@ -89,13 +89,13 @@ final class Environment implements JsonSerializable
     public static function current(): self
     {
         /** @var float|false $totalDisk */
-        $totalDisk = Cloak::warning(disk_total_space(...), '/');
+        $totalDisk = Warning::cloak(disk_total_space(...), '/');
         if (false === $totalDisk) {
             $totalDisk = 0;
         }
 
         /** @var float|false $freeDisk */
-        $freeDisk = Cloak::warning(disk_free_space(...), '/');
+        $freeDisk = Warning::cloak(disk_free_space(...), '/');
         if (false === $freeDisk) {
             $freeDisk = 0;
         }
