@@ -35,16 +35,6 @@ final class CloakTest extends TestCase
         self::assertFalse($result);
     }
 
-    public function testDeprecatedSuppressesDeprecated(): void
-    {
-        $result = Cloak::deprecated(function (): string {
-            @trigger_error('Deprecated feature', E_USER_DEPRECATED);
-            return 'ok';
-        });
-
-        self::assertSame('ok', $result);
-    }
-
     public function testAllSuppressesAllErrors(): void
     {
         $result = Cloak::all(function (): string {

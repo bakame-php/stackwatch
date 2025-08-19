@@ -24,13 +24,14 @@ use const E_WARNING;
 
 /**
  * Utility to cloak PHP errors (suppress certain error levels) during the execution of a callback.
+ *
  * @template TReturn
  *
- * @method static TReturn call(callable $callback, mixed...$args)
- * @method static TReturn all(callable $callback, mixed...$args)
- * @method static TReturn warning(callable  $callback, mixed...$args)
- * @method static TReturn notice(callable  $callback, mixed...$args)
- * @method static TReturn deprecated(callable  $callback, mixed...$args)
+ * @method static TReturn call(callable $callback, mixed...$args) Suppresses Warnings and Notices
+ * @method static TReturn warningAndNorice(callable $callback, mixed...$args) Suppresses Warnings and Notices
+ * @method static TReturn all(callable $callback, mixed...$args) Suppresses All errors
+ * @method static TReturn warning(callable  $callback, mixed...$args) Suppresses Warnings
+ * @method static TReturn notice(callable  $callback, mixed...$args) Suppresses Notices
  */
 final class Cloak
 {
@@ -56,7 +57,6 @@ final class Cloak
             'call', 'warningandnotice' => [E_WARNING, E_NOTICE, E_USER_WARNING, E_USER_NOTICE],
             'warning' => [E_WARNING, E_USER_WARNING],
             'notice' => [E_NOTICE, E_USER_NOTICE],
-            'deprecated' => [E_DEPRECATED, E_USER_DEPRECATED],
             'all' => [E_WARNING, E_NOTICE, E_USER_WARNING, E_USER_NOTICE, E_DEPRECATED, E_USER_DEPRECATED],
             default => throw new BadMethodCallException("Undefined Cloak method '$name'"),
         };
