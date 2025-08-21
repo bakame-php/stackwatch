@@ -126,7 +126,7 @@ final class ReportTest extends TestCase
         $report = Report::none();
 
         foreach ($report->toArray() as $key => $stat) {
-            self::assertSame(0, $stat['count'], "Failed asserting count is 0 for $key");
+            self::assertSame(0, $stat['iterations'], "Failed asserting count is 0 for $key");
             self::assertArrayHasKey('average', $stat);
         }
     }

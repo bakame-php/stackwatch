@@ -6,6 +6,7 @@ namespace Bakame\Stackwatch\Console;
 
 use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\Exporter\LeaderPrinter;
+use Bakame\Stackwatch\Translator;
 use Bakame\Stackwatch\Version;
 use Bakame\Stackwatch\Warning;
 use Psr\Log\LoggerInterface;
@@ -21,6 +22,8 @@ final class ConsoleHandler implements Handler
         private readonly OutputInterface $stdout,
         private readonly LoggerInterface $logger,
         private readonly Environment $environment,
+        private readonly LeaderPrinter $leaderPrinter = new LeaderPrinter(),
+        private readonly Translator $translator = new Translator(),
     ) {
     }
 
@@ -34,16 +37,14 @@ final class ConsoleHandler implements Handler
             $output = new StreamOutput($handler);
         }
 
-        $profiler = PathProfiler::forConsole($input, $output, $this->logger);
+        $profiler = PathProfiler::forConsole($input, $output, $this->logger, $this->translator);
         $output->writeln(Version::toConsoleString());
 
         if ($input->infoSection->isVisible()) {
             $formatter = $profiler->formatter;
             if ($formatter instanceof ConsoleFormatter) {
-                $leaderPrinter = new LeaderPrinter(filler: '.', padExtra: 1);
-                /** @var EnvironmentHumanReadable $data */
-                $data = $this->environment->forHuman();
-                $formatter->exporter->output->writeln($leaderPrinter->render($data));
+                $data = $this->translator->translateArrayKeys($this->environment->forHuman()); /* @phpstan-ignore-line */
+                $formatter->exporter->output->writeln($this->leaderPrinter->render($data));
                 $formatter->exporter->output->writeln('');
             }
         } else {

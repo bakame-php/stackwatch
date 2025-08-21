@@ -27,7 +27,7 @@ use function strtolower;
  *
  * @phpstan-type StatsMap array{
  *     unit: string,
- *     count:int,
+ *     iterations:int,
  *     minimum:float|int,
  *     maximum:float|int,
  *     range:float|int,
@@ -40,7 +40,7 @@ use function strtolower;
  * }
  *
  * @phpstan-type StatsHumanReadable array{
- *      count:string,
+ *      iterations:string,
  *      minimum:string,
  *      maximum:string,
  *      range:string,
@@ -57,7 +57,7 @@ final class Statistics implements JsonSerializable
 {
     public function __construct(
         public readonly Unit $unit,
-        public readonly int $count,
+        public readonly int $iterations,
         public readonly float|int $minimum,
         public readonly float|int $maximum,
         public readonly float|int $range,
@@ -77,23 +77,23 @@ final class Statistics implements JsonSerializable
      */
     public static function fromValues(Unit $unit, array $values): self
     {
-        $count = count($values);
-        if (0 === $count) {
+        $iterations = count($values);
+        if (0 === $iterations) {
             return self::none($unit);
         }
 
         $sum = array_sum($values);
         sort($values);
-        $average = $sum / $count;
-        $median = self::medianOf($values, $count);
-        $variance = self::varianceOf($values, $average, $count);
+        $average = $sum / $iterations;
+        $median = self::medianOf($values, $iterations);
+        $variance = self::varianceOf($values, $average, $iterations);
         $stddev = sqrt($variance);
         $min = $values[0];
-        $max = $values[$count - 1];
+        $max = $values[$iterations - 1];
 
         return new self(
             unit: $unit,
-            count: $count,
+            iterations: $iterations,
             minimum: $min,
             maximum: $max,
             range: $max - $min,
@@ -110,7 +110,7 @@ final class Statistics implements JsonSerializable
     {
         return new self(
             unit: $unit,
-            count: 1,
+            iterations: 1,
             minimum: $value,
             maximum: $value,
             range: 0,
@@ -127,7 +127,7 @@ final class Statistics implements JsonSerializable
     {
         return new self(
             unit: $unit,
-            count: 0,
+            iterations: 0,
             minimum: 0,
             maximum: 0,
             range: 0,
@@ -150,7 +150,7 @@ final class Statistics implements JsonSerializable
     {
         $missingKeys = array_diff_key([
             'unit' => 1,
-            'count' => 1,
+            'iterations' => 1,
             'minimum' => 1,
             'maximum' => 1,
             'range' => 1,
@@ -167,7 +167,7 @@ final class Statistics implements JsonSerializable
         try {
             return new self(
                 Unit::from($data['unit']),
-                $data['count'],
+                $data['iterations'],
                 $data['minimum'],
                 $data['maximum'],
                 $data['range'],
@@ -213,7 +213,7 @@ final class Statistics implements JsonSerializable
     {
         return [
             'unit' => $this->unit->value,
-            'count' => $this->count,
+            'iterations' => $this->iterations,
             'minimum' => $this->minimum,
             'maximum' => $this->maximum,
             'range' => $this->range,
@@ -239,14 +239,14 @@ final class Statistics implements JsonSerializable
      *
      * If a `$property` is specified, returns only the formatted value of that metric.
      *
-     * @param 'count'|'minimum'|'maximum'|'range'|'sum'|'average'|'median'|'variance'|'std_dev'|'coef_var'|null $property
+     * @param 'iterations'|'minimum'|'maximum'|'range'|'sum'|'average'|'median'|'variance'|'std_dev'|'coef_var'|null $property
      *
      * @return StatsHumanReadable|string
      */
     public function forHuman(?string $property = null): array|string
     {
         $humans = [
-             'count' => (string) $this->count,
+             'iterations' => (string) $this->iterations,
              'minimum' => $this->unit->format($this->minimum, 3),
              'maximum' => $this->unit->format($this->maximum, 3),
              'range' => $this->unit->format($this->range, 3),

@@ -21,6 +21,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - **BC BREAK:** `Visibility` is renamed `Display`
 - **BC BREAK:** `State` is renamed `Feature`
 - **BC BREAK:** `Input::TABLE_FORMAT` is renamed `Input::TEXT_FORMAT`
+- Added a `Translator` class to improve human-readable key translation.
 
 ### Fixed
 
@@ -29,6 +30,8 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - **BC BREAK:** `Snapshot::cpu` property is replaced by 2 properties `Snapshot::cpuUserTime` and `Snapshot::cpuSystemTime`.
 - `LabelGenerator::generate` now also accepts the hyphen (`-`) character.
 - Adding support for `Timeline` on `Metrics::sum` and `Metrics::average` static methods.
+- **BC BREAK:** Fix `Report` and `Environment` keys used for `toArray` and `forHuman`
+- **BC BREAK:** Fix `Statistics::count` is not `Statistics::iterations`  keys used for `toArray` and `forHuman`
 
 ### Deprecated
 

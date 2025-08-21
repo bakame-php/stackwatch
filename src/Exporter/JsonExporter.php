@@ -22,7 +22,6 @@ use SplFileInfo;
 use SplFileObject;
 use TypeError;
 
-use function fwrite;
 use function is_resource;
 use function is_string;
 use function json_encode;

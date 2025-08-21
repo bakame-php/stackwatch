@@ -6,19 +6,17 @@ namespace Bakame\Stackwatch\Console;
 
 use Bakame\Stackwatch\Exporter\ConsoleExporter;
 use Bakame\Stackwatch\Exporter\LeaderPrinter;
-use Bakame\Stackwatch\Metrics;
 use Bakame\Stackwatch\Report;
+use Bakame\Stackwatch\Translator;
 use Throwable;
 
-/**
- * @phpstan-import-type MetricsHumanReadable from Metrics
- */
 final class ConsoleFormatter implements Formatter
 {
     public function __construct(
         public readonly ConsoleExporter $exporter,
         public readonly LeaderPrinter $leaderPrinter = new LeaderPrinter(),
         public readonly Feature $dryRun = Feature::Disabled,
+        public readonly Translator $translator = new Translator(),
     ) {
     }
 
@@ -43,36 +41,9 @@ final class ConsoleFormatter implements Formatter
                 continue;
             }
 
-            /** @var MetricsHumanReadable $data */
-            $data = $stats->forHuman();
-            $this->exporter->output->writeln($this->leaderPrinter->render(self::exchangeKeys($data)));
+            $data = $this->leaderPrinter->render($this->translator->translateArrayKeys($stats->forHuman())); /* @phpstan-ignore-line */
+            $this->exporter->output->writeln($data);
             $this->exporter->output->writeln('');
         }
-    }
-
-    /**
-     * @param MetricsHumanReadable $metrics
-     *
-     * @return array<string, string>
-     */
-    private static function exchangeKeys(array $metrics): array
-    {
-        static $humanKeys = [
-            'cpu_time' => 'CPU Time',
-            'memory_usage' => 'Memory Usage',
-            'real_memory_usage' => 'Real Memory Usage',
-            'peak_memory_usage' => 'Peak Memory Usage',
-            'real_peak_memory_usage' => 'Real Peak Memory Usage',
-            'execution_time' => 'Execution Time',
-        ];
-
-        $humans = [];
-        foreach ($metrics as $key => $metric) {
-            /** @var string $humanKey */
-            $humanKey = $humanKeys[$key] ?? $key;
-            $humans[ $humanKey] = $metric;
-        }
-
-        return $humans;
     }
 }

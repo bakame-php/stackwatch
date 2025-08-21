@@ -14,11 +14,15 @@ use Bakame\Stackwatch\Snapshot;
 use Bakame\Stackwatch\Span;
 use Bakame\Stackwatch\Statistics;
 use Bakame\Stackwatch\Timeline;
+use Bakame\Stackwatch\Translator;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableCell;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+
+use function array_keys;
+use function array_map;
 
 /**
  * @phpstan-import-type MetricsHumanReadable from Metrics
@@ -28,8 +32,10 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 final class ConsoleExporter implements Exporter
 {
-    public function __construct(public readonly OutputInterface $output = new ConsoleOutput())
-    {
+    public function __construct(
+        public readonly OutputInterface $output = new ConsoleOutput(),
+        public readonly Translator $translator = new Translator(),
+    ) {
     }
 
     public function exportSummary(Result|Span $span, Profiler|Timeline|null $parent = null): void
@@ -65,7 +71,6 @@ final class ConsoleExporter implements Exporter
             return;
         }
 
-        /** @var Span $span */
         $span = $timeline->summarize();
 
         $this
@@ -81,12 +86,12 @@ final class ConsoleExporter implements Exporter
         return (new Table($this->output))
             ->setHeaders([
             'Label',
-            'CPU Time',
-            'Execution Time',
-            'Memory Usage',
-            'Real Memory Usage',
-            'Peak Memory Usage',
-            'Real Peak Memory Usage',
+            $this->translator->translate('execution_time'),
+            $this->translator->translate('cpu_time'),
+            $this->translator->translate('memory_usage'),
+            $this->translator->translate('real_memory_usage'),
+            $this->translator->translate('peak_memory_usage'),
+            $this->translator->translate('real_peak_memory_usage'),
         ]);
     }
 
@@ -115,15 +120,7 @@ final class ConsoleExporter implements Exporter
         /** @var MetricsHumanReadable $formattedMetrics */
         $formattedMetrics = $metrics->forHuman();
 
-        return [
-            $formattedLabel,
-            $formattedMetrics['cpu_time'],
-            $formattedMetrics['execution_time'],
-            $formattedMetrics['memory_usage'],
-            $formattedMetrics['real_memory_usage'],
-            $formattedMetrics['peak_memory_usage'],
-            $formattedMetrics['real_peak_memory_usage'],
-        ];
+        return [...[$formattedLabel], ...array_values($formattedMetrics)];
     }
 
     public function exportSnapshot(Snapshot $snapshot): void
@@ -131,97 +128,27 @@ final class ConsoleExporter implements Exporter
         /** @var SnapshotHumanReadable $stats */
         $stats = $snapshot->forHuman();
 
-        (new Table($this->output))
-            ->setHeaders([
-                'Timestamp',
-                'Call Location Path',
-                'Call Location Line',
-                'Memory Usage',
-                'Real Memory Usage',
-                'Peak Memory Usage',
-                'Real Peak Memory Usage',
-                'CPU System Time',
-                'CPU User Time',
-                'CPU Total Time',
-            ])
-            ->addRow([
-                $stats['timestamp'],
-                $stats['origin_path'],
-                $stats['origin_line'],
-                $stats['memory_usage'],
-                $stats['real_memory_usage'],
-                $stats['peak_memory_usage'],
-                $stats['real_peak_memory_usage'],
-                $stats['cpu_system_time'],
-                $stats['cpu_user_time'],
-                $stats['cpu_total_time'],
-            ])
-            ->setVertical()
-            ->render();
+        $this->renderTable($stats);
     }
 
     public function exportMetrics(Result|Span|Metrics $metrics): void
     {
-        /** @var MetricsHumanReadable $map */
-        $map = (match (true) {
+        /** @var MetricsHumanReadable $stats */
+        $stats = (match (true) {
             $metrics instanceof Result => $metrics->span->metrics,
             $metrics instanceof Span => $metrics->metrics,
             default => $metrics,
         })->forHuman();
 
-        (new Table($this->output))
-            ->setHeaders([
-                'Execution Time',
-                'CPU Time',
-                'Memory Usage',
-                'Real Memory Usage',
-                'Peak Memory Usage',
-                'Real Peak Memory Usage',
-            ])
-            ->addRow([
-                $map['execution_time'],
-                $map['cpu_time'],
-                $map['memory_usage'],
-                $map['real_memory_usage'],
-                $map['peak_memory_usage'],
-                $map['real_peak_memory_usage'],
-            ])
-            ->setVertical()
-            ->render();
+        $this->renderTable($stats);
     }
 
     public function exportStatistics(Statistics $statistics): void
     {
-        /** @var StatsHumanReadable $map */
-        $map = $statistics->forHuman();
+        /** @var StatsHumanReadable $stats */
+        $stats = $statistics->forHuman();
 
-        (new Table($this->output))
-            ->setHeaders([
-                'Nb Iterations',
-                'Min Value',
-                'Max Value',
-                'Median Value',
-                'Sum',
-                'Range',
-                'Average',
-                'Variance',
-                'Std Dev',
-                'Coef Var',
-            ])
-            ->addRow([
-                $map['count'],
-                $map['minimum'],
-                $map['maximum'],
-                $map['median'],
-                $map['sum'],
-                $map['range'],
-                $map['average'],
-                $map['variance'],
-                $map['std_dev'],
-                $map['coef_var'],
-            ])
-            ->setVertical()
-            ->render();
+        $this->renderTable($stats);
     }
 
     public function exportReport(Report $report): void
@@ -246,23 +173,23 @@ final class ConsoleExporter implements Exporter
 
         $table = (new Table($this->output))
             ->setHeaders([
-                'Metric ',
-                'Nb Iterations',
-                'Min Value',
-                'Max Value',
-                'Median Value',
-                'Sum',
-                'Range',
-                'Average',
-                'Variance',
-                'Std Dev',
-                'Coef Var',
+                $this->translator->translate('metrics'),
+                $this->translator->translate('iterations'),
+                $this->translator->translate('minimum'),
+                $this->translator->translate('maximum'),
+                $this->translator->translate('median'),
+                $this->translator->translate('sum'),
+                $this->translator->translate('range'),
+                $this->translator->translate('average'),
+                $this->translator->translate('variance'),
+                $this->translator->translate('std_dev'),
+                $this->translator->translate('coef_var'),
             ]);
 
         foreach ($reportData as $name => $stats) {
             $table->addRow([
                 $reportPropertyNames[$name],
-                $stats['count'],
+                $stats['iterations'],
                 $stats['minimum'],
                 $stats['maximum'],
                 $stats['median'],
@@ -280,40 +207,22 @@ final class ConsoleExporter implements Exporter
 
     public function exportEnvironment(Environment $environment): void
     {
-        /** @var EnvironmentHumanReadable $map */
-        $map = $environment->forHuman();
+        /** @var EnvironmentHumanReadable $stats */
+        $stats = $environment->forHuman();
+
+        $this->renderTable($stats);
+    }
+
+    /**
+     * @param array<string, scalar> $stats
+     */
+    private function renderTable(array $stats): void
+    {
+        $fields = array_keys($stats);
 
         (new Table($this->output))
-            ->setHeaders([
-                'Operating System',
-                'OS Family',
-                'Hostname',
-                'Architecture',
-                'PHP Integer Size',
-                'PHP Architecture',
-                'SAPI',
-                'PHP Version',
-                'Memory Limit',
-                'Raw Memory Limit',
-                'CPU Cores',
-                'Disk Size',
-                'Free Disk Space',
-            ])
-            ->addRow([
-                $map['os'],
-                $map['os_family'],
-                $map['hostname'],
-                $map['machine'],
-                $map['php_int_size'],
-                $map['php_architecture'],
-                $map['sapi'],
-                $map['php_version'],
-                $map['memory_limit'],
-                $map['raw_memory_limit'],
-                $map['cpu_cores'],
-                $map['total_disk'],
-                $map['free_disk'],
-            ])
+            ->setHeaders(array_map($this->translator->translate(...), $fields))
+            ->addRow($stats)
             ->setVertical()
             ->render();
     }
