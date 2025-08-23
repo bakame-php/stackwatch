@@ -10,6 +10,5 @@ parameters:
         - benchmark
     ignoreErrors:
         - identifier: offsetAccess.notFound
-        - identifier: offsetAccess.nonOffsetAccessible
     reportUnmatchedIgnoredErrors: true
     treatPhpDocTypesAsCertain: false

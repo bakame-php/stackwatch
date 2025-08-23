@@ -5,10 +5,14 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch;
 
 use Attribute;
+use Bakame\Stackwatch\Exporter\StatsExporter;
 use JsonSerializable;
+use Throwable;
 
 use function array_keys;
 use function in_array;
+
+use const STDOUT;
 
 /**
  * @phpstan-type ProfileMap array{
@@ -116,5 +120,50 @@ final class Profile implements JsonSerializable
         }
 
         return array_keys($res);
+    }
+
+    /**
+     * Profile a callable and dump the stats to console.
+     *
+     * @param int<1, max> $iterations
+     * @param int<0, max> $warmup
+     *
+     * @throws Throwable
+     */
+    public static function dump(callable $callback, int $iterations = 3, int $warmup = 0, string $type = self::SUMMARY): void
+    {
+        in_array($type, [self::DETAILED, self::SUMMARY], true) || throw new InvalidArgument('The defined type is not supported.');
+
+        $stats = self::SUMMARY === $type
+            ? Profiler::metrics($callback, $iterations, $warmup)
+            : Profiler::report($callback, $iterations, $warmup);
+        $callLocation = CallLocation::fromLastInternalCall(__NAMESPACE__);
+        $exporter = new StatsExporter(STDOUT);
+
+        $exporter->writeln(
+            Ansi::write('Path: ', AnsiStyle::Green)
+            .Ansi::writeln($callLocation->path.' on line '.$callLocation->line, AnsiStyle::Yellow)
+            .Ansi::write('Iterations: ', AnsiStyle::Green)
+            .Ansi::write($iterations, AnsiStyle::Yellow)
+            .'; '
+            .Ansi::writeln('Warmup: ', AnsiStyle::Green)
+            .Ansi::write($warmup, AnsiStyle::Yellow)
+        );
+        $stats instanceof Report ? $exporter->exportReport($stats) : $exporter->exportMetrics($stats);
+    }
+
+    /**
+     * Profile a callable, dump the stats to console and die.
+     *
+     * @param int<1, max> $iterations
+     * @param int<0, max> $warmup
+     *
+     * @throws Throwable
+     */
+    public static function dd(callable $callback, int $iterations = 3, int $warmup = 0, string $type = self::SUMMARY): never
+    {
+        self::dump($callback, $iterations, $warmup, $type);
+
+        exit(0);
     }
 }

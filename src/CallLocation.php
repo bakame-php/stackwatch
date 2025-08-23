@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch;
 
 use JsonSerializable;
+use Throwable;
 
+use function count;
 use function debug_backtrace;
+use function preg_match;
 use function preg_quote;
 use function str_replace;
 
@@ -17,7 +20,7 @@ use const DEBUG_BACKTRACE_IGNORE_ARGS;
  */
 final class CallLocation implements JsonSerializable
 {
-    private const DEBUG_BACKTRACE_LIMIT = 4;
+    private const BACKTRACE_LIMIT = 4;
 
     public function __construct(
         public readonly ?string $path = null,
@@ -38,7 +41,7 @@ final class CallLocation implements JsonSerializable
     {
         $namespace = trim($namespace, '\\');
         $lastFrame = null;
-        foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, self::DEBUG_BACKTRACE_LIMIT) as $frame) {
+        foreach (debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, self::BACKTRACE_LIMIT) as $frame) {
             $class = $frame['class'] ?? '';
             if (!isset($frame['file'], $frame['line'])) {
                 continue;
@@ -61,6 +64,56 @@ final class CallLocation implements JsonSerializable
         }
 
         return null === $lastFrame ? new self() : new self(path: $lastFrame['file'], line: $lastFrame['line']);
+    }
+
+    /**
+     * Returns a new instance from a specified frame in the debug backtrace.
+     * @param int $step 0 = exception origin (default).
+     *                  Positive = offset into trace frames (1 = first trace frame).
+     *                  Negative = count from the deepest frame (-1 = last).
+     *
+     * @param int<0, max> $limit limit the number of stack frames returned. By default (limit=0) it returns all stack frames.
+     */
+    public static function fromDebugBackTrace(int $step = 0, int $limit = 0): self
+    {
+        $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $limit);
+
+        if (0 === $step) {
+            $frame = $trace[0] ?? [];
+
+            return new self(path: $frame['file'] ?? null, line: $frame['line'] ?? null);
+        }
+
+        if (0 > $step) {
+            $step += count($trace);
+        }
+
+        $frame = $trace[$step] ?? [];
+
+        return new self(path: $frame['file'] ?? null, line: $frame['line'] ?? null);
+    }
+
+    /**
+     * Returns a new instance from an Exception/Throwable trace.
+     *
+     * @param int $step 0 = exception origin (default).
+     *                  Positive = offset into trace frames (1 = first trace frame).
+     *                  Negative = count from the deepest frame (-1 = last).
+     */
+    public static function fromExceptionTrace(Throwable $exception, int $step = 0): self
+    {
+        if (0 === $step) {
+            return new self(path: $exception->getFile(), line: $exception->getLine());
+        }
+
+        $trace = $exception->getTrace();
+        if (0 > $step) {
+            $step += count($trace);
+        }
+
+        $frame = $trace[$step] ?? [];
+
+        return new self(path: $frame['file'] ?? null, line: $frame['line'] ?? null);
     }
 
     /**

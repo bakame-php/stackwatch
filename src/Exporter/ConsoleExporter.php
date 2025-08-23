@@ -23,12 +23,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use function array_keys;
 use function array_map;
+use function array_merge;
 
 /**
  * @phpstan-import-type MetricsHumanReadable from Metrics
  * @phpstan-import-type SnapshotHumanReadable from Snapshot
  * @phpstan-import-type StatsHumanReadable from Statistics
  * @phpstan-import-type EnvironmentHumanReadable from Environment
+ * @phpstan-import-type ReportHumanReadable from Report
  */
 final class ConsoleExporter implements Exporter
 {
@@ -38,7 +40,7 @@ final class ConsoleExporter implements Exporter
     ) {
     }
 
-    public function exportSummary(Result|Span $span, Profiler|Timeline|null $parent = null): void
+    public function exportSpan(Result|Span $span, Profiler|Timeline|null $parent = null): void
     {
         if ($span instanceof Result) {
             $span = $span->span;
@@ -153,53 +155,12 @@ final class ConsoleExporter implements Exporter
 
     public function exportReport(Report $report): void
     {
-        static $reportPropertyNames = [
-            'cpuTime' => 'CPU Time',
-            'executionTime' => 'Execution Time',
-            'memoryUsage' => 'Memory Usage',
-            'realMemoryUsage' => 'Real Memory Usage',
-            'peakMemoryUsage' => 'Peak Memory Usage',
-            'realPeakMemoryUsage' =>  'Real Peak Memory Usage',
-        ];
-
-        $reportData = [
-            'cpuTime' => $report->cpuTime->forHuman(),
-            'executionTime' => $report->executionTime->forHuman(),
-            'memoryUsage' => $report->memoryUsage->forHuman(),
-            'realMemoryUsage' => $report->realMemoryUsage->forHuman(),
-            'peakMemoryUsage' => $report->peakMemoryUsage->forHuman(),
-            'realPeakMemoryUsage' => $report->realPeakMemoryUsage->forHuman(),
-        ];
-
-        $table = (new Table($this->output))
-            ->setHeaders([
-                $this->translator->translate('metrics'),
-                $this->translator->translate('iterations'),
-                $this->translator->translate('minimum'),
-                $this->translator->translate('maximum'),
-                $this->translator->translate('median'),
-                $this->translator->translate('sum'),
-                $this->translator->translate('range'),
-                $this->translator->translate('average'),
-                $this->translator->translate('variance'),
-                $this->translator->translate('std_dev'),
-                $this->translator->translate('coef_var'),
-            ]);
-
-        foreach ($reportData as $name => $stats) {
-            $table->addRow([
-                $reportPropertyNames[$name],
-                $stats['iterations'],
-                $stats['minimum'],
-                $stats['maximum'],
-                $stats['median'],
-                $stats['sum'],
-                $stats['range'],
-                $stats['average'],
-                $stats['variance'],
-                $stats['std_dev'],
-                $stats['coef_var'],
-            ]);
+        /** @var ReportHumanReadable $reportData */
+        $reportData = $report->forHuman();
+        $headers = array_merge(['metrics'], array_keys($reportData['cpu_time']));
+        $table = (new Table($this->output))->setHeaders(array_map($this->translator->translate(...), $headers));
+        foreach ($reportData as $name => $statsForHuman) {
+            $table->addRow(array_merge([$this->translator->translate($name)], $statsForHuman));
         }
 
         $table->render();

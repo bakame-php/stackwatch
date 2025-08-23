@@ -22,6 +22,8 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - **BC BREAK:** `State` is renamed `Feature`
 - **BC BREAK:** `Input::TABLE_FORMAT` is renamed `Input::TEXT_FORMAT`
 - Added a `Translator` class to improve human-readable key translation.
+- Added `Profiler::dump` and its global function counterpart `pf` to profile, and dump a human-readable result into the output stream.
+- Added `Profiler::dump` and its global function counterpart `pfd` to profile, dump a human-readable result into the output stream and die.
 
 ### Fixed
 

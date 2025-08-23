@@ -241,7 +241,9 @@ final class Statistics implements JsonSerializable
      *
      * @param 'iterations'|'minimum'|'maximum'|'range'|'sum'|'average'|'median'|'variance'|'std_dev'|'coef_var'|null $property
      *
-     * @return StatsHumanReadable|string
+     * @throws InvalidArgument if the property is unknown
+     *
+     * @return ($property is null ? StatsHumanReadable : string)
      */
     public function forHuman(?string $property = null): array|string
     {

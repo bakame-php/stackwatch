@@ -7,7 +7,7 @@ namespace Bakame\Stackwatch\Console;
 use ArrayIterator;
 use Bakame\Stackwatch\Exporter\ConsoleExporter;
 use Bakame\Stackwatch\Exporter\JsonExporter;
-use Bakame\Stackwatch\Exporter\LeaderPrinter;
+use Bakame\Stackwatch\LeaderPrinter;
 use Bakame\Stackwatch\Profile;
 use Bakame\Stackwatch\Translator;
 use Bakame\Stackwatch\UnableToProfile;

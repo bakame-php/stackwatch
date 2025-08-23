@@ -106,4 +106,37 @@ final class CallLocationTest extends TestCase
         self::assertFalse($a->equals($c));
         self::assertFalse($a->equals(null));
     }
+
+    public function testFromDebugBackTraceStep0ReturnsCurrentFrame(): void
+    {
+        $location = CallLocation::fromDebugBackTrace(0);
+
+        self::assertIsString($location->path);
+        self::assertStringContainsString('CallLocationTest.php', $location->path);
+        self::assertGreaterThan(0, $location->line);
+        self::assertTrue($location->isComplete());
+    }
+
+    public function testFromDebugBackTraceStep1ReturnsCaller(): void
+    {
+        $location = $this->helperCallDebugBackTraceStep1();
+
+        self::assertIsString($location->path);
+        self::assertStringContainsString('CallLocationTest.php', $location->path);
+        self::assertGreaterThan(0, $location->line);
+        self::assertTrue($location->isComplete());
+    }
+
+    private function helperCallDebugBackTraceStep1(): CallLocation
+    {
+        return CallLocation::fromDebugBackTrace(1);
+    }
+
+    public function testFromDebugBackTraceNegativeStep(): void
+    {
+        $location = CallLocation::fromDebugBackTrace(-1);
+
+        // Should not be empty (returns deepest frame)
+        self::assertFalse($location->isEmpty());
+    }
 }

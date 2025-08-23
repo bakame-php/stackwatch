@@ -14,9 +14,9 @@ interface Exporter extends BasicExporter
 {
     public function exportMetrics(Metrics $metrics): void;
 
+    public function exportReport(Report $report): void;
+
     public function exportEnvironment(Environment $environment): void;
 
     public function exportStatistics(Statistics $statistics): void;
-
-    public function exportReport(Report $report): void;
 }

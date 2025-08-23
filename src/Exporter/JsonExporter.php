@@ -117,7 +117,7 @@ final class JsonExporter implements Exporter
         $this->write($metrics);
     }
 
-    public function exportSummary(Result|Span $span, Timeline|Profiler|null $parent = null): void
+    public function exportSpan(Result|Span $span, Timeline|Profiler|null $parent = null): void
     {
         if ($span instanceof Result) {
             $span = $span->span;

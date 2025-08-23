@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch\Console;
 
 use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\Exporter\LeaderPrinter;
+use Bakame\Stackwatch\LeaderPrinter;
 use Bakame\Stackwatch\Translator;
 use Bakame\Stackwatch\Version;
 use Bakame\Stackwatch\Warning;
@@ -44,7 +44,7 @@ final class ConsoleHandler implements Handler
             $formatter = $profiler->formatter;
             if ($formatter instanceof ConsoleFormatter) {
                 $data = $this->translator->translateArrayKeys($this->environment->forHuman()); /* @phpstan-ignore-line */
-                $formatter->exporter->output->writeln($this->leaderPrinter->render($data));
+                $formatter->exporter->output->writeln($this->leaderPrinter->setPairs($data)->render());
                 $formatter->exporter->output->writeln('');
             }
         } else {

@@ -28,7 +28,7 @@ final class OpenTelemetryExporter implements Exporter
         $this->tracer = $this->tracerProvider->getTracer('profiler-exporter');
     }
 
-    public function exportSummary(Result|Span $span, Profiler|Timeline|null $parent = null): void
+    public function exportSpan(Result|Span $span, Profiler|Timeline|null $parent = null): void
     {
         if ($span instanceof Result) {
             $span = $span->span;
@@ -72,7 +72,7 @@ final class OpenTelemetryExporter implements Exporter
 
         try {
             foreach ($input as $span) {
-                $this->exportSummary($span, $profiler);
+                $this->exportSpan($span, $profiler);
             }
         } finally {
             $parent->end();
@@ -118,7 +118,7 @@ final class OpenTelemetryExporter implements Exporter
 
         try {
             foreach ($timeline->deltas() as $span) {
-                $this->exportSummary($span, $timeline);
+                $this->exportSpan($span, $timeline);
             }
         } finally {
             $parent->end();

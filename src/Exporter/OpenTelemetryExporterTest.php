@@ -38,7 +38,7 @@ class OpenTelemetryExporterTest extends TestCase
     /**
      * @param non-empty-string $label
      */
-    private static function createSummary(string $label): Span
+    private static function createSpan(string $label): Span
     {
         $start = new Snapshot(
             'start',
@@ -90,7 +90,7 @@ class OpenTelemetryExporterTest extends TestCase
     #[DataProvider('providesSummaries')]
     public function it_can_export_profiling_data(Span|Result $profiling): void
     {
-        $this->exporter->exportSummary($profiling);
+        $this->exporter->exportSpan($profiling);
 
         $span = $profiling instanceof Span ? $profiling : $profiling->span;
         $spans = $this->otlExporter->getSpans();
@@ -121,19 +121,19 @@ class OpenTelemetryExporterTest extends TestCase
     public static function providesSummaries(): iterable
     {
         yield 'the profiling data comes from a Summary instance' => [
-            'profiling' => self::createSummary('test_export'),
+            'profiling' => self::createSpan('test_export'),
         ];
 
         yield 'the profiling data comes from a ProfiledResult instance' => [
-            'profiling' => new Result('result', self::createSummary('test_export')),
+            'profiling' => new Result('result', self::createSpan('test_export')),
         ];
     }
 
     #[Test]
     public function it_can_export_a_profiler(): void
     {
-        $span1 = self::createSummary('profile1');
-        $span2 = self::createSummary('profile2');
+        $span1 = self::createSpan('profile1');
+        $span2 = self::createSpan('profile2');
 
         $profiler = new Profiler(fn () => null);
         $reflection = new ReflectionClass($profiler);

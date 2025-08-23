@@ -58,7 +58,7 @@ final class ConsoleExporterTest extends TestCase
         $renderer = new ConsoleExporter($output);
 
         $span = Profiler::execute(fn () => usleep(1000));
-        $renderer->exportSummary($span);
+        $renderer->exportSpan($span);
         $content = $output->fetch();
 
         self::assertStringContainsString('Label', $content);

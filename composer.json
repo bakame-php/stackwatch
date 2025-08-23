@@ -45,7 +45,10 @@
     "autoload": {
         "psr-4": {
             "Bakame\\Stackwatch\\": "src"
-        }
+        },
+        "files": [
+            "src/functions_include.php"
+        ]
     },
     "autoload-dev": {
         "files": [

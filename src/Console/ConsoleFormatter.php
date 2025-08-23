@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch\Console;
 
 use Bakame\Stackwatch\Exporter\ConsoleExporter;
-use Bakame\Stackwatch\Exporter\LeaderPrinter;
+use Bakame\Stackwatch\LeaderPrinter;
 use Bakame\Stackwatch\Report;
 use Bakame\Stackwatch\Translator;
 use Throwable;
@@ -41,7 +41,7 @@ final class ConsoleFormatter implements Formatter
                 continue;
             }
 
-            $data = $this->leaderPrinter->render($this->translator->translateArrayKeys($stats->forHuman())); /* @phpstan-ignore-line */
+            $data = $this->leaderPrinter->setPairs($this->translator->translateArrayKeys($stats->forHuman()))->render(); /* @phpstan-ignore-line */
             $this->exporter->output->writeln($data);
             $this->exporter->output->writeln('');
         }

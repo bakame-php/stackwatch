@@ -106,7 +106,7 @@ final class JsonExporterTest extends TestCase
         $data = new Span('test', Snapshot::now(), Snapshot::now());
         $result = new Result(42, $data);
         $exporter = new JsonExporter($this->tmpFile, 0);
-        $exporter->exportSummary($result);
+        $exporter->exportSpan($result);
 
         /** @var string $json */
         $json = file_get_contents($this->tmpFile);

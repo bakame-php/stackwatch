@@ -14,7 +14,7 @@ interface Exporter
 {
     public function exportSnapshot(Snapshot $snapshot): void;
 
-    public function exportSummary(Result|Span $span, Profiler|Timeline|null $parent = null): void;
+    public function exportSpan(Result|Span $span, Profiler|Timeline|null $parent = null): void;
 
     public function exportProfiler(Profiler $profiler, ?string $label = null): void;
 

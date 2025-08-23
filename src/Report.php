@@ -13,6 +13,8 @@ use function implode;
 
 /**
  * @phpstan-import-type StatsMap from Statistics
+ * @phpstan-import-type StatsHumanReadable from Statistics
+ * @phpstan-import-type MetricsHumanReadable from Metrics
  * @phpstan-type ReportMap array{
  *      cpu_time: StatsMap,
  *      execution_time: StatsMap,
@@ -20,6 +22,14 @@ use function implode;
  *      real_memory_usage: StatsMap,
  *      peak_memory_usage: StatsMap,
  *      real_peak_memory_usage: StatsMap,
+ *  }
+ * @phpstan-type ReportHumanReadable array{
+ *       cpu_time: StatsHumanReadable,
+ *       execution_time: StatsHumanReadable,
+ *       memory_usage: StatsHumanReadable,
+ *       real_memory_usage: StatsHumanReadable,
+ *       peak_memory_usage: StatsHumanReadable,
+ *       real_peak_memory_usage: StatsHumanReadable,
  *  }
  */
 final class Report implements JsonSerializable
@@ -152,5 +162,24 @@ final class Report implements JsonSerializable
         } catch (Throwable $exception) {
             throw new InvalidArgument('Unable to create a report from the payload', previous: $exception);
         }
+    }
+
+    /**
+     * @param ('average'|'coef_var'|'iterations'|'maximum'|'median'|'minimum'|'range'|'std_dev'|'sum'|'variance'|null) $property
+     *
+     * @throws InvalidArgument If the property value is unknown
+     *
+     * @return ($property is null ? ReportHumanReadable : MetricsHumanReadable)
+     */
+    public function forHuman(?string $property = null): array /* @phpstan-ignore-line */
+    {
+        return [/* @phpstan-ignore-line */
+            'cpu_time' => $this->cpuTime->forHuman($property),
+            'execution_time' => $this->executionTime->forHuman($property),
+            'memory_usage' => $this->memoryUsage->forHuman($property),
+            'real_memory_usage' => $this->realMemoryUsage->forHuman($property),
+            'peak_memory_usage' => $this->peakMemoryUsage->forHuman($property),
+            'real_peak_memory_sage' => $this->realPeakMemoryUsage->forHuman($property),
+        ];
     }
 }
