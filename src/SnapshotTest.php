@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch;
 
+use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -102,5 +103,55 @@ final class SnapshotTest extends TestCase
         $this->expectException(InvalidArgument::class);
 
         Snapshot::fromArray([]); /* @phpstan-ignore-line */
+    }
+
+    #[Test]
+    public function testCompareToAndRelations(): void
+    {
+        $a = new Snapshot(
+            'start',
+            new DateTimeImmutable(),
+            100,
+            1_500_000,
+            250_000,
+            1000,
+            2000,
+            3000,
+            4000,
+        );
+
+        $b = new Snapshot(
+            'start',
+            new DateTimeImmutable(),
+            200,
+            1_500_000,
+            250_000,
+            1000,
+            2000,
+            3000,
+            4000,
+        );
+
+        self::assertSame(-1, $a->compareTo($b));
+        self::assertTrue($a->isBefore($b));
+        self::assertFalse($a->isAfter($b));
+        self::assertFalse($a->isAtSameTime($b));
+        self::assertTrue($a->isBeforeOrAtSameTime($b));
+        self::assertFalse($a->isAfterOrAtSameTime($b));
+
+        self::assertSame(1, $b->compareTo($a));
+        self::assertTrue($b->isAfter($a));
+        self::assertFalse($b->isBefore($a));
+        self::assertFalse($b->isAtSameTime($a));
+        self::assertFalse($b->isBeforeOrAtSameTime($a));
+        self::assertTrue($b->isAfterOrAtSameTime($a));
+
+        $c = clone $a;
+        self::assertSame(0, $a->compareTo($c));
+        self::assertFalse($a->isBefore($c));
+        self::assertFalse($a->isAfter($c));
+        self::assertTrue($a->isAtSameTime($c));
+        self::assertTrue($a->isBeforeOrAtSameTime($c));
+        self::assertTrue($a->isAfterOrAtSameTime($c));
     }
 }

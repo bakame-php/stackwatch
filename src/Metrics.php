@@ -68,11 +68,11 @@ final class Metrics implements JsonSerializable
 
     public static function fromSnapshots(Snapshot $start, Snapshot $end): self
     {
-        ($excutionTime = $end->hrtime - $start->hrtime) >= 0 || throw new UnableToProfile('The ending snapshot was taken before the starting snapshot.');
+        $start->isBeforeOrAtSameTime($end) || throw new UnableToProfile('The ending snapshot was taken before the starting snapshot.');
 
         return new self(
             cpuTime: $end->cpuUserTime + $end->cpuSystemTime - $start->cpuUserTime - $start->cpuSystemTime,
-            executionTime: $excutionTime,
+            executionTime: $end->hrtime - $start->hrtime,
             memoryUsage: $end->memoryUsage - $start->memoryUsage,
             peakMemoryUsage: $end->peakMemoryUsage - $start->peakMemoryUsage,
             realMemoryUsage: $end->realMemoryUsage - $start->realMemoryUsage,

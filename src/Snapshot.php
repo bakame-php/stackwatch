@@ -200,6 +200,36 @@ final class Snapshot implements JsonSerializable
             && $this->originLine === $other->originLine;
     }
 
+    public function isBefore(Snapshot $other): bool
+    {
+        return -1 === $this->compareTo($other);
+    }
+
+    public function isAfter(Snapshot $other): bool
+    {
+        return 1 === $this->compareTo($other);
+    }
+
+    public function isAtSameTime(Snapshot $other): bool
+    {
+        return 0 === $this->compareTo($other);
+    }
+
+    public function isAfterOrAtSameTime(Snapshot $other): bool
+    {
+        return 0 <= $this->compareTo($other);
+    }
+
+    public function isBeforeOrAtSameTime(Snapshot $other): bool
+    {
+        return 0 >= $this->compareTo($other);
+    }
+
+    public function compareTo(Snapshot $other): int
+    {
+        return $this->hrtime <=> $other->hrtime;
+    }
+
     /**
      * @return SnapshotMap
      */

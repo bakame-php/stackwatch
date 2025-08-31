@@ -13,6 +13,7 @@ use Bakame\Stackwatch\Report;
 use Bakame\Stackwatch\Result;
 use Bakame\Stackwatch\Snapshot;
 use Bakame\Stackwatch\Span;
+use Bakame\Stackwatch\Statistics;
 use Bakame\Stackwatch\Translator;
 
 use function array_keys;
@@ -52,18 +53,6 @@ final class StatsExporter
         return fwrite($this->stream, $content."\n");
     }
 
-    public function exportMetrics(Result|Span|Metrics $metrics): void
-    {
-        /** @var Metrics $source */
-        $source = match ($metrics::class) {
-            Result::class => $metrics->span->metrics,
-            Span::class => $metrics->metrics,
-            Metrics::class => $metrics,
-        };
-
-        $this->writeLeaderPrinter($source->toHuman());
-    }
-
     /**
      * @param array<string, string> $data
      */
@@ -79,9 +68,26 @@ final class StatsExporter
         $this->writeLeaderPrinter($snapshot->toHuman());
     }
 
-    public function exportEnvironement(Environment $environment): void
+    public function exportMetrics(Result|Span|Metrics $metrics): void
+    {
+        /** @var Metrics $source */
+        $source = match ($metrics::class) {
+            Result::class => $metrics->span->metrics,
+            Span::class => $metrics->metrics,
+            Metrics::class => $metrics,
+        };
+
+        $this->writeLeaderPrinter($source->toHuman());
+    }
+
+    public function exportEnvironment(Environment $environment): void
     {
         $this->writeLeaderPrinter($environment->toHuman());
+    }
+
+    public function exportStatistics(Statistics $statistics): void
+    {
+        $this->writeLeaderPrinter($statistics->toHuman());
     }
 
     public function exportReport(Report $report): void

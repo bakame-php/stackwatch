@@ -26,6 +26,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - Added `Profiler::dump` and its global function counterpart `pfd` to profile, dump a human-readable result into the output stream and die.
 - Added `forHuman()` method to return a human-readable version of `toArray`
 - Added `human()` method to return the human-redable version of a single property.
+- Added Snapshot relation method `compareTo` and its aliases `isBefore*` `isAfter*` and `isAtSameTime` using the `Snapshot::hrtime` property
 
 ### Fixed
 
