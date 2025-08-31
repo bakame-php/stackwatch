@@ -35,11 +35,8 @@ final class StatsExporter
     /**
      * @param resource $stream
      */
-    public function __construct(
-        $stream,
-        public readonly LeaderPrinter $leaderPrinter = new LeaderPrinter(),
-        public readonly Translator $translator = new Translator(),
-    ) {
+    public function __construct($stream, public readonly Translator $translator = new Translator())
+    {
         $this->stream = $stream;
     }
 
@@ -58,7 +55,8 @@ final class StatsExporter
      */
     private function writeLeaderPrinter(array $data): void
     {
-        foreach ($this->leaderPrinter->setPairs($this->translator->translateArrayKeys($data))->format() as $line) {
+        $leaderPrinter = new LeaderPrinter();
+        foreach ($leaderPrinter->setPairs($this->translator->translateArrayKeys($data))->format() as $line) {
             $this->writeln($line);
         }
     }
