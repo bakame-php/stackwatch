@@ -237,35 +237,33 @@ final class Statistics implements JsonSerializable
     /**
      * Returns a human-readable version of the statistics.
      *
-     * If a `$property` is specified, returns only the formatted value of that metric.
-     *
-     * @param 'iterations'|'minimum'|'maximum'|'range'|'sum'|'average'|'median'|'variance'|'std_dev'|'coef_var'|null $property
+     * @return StatsHumanReadable
+     */
+    public function toHuman(): array
+    {
+        return [
+            'iterations' => (string) $this->iterations,
+            'minimum' => $this->unit->format($this->minimum, 3),
+            'maximum' => $this->unit->format($this->maximum, 3),
+            'range' => $this->unit->format($this->range, 3),
+            'sum' => $this->unit->format($this->sum, 3),
+            'average' => $this->unit->format($this->average, 3),
+            'median' => $this->unit->format($this->median, 3),
+            'variance' => $this->unit->formatSquared($this->variance, 3),
+            'std_dev' => $this->unit->format($this->stdDev, 3),
+            'coef_var' => number_format($this->coefVar * 100, 4).' %',
+        ];
+    }
+
+    /**
+     * Returns a human-readable version of a property.
      *
      * @throws InvalidArgument if the property is unknown
-     *
-     * @return ($property is null ? StatsHumanReadable : string)
      */
-    public function forHuman(?string $property = null): array|string
+    public function human(string $property): string
     {
-        $humans = [
-             'iterations' => (string) $this->iterations,
-             'minimum' => $this->unit->format($this->minimum, 3),
-             'maximum' => $this->unit->format($this->maximum, 3),
-             'range' => $this->unit->format($this->range, 3),
-             'sum' => $this->unit->format($this->sum, 3),
-             'average' => $this->unit->format($this->average, 3),
-             'median' => $this->unit->format($this->median, 3),
-             'variance' => $this->unit->formatSquared($this->variance, 3),
-             'std_dev' => $this->unit->format($this->stdDev, 3),
-             'coef_var' => number_format($this->coefVar * 100, 4).' %',
-        ];
-
-        if (null === $property) {
-            return $humans;
-        }
-
-        $propertyNormalized = strtolower((string) preg_replace('/[\s_\-]+/', '_', $property));
-
+        $humans = $this->toHuman();
+        $propertyNormalized = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '_$0', $property));
         return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown statistics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
     }
 }

@@ -13,6 +13,7 @@ use function getenv;
 use function gethostname;
 use function implode;
 use function ini_get;
+use function is_int;
 use function is_readable;
 use function max;
 use function php_sapi_name;
@@ -248,11 +249,11 @@ final class Environment implements JsonSerializable
     }
 
     /**
-     * @return EnvironmentHumanReadable|string
+     * @return EnvironmentHumanReadable
      */
-    public function forHuman(?string $property = null): array|string
+    public function toHuman(): array
     {
-        $humans = [
+        return [
             'os' => $this->os,
             'os_family' => $this->osFamily,
             'hostname' => $this->hostname,
@@ -267,16 +268,21 @@ final class Environment implements JsonSerializable
             'total_disk' => MemoryUnit::format($this->totalDisk, 0),
             'free_disk' => MemoryUnit::format($this->freeDisk, 0),
         ];
-
-        if (null === $property) {
-            return $humans;
-        }
-
-        $propertyNormalized = strtolower((string) preg_replace('/[\s_\-]+/', '_', $property));
-
-        return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown environment name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
     }
 
+    /**
+     * Returns a human-readable version of a property.
+     *
+     * @param non-empty-string $property
+     *
+     * @throws InvalidArgument if the property is unknown
+     */
+    public function human(string $property): string
+    {
+        $humans = $this->toHuman();
+        $propertyNormalized = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '_$0', $property));
+        return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown environment name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
+    }
 
     /**
      * @return EnvironmentMap

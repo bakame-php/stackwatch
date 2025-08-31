@@ -119,14 +119,14 @@ final class MetricsTest extends TestCase
         );
         $metrics = Metrics::fromSnapshots($start, $end);
 
-        $humans = $metrics->forHuman();
+        $humans = $metrics->toHuman();
         self::assertIsArray($humans);
         self::assertArrayHasKey('cpu_time', $humans);
         self::assertArrayHasKey('memory_usage', $humans);
-        self::assertIsString($metrics->forHuman('execution_time'));
+        self::assertIsString($metrics->human('execution_time'));
 
         $this->expectException(InvalidArgument::class);
-        $metrics->forHuman('foobar');
+        $metrics->human('foobar');
     }
 
     #[Test]

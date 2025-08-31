@@ -205,13 +205,11 @@ final class Metrics implements JsonSerializable
     }
 
     /**
-     * @throws InvalidArgument if the metrics property is unknown or not supported.
-     *
-     * @return MetricsHumanReadable|string
+     * @return MetricsHumanReadable
      */
-    public function forHuman(?string $property = null): array|string
+    public function toHuman(): array
     {
-        $humans =  [
+        return [
             'cpu_time' => DurationUnit::format($this->cpuTime, 3),
             'execution_time' => DurationUnit::format($this->executionTime, 3),
             'memory_usage' => MemoryUnit::format($this->memoryUsage, 1),
@@ -219,12 +217,19 @@ final class Metrics implements JsonSerializable
             'peak_memory_usage' => MemoryUnit::format($this->peakMemoryUsage, 1),
             'real_peak_memory_usage' => MemoryUnit::format($this->realPeakMemoryUsage, 1),
         ];
+    }
 
-        if (null === $property) {
-            return $humans;
-        }
-
-        $propertyNormalized = strtolower((string) preg_replace('/[\s_\-]+/', '_', $property));
+    /**
+     * Returns a human-readable version of a property.
+     *
+     * @param non-empty-string $property
+     *
+     * @throws InvalidArgument if the property is unknown
+     */
+    public function human(string $property): string
+    {
+        $humans = $this->toHuman();
+        $propertyNormalized = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '_$0', $property));
 
         return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown metrics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
     }

@@ -41,7 +41,7 @@ final class ConsoleFormatter implements Formatter
                 continue;
             }
 
-            $data = $this->leaderPrinter->setPairs($this->translator->translateArrayKeys($stats->forHuman()))->render(); /* @phpstan-ignore-line */
+            $data = $this->leaderPrinter->setPairs($this->translator->translateArrayKeys($stats->toHuman()))->render();
             $this->exporter->output->writeln($data);
             $this->exporter->output->writeln('');
         }

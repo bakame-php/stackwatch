@@ -43,7 +43,7 @@ final class ConsoleHandler implements Handler
         if ($input->infoSection->isVisible()) {
             $formatter = $profiler->formatter;
             if ($formatter instanceof ConsoleFormatter) {
-                $data = $this->translator->translateArrayKeys($this->environment->forHuman()); /* @phpstan-ignore-line */
+                $data = $this->translator->translateArrayKeys($this->environment->toHuman());
                 $formatter->exporter->output->writeln($this->leaderPrinter->setPairs($data)->render());
                 $formatter->exporter->output->writeln('');
             }

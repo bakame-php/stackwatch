@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Bakame\Stackwatch\Profile;
+use Bakame\Stackwatch\Profiler;
 
 if (!function_exists('pf')) {
     /**
@@ -15,7 +16,7 @@ if (!function_exists('pf')) {
      */
     function pf(callable $callback, int $iterations = 3, int $warmup = 0, string $type = Profile::SUMMARY): void
     {
-        Profile::dump($callback, $iterations, $warmup, $type);
+        Profiler::dump($callback, $iterations, $warmup, $type);
     }
 }
 
@@ -30,6 +31,6 @@ if (!function_exists('pfd')) {
      */
     function pfd(callable $callback, int $iterations = 3, int $warmup = 0, string $type = Profile::SUMMARY): never
     {
-        Profile::dd($callback, $iterations, $warmup, $type);
+        Profiler::dd($callback, $iterations, $warmup, $type);
     }
 }

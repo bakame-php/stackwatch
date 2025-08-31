@@ -46,7 +46,7 @@ final class EnvironmentTest extends TestCase
     #[Test]
     public function it_retuns_the_array_in_full_with_for_human_without_property_given(): void
     {
-        $result = $this->env->forHuman();
+        $result = $this->env->toHuman();
 
         self::assertIsArray($result);
         self::assertArrayHasKey('os', $result);
@@ -58,11 +58,11 @@ final class EnvironmentTest extends TestCase
     #[Test]
     public function it_retuns_a_single_value_with_for_human_with_property_given(): void
     {
-        self::assertSame('Linux', $this->env->forHuman('os'));
-        self::assertSame('Unix', $this->env->forHuman('os_family'));
-        self::assertSame('1 GB', $this->env->forHuman('memory_limit'));
-        self::assertSame('500 GB', $this->env->forHuman('total_disk'));
-        self::assertSame('500 GB', $this->env->forHuman('TOTAL DISK'));
+        self::assertSame('Linux', $this->env->human('os'));
+        self::assertSame('Unix', $this->env->human('os_family'));
+        self::assertSame('1 GB', $this->env->human('memory_limit'));
+        self::assertSame('500 GB', $this->env->human('total_disk'));
+        self::assertSame('500 GB', $this->env->human('totalDisk'));
     }
 
     #[Test]
@@ -71,6 +71,6 @@ final class EnvironmentTest extends TestCase
         $this->expectException(InvalidArgument::class);
         $this->expectExceptionMessage('Unknown environment name: "foobar"');
 
-        $this->env->forHuman('foobar');
+        $this->env->human('foobar');
     }
 }

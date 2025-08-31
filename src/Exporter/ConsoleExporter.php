@@ -119,44 +119,33 @@ final class ConsoleExporter implements Exporter
      */
     private function metricsToRow(string $formattedLabel, Metrics $metrics): array
     {
-        /** @var MetricsHumanReadable $formattedMetrics */
-        $formattedMetrics = $metrics->forHuman();
-
-        return [...[$formattedLabel], ...array_values($formattedMetrics)];
+        return [...[$formattedLabel], ...array_values($metrics->toHuman())];
     }
 
     public function exportSnapshot(Snapshot $snapshot): void
     {
-        /** @var SnapshotHumanReadable $stats */
-        $stats = $snapshot->forHuman();
-
-        $this->renderTable($stats);
+        $this->renderTable($snapshot->toHuman());
     }
 
     public function exportMetrics(Result|Span|Metrics $metrics): void
     {
-        /** @var MetricsHumanReadable $stats */
-        $stats = (match (true) {
-            $metrics instanceof Result => $metrics->span->metrics,
-            $metrics instanceof Span => $metrics->metrics,
-            default => $metrics,
-        })->forHuman();
-
-        $this->renderTable($stats);
+        $this->renderTable(
+            (match (true) {
+                $metrics instanceof Result => $metrics->span->metrics,
+                $metrics instanceof Span => $metrics->metrics,
+                default => $metrics,
+            })->toHuman()
+        );
     }
 
     public function exportStatistics(Statistics $statistics): void
     {
-        /** @var StatsHumanReadable $stats */
-        $stats = $statistics->forHuman();
-
-        $this->renderTable($stats);
+        $this->renderTable($statistics->toHuman());
     }
 
     public function exportReport(Report $report): void
     {
-        /** @var ReportHumanReadable $reportData */
-        $reportData = $report->forHuman();
+        $reportData = $report->toHuman();
         $headers = array_merge(['metrics'], array_keys($reportData['cpu_time']));
         $table = (new Table($this->output))->setHeaders(array_map($this->translator->translate(...), $headers));
         foreach ($reportData as $name => $statsForHuman) {
@@ -168,10 +157,7 @@ final class ConsoleExporter implements Exporter
 
     public function exportEnvironment(Environment $environment): void
     {
-        /** @var EnvironmentHumanReadable $stats */
-        $stats = $environment->forHuman();
-
-        $this->renderTable($stats);
+        $this->renderTable($environment->toHuman());
     }
 
     /**

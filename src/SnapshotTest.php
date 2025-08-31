@@ -63,7 +63,7 @@ final class SnapshotTest extends TestCase
     #[Test]
     public function it_will_return_a_human_readable_value(): void
     {
-        $humans = Snapshot::now('test')->forHuman();
+        $humans = Snapshot::now('test')->toHuman();
 
         self::assertIsArray($humans);
         self::assertArrayHasKey('cpu_user_time', $humans);
@@ -74,7 +74,7 @@ final class SnapshotTest extends TestCase
     {
         $this->expectException(InvalidArgument::class);
 
-        Snapshot::now()->forHuman('foobar');
+        Snapshot::now()->human('foobar');
     }
 
     #[Test]
@@ -83,8 +83,8 @@ final class SnapshotTest extends TestCase
         $snapshot = Snapshot::now();
 
         self::assertSame(
-            $snapshot->forHuman('MeMorY UsaGE'),
-            $snapshot->forHuman('memory_usage')
+            $snapshot->human('memoryUsage'),
+            $snapshot->human('memory_usage')
         );
     }
 

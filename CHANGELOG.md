@@ -24,6 +24,8 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - Added a `Translator` class to improve human-readable key translation.
 - Added `Profiler::dump` and its global function counterpart `pf` to profile, and dump a human-readable result into the output stream.
 - Added `Profiler::dump` and its global function counterpart `pfd` to profile, dump a human-readable result into the output stream and die.
+- Added `forHuman()` method to return a human-readable version of `toArray`
+- Added `human()` method to return the human-redable version of a single property.
 
 ### Fixed
 
@@ -42,6 +44,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 ### Removed
 
 - **BC BREAK:** `Summary` is removed and replaced by `Span`.
+- **BC BREAK:** `forHuman()` method is removed and replaced by 2 methods `toHuman()` and `human()`.
 
 ## [0.13.0 - Marrakesh](https://github.com/bakame-php/stackwatch/compare/0.12.0...0.13.0) - 2025-08-14
 

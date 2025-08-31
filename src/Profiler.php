@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch;
 
+use Bakame\Stackwatch\Exporter\StatsExporter;
 use Closure;
 use Countable;
 use IteratorAggregate;
@@ -19,7 +20,10 @@ use function array_map;
 use function array_unique;
 use function array_values;
 use function count;
+use function in_array;
 use function trim;
+
+use const STDOUT;
 
 /**
  * @implements IteratorAggregate<int, Span>
@@ -119,6 +123,53 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
             throw $exception;
         }
+    }
+
+    /**
+     * Profile a callable and dump the stats to console.
+     *
+     * @param int<1, max> $iterations
+     * @param int<0, max> $warmup
+     *
+     * @throws Throwable
+     */
+    public static function dump(callable $callback, int $iterations = 3, int $warmup = 0, string $type = Profile::SUMMARY): void
+    {
+        in_array($type, [Profile::DETAILED, Profile::SUMMARY], true) || throw new InvalidArgument('The defined type is not supported.');
+
+        $stats = Profile::SUMMARY === $type
+            ? self::metrics($callback, $iterations, $warmup)
+            : self::report($callback, $iterations, $warmup);
+        $callLocation = CallLocation::fromLastInternalCall(__NAMESPACE__);
+        $exporter = new StatsExporter(STDOUT);
+
+        $exporter->writeln(
+            Ansi::write('Path: ', AnsiStyle::Green)
+            .Ansi::writeln($callLocation->path.':'.$callLocation->line, AnsiStyle::Yellow)
+            .Ansi::write('Iterations: ', AnsiStyle::Green)
+            .Ansi::write($iterations, AnsiStyle::Yellow)
+            .'; '
+            .Ansi::write('Warmup: ', AnsiStyle::Green)
+            .Ansi::write($warmup, AnsiStyle::Yellow)
+            ."\n"
+        );
+
+        $stats instanceof Report ? $exporter->exportReport($stats) : $exporter->exportMetrics($stats);
+    }
+
+    /**
+     * Profile a callable, dump the stats to console and die.
+     *
+     * @param int<1, max> $iterations
+     * @param int<0, max> $warmup
+     *
+     * @throws Throwable
+     */
+    public static function dd(callable $callback, int $iterations = 3, int $warmup = 0, string $type = Profile::SUMMARY): never
+    {
+        self::dump($callback, $iterations, $warmup, $type);
+
+        exit(1);
     }
 
     /**

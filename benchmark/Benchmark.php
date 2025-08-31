@@ -135,45 +135,45 @@ final class Benchmark
             ])
             ->addRow([
                 'Average',
-                $micro->forHuman('average'),
-                $hrtime->forHuman('average'),
-                $profiler->forHuman('average'),
-                $marker->forHuman('average'),
+                $micro->human('average'),
+                $hrtime->human('average'),
+                $profiler->human('average'),
+                $marker->human('average'),
             ])
             ->addRow([
                 'Min',
-                $micro->forHuman('minimum'),
-                $hrtime->forHuman('minimum'),
-                $profiler->forHuman('minimum'),
-                $marker->forHuman('minimum'),
+                $micro->human('minimum'),
+                $hrtime->human('minimum'),
+                $profiler->human('minimum'),
+                $marker->human('minimum'),
             ])
             ->addRow([
                 'Max',
-                $micro->forHuman('maximum'),
-                $hrtime->forHuman('maximum'),
-                $profiler->forHuman('maximum'),
-                $marker->forHuman('maximum'),
+                $micro->human('maximum'),
+                $hrtime->human('maximum'),
+                $profiler->human('maximum'),
+                $marker->human('maximum'),
             ])
             ->addRow([
                 'Median',
-                $micro->forHuman('median'),
-                $hrtime->forHuman('median'),
-                $profiler->forHuman('median'),
-                $marker->forHuman('median'),
+                $micro->human('median'),
+                $hrtime->human('median'),
+                $profiler->human('median'),
+                $marker->human('median'),
             ])
             ->addRow([
                 'Standard Deviation',
-                $micro->forHuman('std_dev'),
-                $hrtime->forHuman('std_dev'),
-                $profiler->forHuman('std_dev'),
-                $marker->forHuman('std_dev'),
+                $micro->human('std_dev'),
+                $hrtime->human('std_dev'),
+                $profiler->human('std_dev'),
+                $marker->human('std_dev'),
             ])
             ->addRow([
                 'Coeff Variation',
-                $micro->forHuman('coef_var'),
-                $hrtime->forHuman('coef_var'),
-                $profiler->forHuman('coef_var'),
-                $marker->forHuman('coef_var'),
+                $micro->human('coef_var'),
+                $hrtime->human('coef_var'),
+                $profiler->human('coef_var'),
+                $marker->human('coef_var'),
             ])
             ->render();
 

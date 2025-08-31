@@ -42,59 +42,6 @@ final class StatsExporter
         $this->stream = $stream;
     }
 
-    public function exportMetrics(Result|Span|Metrics $metrics): void
-    {
-        /** @var Metrics $source */
-        $source = match ($metrics::class) {
-            Result::class => $metrics->span->metrics,
-            Span::class => $metrics->metrics,
-            default => $metrics,
-        };
-
-        /** @var MetricsHumanReadable $data */
-        $data = $source->forHuman();
-        foreach ($this->leaderPrinter->setPairs($this->translator->translateArrayKeys($data))->format() as $line) {
-            fwrite($this->stream, $line."\n");
-        }
-    }
-
-    public function exportSnapshots(Snapshot $snapshot): void
-    {
-        /** @var SnapshotHumanReadable $data */
-        $data = $snapshot->forHuman();
-        foreach ($this->leaderPrinter->setPairs($this->translator->translateArrayKeys($data))->format() as $line) {
-            fwrite($this->stream, $line."\n");
-        }
-    }
-
-    public function exportEnvironement(Environment $environment): void
-    {
-        /** @var EnvironmentHumanReadable $data */
-        $data = $environment->forHuman();
-        foreach ($this->leaderPrinter->setPairs($this->translator->translateArrayKeys($data))->format() as $line) {
-            fwrite($this->stream, $line."\n");
-        }
-    }
-
-    public function exportReport(Report $report): void
-    {
-        $reportData = $report->forHuman();
-        $headers = array_merge(['metrics'], array_keys($reportData['cpu_time']));
-        $headers = array_map($this->translator->translate(...), $headers);
-
-        $rows = [];
-        foreach ($reportData as $name => $statsForHuman) {
-            $rows[] = array_values(array_merge([$this->translator->translate($name)], $statsForHuman));
-        }
-
-        $tableRenderer = ConsoleTable::dashed(AnsiStyle::Green)
-            ->setHeader($headers)
-            ->setRows($rows);
-        foreach ($tableRenderer->format() as $line) {
-            fwrite($this->stream, $line."\n");
-        }
-    }
-
     public function write(string $content): int|false
     {
         return fwrite($this->stream, $content);
@@ -103,5 +50,57 @@ final class StatsExporter
     public function writeln(string $content): int|false
     {
         return fwrite($this->stream, $content."\n");
+    }
+
+    public function exportMetrics(Result|Span|Metrics $metrics): void
+    {
+        /** @var Metrics $source */
+        $source = match ($metrics::class) {
+            Result::class => $metrics->span->metrics,
+            Span::class => $metrics->metrics,
+            Metrics::class => $metrics,
+        };
+
+        $this->writeLeaderPrinter($source->toHuman());
+    }
+
+    /**
+     * @param array<string, string> $data
+     */
+    private function writeLeaderPrinter(array $data): void
+    {
+        foreach ($this->leaderPrinter->setPairs($this->translator->translateArrayKeys($data))->format() as $line) {
+            $this->writeln($line);
+        }
+    }
+
+    public function exportSnapshots(Snapshot $snapshot): void
+    {
+        $this->writeLeaderPrinter($snapshot->toHuman());
+    }
+
+    public function exportEnvironement(Environment $environment): void
+    {
+        $this->writeLeaderPrinter($environment->toHuman());
+    }
+
+    public function exportReport(Report $report): void
+    {
+        $reportData = $report->toHuman();
+        $headers = array_map($this->translator->translate(...), array_merge(['metrics'], array_keys($reportData['cpu_time'])));
+        $rows = [];
+        foreach ($reportData as $name => $statsForHuman) {
+            $rows[] = array_values(array_merge([$this->translator->translate($name)], $statsForHuman));
+        }
+
+        $tableRenderer = ConsoleTable::dashed()
+            ->setHeader($headers)
+            ->setHeaderColor(AnsiStyle::Green)
+            ->setRows($rows)
+            ->setRowsColor([['column' => 0, 'color' => AnsiStyle::Green]]);
+
+        foreach ($tableRenderer->format() as $line) {
+            $this->writeln($line);
+        }
     }
 }

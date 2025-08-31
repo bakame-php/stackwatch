@@ -110,8 +110,9 @@ final class ConsoleTableTest extends TestCase
             ['column' => 1, 'color' => AnsiStyle::Green, 'above' => 50],
         ];
 
-        $table = ConsoleTable::classic(colorRules: $rules)
+        $table = ConsoleTable::classic()
             ->setHeader(['Name', 'Score'])
+            ->setRowsColor($rules)
             ->addRow(['Alice', 30])  // should be red
             ->addRow(['Bob', 80]);   // should be green
 

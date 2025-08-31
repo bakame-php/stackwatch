@@ -54,7 +54,6 @@ use function strtolower;
  *     real_peak_memory_usage: string,
  *     cpu_user_time: string,
  *     cpu_system_time: string,
- *     cpu_total_time: string,
  *     origin_path: string,
  *     origin_line: string,
  * }
@@ -232,11 +231,11 @@ final class Snapshot implements JsonSerializable
     /**
      * @throws InvalidArgument if the specified property is not supported
      *
-     * @return SnapshotHumanReadable|string
+     * @return SnapshotHumanReadable
      */
-    public function forHuman(?string $property = null): array|string
+    public function toHuman(): array
     {
-        $humans = [
+        return [
             'label' => $this->label,
             'timestamp' => $this->timestamp->format(self::DATE_FORMAT),
             'memory_usage' => MemoryUnit::format($this->memoryUsage, 3),
@@ -245,17 +244,22 @@ final class Snapshot implements JsonSerializable
             'real_peak_memory_usage' => MemoryUnit::format($this->realPeakMemoryUsage, 3),
             'cpu_user_time' => DurationUnit::format($this->cpuUserTime, 3),
             'cpu_system_time' => DurationUnit::format($this->cpuSystemTime, 3),
-            'cpu_total_time' => DurationUnit::format($this->cpuSystemTime + $this->cpuUserTime, 3),
             'origin_path' => (string) $this->originPath,
             'origin_line' => (string) $this->originLine,
         ];
+    }
 
-        if (null === $property) {
-            return $humans;
-        }
-
-        $propertyNormalized = strtolower((string) preg_replace('/[\s_\-]+/', '_', $property));
-
-        return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown snapshot name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
+    /**
+     * Returns a human-readable version of a property.
+     *
+     * @param non-empty-string $property
+     *
+     * @throws InvalidArgument if the property is unknown
+     */
+    public function human(string $property): string
+    {
+        $humans = $this->toHuman();
+        $propertyNormalized = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '_$0', $property));
+        return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown snapshot property name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
     }
 }

@@ -165,21 +165,34 @@ final class Report implements JsonSerializable
     }
 
     /**
-     * @param ('average'|'coef_var'|'iterations'|'maximum'|'median'|'minimum'|'range'|'std_dev'|'sum'|'variance'|null) $property
-     *
-     * @throws InvalidArgument If the property value is unknown
-     *
-     * @return ($property is null ? ReportHumanReadable : MetricsHumanReadable)
+     * @return ReportHumanReadable
      */
-    public function forHuman(?string $property = null): array /* @phpstan-ignore-line */
+    public function toHuman(): array
     {
-        return [/* @phpstan-ignore-line */
-            'cpu_time' => $this->cpuTime->forHuman($property),
-            'execution_time' => $this->executionTime->forHuman($property),
-            'memory_usage' => $this->memoryUsage->forHuman($property),
-            'real_memory_usage' => $this->realMemoryUsage->forHuman($property),
-            'peak_memory_usage' => $this->peakMemoryUsage->forHuman($property),
-            'real_peak_memory_sage' => $this->realPeakMemoryUsage->forHuman($property),
+        return [
+            'cpu_time' => $this->cpuTime->toHuman(),
+            'execution_time' => $this->executionTime->toHuman(),
+            'memory_usage' => $this->memoryUsage->toHuman(),
+            'real_memory_usage' => $this->realMemoryUsage->toHuman(),
+            'peak_memory_usage' => $this->peakMemoryUsage->toHuman(),
+            'real_peak_memory_usage' => $this->realPeakMemoryUsage->toHuman(),
+        ];
+    }
+
+    /**
+     * @throws InvalidArgument if the property is unknown or unsupported
+     *
+     * @return MetricsHumanReadable
+     */
+    public function human(string $property): array
+    {
+        return [
+            'cpu_time' => $this->cpuTime->human($property),
+            'execution_time' => $this->executionTime->human($property),
+            'memory_usage' => $this->memoryUsage->human($property),
+            'real_memory_usage' => $this->realMemoryUsage->human($property),
+            'peak_memory_usage' => $this->peakMemoryUsage->human($property),
+            'real_peak_memory_usage' => $this->realPeakMemoryUsage->human($property),
         ];
     }
 }

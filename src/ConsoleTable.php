@@ -51,54 +51,30 @@ final class ConsoleTable
     ) {
     }
 
-    /**
-     * @param colorConfig $colorRules
-     */
-    public static function classic(
-        ?AnsiStyle $headerColor = null,
-        ?AnsiStyle $titleColor = null,
-        array $colorRules = []
-    ): self {
+    public static function classic(): self
+    {
         return new self(
             borders: [
                 'top' => ['left' => '┌', 'mid' => '┬', 'right' => '┐'],
                 'header_sep' => ['left' => '├', 'mid' => '┼', 'right' => '┤'],
                 'bottom' => ['left' => '└', 'mid' => '┴', 'right' => '┘'],
             ],
-            headerColor: $headerColor,
-            titleColor: $titleColor,
-            colorRules: $colorRules,
         );
     }
 
-    /**
-     * @param colorConfig $colorRules
-     */
-    public static function doubleLine(
-        ?AnsiStyle $headerColor = null,
-        ?AnsiStyle $titleColor = null,
-        array $colorRules = []
-    ): self {
+    public static function doubleLine(): self
+    {
         return new self(
             borders: [
                 'top' => ['left' => '╔', 'mid' => '╦', 'right' => '╗'],
                 'header_sep' => ['left' => '╠', 'mid' => '╬', 'right' => '╣'],
                 'bottom' => ['left' => '╚', 'mid' => '╩', 'right' => '╝'],
             ],
-            headerColor: $headerColor,
-            titleColor: $titleColor,
-            colorRules: $colorRules,
         );
     }
 
-    /**
-     * @param colorConfig $colorRules
-     */
-    public static function dashed(
-        ?AnsiStyle $headerColor = null,
-        ?AnsiStyle $titleColor = null,
-        array $colorRules = []
-    ): self {
+    public static function dashed(): self
+    {
         return new self(
             borders: [
                 'top' => ['left' => '+', 'mid' => '+', 'right' => '+'],
@@ -107,9 +83,6 @@ final class ConsoleTable
                 'horizontal' => '-',
                 'vertical' => '|',
             ],
-            headerColor: $headerColor,
-            titleColor: $titleColor,
-            colorRules: $colorRules,
         );
     }
 
@@ -120,12 +93,26 @@ final class ConsoleTable
         return $this;
     }
 
+    public function setTitleColor(?AnsiStyle $titleColor): self
+    {
+        $this->titleColor = $titleColor;
+
+        return $this;
+    }
+
     /**
      * @param list<string> $headers
      */
     public function setHeader(array $headers): self
     {
         $this->headers = $headers;
+
+        return $this;
+    }
+
+    public function setHeaderColor(?AnsiStyle $color): self
+    {
+        $this->headerColor = $color;
 
         return $this;
     }
@@ -152,6 +139,16 @@ final class ConsoleTable
     public function addRow(array $row): self
     {
         $this->rows[] = array_map(fn (Stringable|string|float|int|null $value): string => (string) $value, $row);
+
+        return $this;
+    }
+
+    /**
+     * @param colorConfig $colorRules
+     */
+    public function setRowsColor(array $colorRules): self
+    {
+        $this->colorRules = $colorRules;
 
         return $this;
     }
@@ -326,7 +323,7 @@ final class ConsoleTable
     }
 
     /**
-     * @param array<array{column:int, color:AnsiStyle, below?:int, above?:int}> $rules
+     * @param array<array{column:int, color:AnsiStyle, below?:int, above?:int, equal?:int}> $rules
      *
      * @return Closure(int, string): list<AnsiStyle>
      */
@@ -346,20 +343,24 @@ final class ConsoleTable
             }
 
             $colors = [];
-            $numericValue = is_numeric($value) ? $value + 0 : $value;
+            $numericValue = is_numeric($value) ? $value + 0 : null;
             /** @var colorRule $rule */
             foreach ($grouped[$col] as $rule) {
-                if (isset($rule['below']) && $numericValue < $rule['below']) {
-                    $colors[] = $rule['color'];
+                if (null !== $numericValue) {
+                    if (isset($rule['below']) && $numericValue < $rule['below']) {
+                        $colors[] = $rule['color'];
+                    }
+
+                    if (isset($rule['above']) && $numericValue > $rule['above']) {
+                        $colors[] = $rule['color'];
+                    }
+
+                    if (isset($rule['equal']) && $numericValue === $rule['equal']) {
+                        $colors[] = $rule['color'];
+                    }
                 }
 
-                if (isset($rule['above']) && $numericValue > $rule['above']) {
-                    $colors[] = $rule['color'];
-                }
-
-                if (isset($rule['equal']) && $numericValue === $rule['equal']) {
-                    $colors[] = $rule['color'];
-                }
+                $colors[] = $rule['color'];
             }
 
             return $colors;
