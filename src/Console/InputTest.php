@@ -425,7 +425,7 @@ final class InputTest extends TestCase
     public function testWithMethodVisibilityList(): void
     {
         $original = new Input(path: '/tmp');
-        $modified = $original->withMethodVisbility(['public', 'protected']);
+        $modified = $original->withMethodVisibility(['public', 'protected']);
 
         self::assertSame([], $original->methodVisibilityList);
         self::assertSame(['public', 'protected'], $modified->methodVisibilityList);

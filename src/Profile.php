@@ -8,11 +8,10 @@ use Attribute;
 use JsonSerializable;
 
 use function array_keys;
-use function in_array;
 
 /**
  * @phpstan-type ProfileMap array{
- *     type: 'detailed'|'summary',
+ *     type: ?string,
  *     iterations: int<1, max>,
  *     warmup:int<0, max>,
  *     tags:list<non-empty-string>
@@ -21,24 +20,20 @@ use function in_array;
 #[Attribute(Attribute::TARGET_FUNCTION | Attribute::TARGET_METHOD | Attribute::TARGET_CLASS)]
 final class Profile implements JsonSerializable
 {
-    public const DETAILED = 'detailed';
-    public const SUMMARY = 'summary';
     /** @var list<non-empty-string> */
     public readonly array $tags;
 
     /**
-     * @param self::DETAILED|self::SUMMARY $type
      * @param int<1, max> $iterations
      * @param int<0, max> $warmup
      * @param array<string> $tags
      */
     public function __construct(
-        public readonly string $type = self::SUMMARY,
+        public readonly ?AggregatorMode $type = null,
         public readonly int $iterations = 3,
         public readonly int $warmup = 0,
         array $tags = [],
     ) {
-        self::isValidReport($type);
         self::isValidIterations($iterations);
         self::isValidWarmup($warmup);
 
@@ -51,16 +46,11 @@ final class Profile implements JsonSerializable
     public static function fromArray(array $data): self
     {
         return new self(
-            type: $data['type'],
+            type: null !== $data['type'] ? AggregatorMode::from($data['type']) : null,
             iterations: $data['iterations'],
             warmup: $data['warmup'],
             tags: $data['tags']
         );
-    }
-
-    public static function isValidReport(string $type): void
-    {
-        in_array($type, [self::DETAILED, self::SUMMARY], true) || throw new InvalidArgument('The defined type is not supported.');
     }
 
     public static function isValidIterations(int $iterations): void
@@ -79,7 +69,7 @@ final class Profile implements JsonSerializable
     public function toArray(): array
     {
         return [
-            'type' => $this->type,
+            'type' => $this->type?->value,
             'iterations' => $this->iterations,
             'warmup' => $this->warmup,
             'tags' => $this->tags,

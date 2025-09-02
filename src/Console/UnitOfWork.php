@@ -28,6 +28,7 @@ use function function_exists;
 use function is_readable;
 use function json_decode;
 use function strtr;
+use function ucfirst;
 
 use const JSON_THROW_ON_ERROR;
 
@@ -35,7 +36,7 @@ use const JSON_THROW_ON_ERROR;
  * @phpstan-import-type MetricsMap from Metrics
  * @phpstan-import-type ReportMap from Report
  * @phpstan-type UnitOfWorkMap array{
- *      type: 'detailed'|'summary',
+ *      type: ?string,
  *      iterations: int<1, max>,
  *      warmup: int<0, max>,
  *      tags: list<non-empty-string>,
@@ -137,9 +138,8 @@ final class UnitOfWork implements JsonSerializable
                 $unitOfWork = $reflection->newInstanceWithoutConstructor();
                 $unitOfWork->runAt = $runAt;
                 $unitOfWork->result = match ($profile->type) {
-                    Profile::DETAILED => Report::fromArray($data['attributes']), /* @phpstan-ignore-line */
-                    Profile::SUMMARY => Metrics::fromArray($data['attributes']), /* @phpstan-ignore-line */
-                    default => throw new InvalidArgument('The profile type '.$profile->type.' is not valid.'),
+                    null => Report::fromArray($data['attributes']), /* @phpstan-ignore-line */
+                    default => Metrics::fromArray($data['attributes']), /* @phpstan-ignore-line */
                 };
 
                 $unitOfWork->path = $data['path'];
@@ -280,9 +280,10 @@ final class UnitOfWork implements JsonSerializable
         if (!$this->hasRun()) {
             $callback = $this->getCallback();
             $this->runAt = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-            $this->result = Profile::DETAILED === $this->profile->type
-                ? Profiler::report($callback, $this->profile->iterations, $this->profile->warmup)
-                : Profiler::metrics($callback, $this->profile->iterations, $this->profile->warmup);
+            $this->result = match ($this->profile->type) {
+                null => Profiler::report($callback, $this->profile->iterations, $this->profile->warmup),
+                default => Profiler::metrics($callback, $this->profile->iterations, $this->profile->warmup, $this->profile->type),
+            };
         }
     }
 
@@ -359,7 +360,7 @@ final class UnitOfWork implements JsonSerializable
         /** @var string $template */
         static $template = 'Target: {name}; Path: {file}; Iterations: {iterations}; Warmup: {warmup};';
 
-        $this->template ??= Profile::DETAILED === $this->profile->type ? '(Detailed) '.$template : '(Summary) '.$template;
+        $this->template ??= null === $this->profile->type ? '(Full) '.$template : '('.ucfirst($this->profile->type->value).') '.$template;
 
         return $this->template;
     }

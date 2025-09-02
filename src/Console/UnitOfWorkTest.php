@@ -43,7 +43,7 @@ final class UnitOfWorkTest extends TestCase
 
     use Bakame\Stackwatch\Profile;
 
-    #[Profile(iterations: 5, warmup: 1, type: Profile::DETAILED)]
+    #[Profile(iterations: 5, warmup: 1)]
     function testCommandLineFunction2(): void
     {
         usleep(1000);
@@ -57,7 +57,7 @@ final class UnitOfWorkTest extends TestCase
         $data = [
             'path' => $this->tmpFile,
             'function' => 'Test\\testCommandLineFunction2',
-            'type' => 'detailed',
+            'type' => null,
             'iterations' => 5,
             'warmup' => 1,
             'tags' => [],
@@ -79,7 +79,7 @@ use Bakame\Stackwatch\Profile;
 
 class SampleClass
 {
-    #[Profile(iterations: 3, warmup: 1, type: Profile::SUMMARY)]
+    #[Profile(iterations: 3, warmup: 1, type: Profile::AVERAGE)]
     public function sampleMethod(): void
     {
         usleep(500);
@@ -95,7 +95,7 @@ PHP;
             'path' => $this->tmpFile,
             'class' => 'Temp\\SampleClass',
             'method' => 'sampleMethod',
-            'type' => 'summary',
+            'type' => 'average',
             'iterations' => 3,
             'warmup' => 1,
             'tags' => [],
@@ -120,7 +120,7 @@ enum SampleEnum
 {
     case FIRST;
 
-    #[Profile(iterations: 2, warmup: 1, type: Profile::SUMMARY)]
+    #[Profile(iterations: 2, warmup: 1, type: Profile::AVERAGE)]
     public function run(): void
     {
         usleep(200);
@@ -135,7 +135,7 @@ PHP;
             'path' => $this->tmpFile,
             'class' => 'Temp\\SampleEnum',
             'method' => 'run',
-            'type' => 'summary',
+            'type' => 'median',
             'iterations' => 2,
             'warmup' => 1,
             'tags' => [],

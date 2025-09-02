@@ -20,7 +20,6 @@ use function array_map;
 use function array_unique;
 use function array_values;
 use function count;
-use function in_array;
 use function trim;
 
 use const STDOUT;
@@ -133,16 +132,17 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @throws Throwable
      */
-    public static function dump(callable $callback, int $iterations = 3, int $warmup = 0, string $type = Profile::SUMMARY): void
+    public static function dump(callable $callback, int $iterations = 3, int $warmup = 0, ?AggregatorMode $type = null): void
     {
-        in_array($type, [Profile::DETAILED, Profile::SUMMARY], true) || throw new InvalidArgument('The defined type is not supported.');
+        $stats = match ($type) {
+            null => self::report($callback, $iterations, $warmup),
+            default => self::metrics($callback, $iterations, $warmup, $type),
+        };
 
-        $stats = Profile::SUMMARY === $type
-            ? self::metrics($callback, $iterations, $warmup)
-            : self::report($callback, $iterations, $warmup);
-        $callLocation = CallLocation::fromLastInternalCall(__NAMESPACE__);
+        $callLocation = CallLocation::fromLastInternalCall(__NAMESPACE__, ['*Test.php']);
+
+        //console rendering
         $exporter = new StatsExporter(STDOUT);
-
         $exporter->writeln(
             Ansi::write('Path: ', AnsiStyle::Green)
             .Ansi::writeln($callLocation->path.':'.$callLocation->line, AnsiStyle::Yellow)
@@ -165,7 +165,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @throws Throwable
      */
-    public static function dd(callable $callback, int $iterations = 3, int $warmup = 0, string $type = Profile::SUMMARY): never
+    public static function dd(callable $callback, int $iterations = 3, int $warmup = 0, ?AggregatorMode $type = null): never
     {
         self::dump($callback, $iterations, $warmup, $type);
 
@@ -173,15 +173,22 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     }
 
     /**
-     * Returns the metrics associated with the callback.
+     * Returns aggregated metrics associated with the callback.
      *
-     * @param int<1, max> $iterations
+     * The aggregation mode (average, median, …) is controlled by $aggregatorMode.
+     *
      * @param int<0, max> $warmup
+     * @param int<1, max> $iterations
      *
      * @throws InvalidArgument|Throwable
      */
-    public static function metrics(callable $callback, int $iterations = 1, int $warmup = 0, ?LoggerInterface $logger = null): Metrics
-    {
+    public static function metrics(
+        callable $callback,
+        int $iterations = 1,
+        int $warmup = 0,
+        AggregatorMode $aggregatorMode = AggregatorMode::Average,
+        ?LoggerInterface $logger = null
+    ): Metrics {
         self::assertItCanBeRun($iterations, $warmup);
         self::warmup($warmup, $callback);
 
@@ -190,7 +197,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
             $new[] = self::execute($callback, $logger);
         }
 
-        return Metrics::average(...$new);
+        return Metrics::aggregate($aggregatorMode, ...$new);
     }
 
     /**

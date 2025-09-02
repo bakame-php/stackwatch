@@ -31,6 +31,9 @@ final class Span implements JsonSerializable
     /** @var non-empty-string */
     public readonly string $label;
 
+
+
+
     /**
      * @param non-empty-string $label
      *

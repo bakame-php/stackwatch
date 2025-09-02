@@ -89,15 +89,6 @@ final class TimelineTest extends TestCase
     }
 
     #[Test]
-    public function it_will_return_null_on_summary_call_if_there_are_not_enough_snapshots(): void
-    {
-        $this->timeline->capture('only');
-
-
-        self::assertEquals(Metrics::none(), $this->timeline->summarize()->metrics);
-    }
-
-    #[Test]
     public function it_returns_a_profiling_data_on_summary(): void
     {
         $this->timeline->capture('start');
@@ -159,15 +150,6 @@ final class TimelineTest extends TestCase
         $metrics = $profile->metrics;
 
         self::assertGreaterThan(0, $metrics->executionTime);
-    }
-
-    #[Test]
-    public function it_throws_if_no_enough_snapshot_present_on_finish(): void
-    {
-        self::assertEquals(
-            Metrics::none(),
-            (new Timeline())->take('end')->metrics
-        );
     }
 
     #[Test]

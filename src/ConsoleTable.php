@@ -8,8 +8,16 @@ use Closure;
 use Stringable;
 
 use function array_map;
+use function array_merge;
+use function array_slice;
+use function array_sum;
+use function array_unshift;
+use function array_values;
+use function count;
 use function floor;
 use function implode;
+use function intdiv;
+use function is_array;
 use function is_numeric;
 use function max;
 use function mb_strwidth;
@@ -28,62 +36,67 @@ use const STR_PAD_RIGHT;
  *     horizontal?: string,
  *     vertical?: string,
  *  }
- * @phpstan-type colorRule array{column:int, color:AnsiStyle, below?:int, above?:int, equal?: int}
- * @phpstan-type colorConfig List<colorRule>
+ * @phpstan-type cell array{value: string, colspan?: int, align?: 'left'|'right'|'center', style?: list<AnsiStyle>}
+ * @phpstan-type cellStyle array{column:int, style?:list<AnsiStyle>, below?:int, above?:int, equal?:int, align?: 'left'|'right'|'center'}
+ * @phpstan-type rowStyle List<cellStyle>
  */
 final class ConsoleTable
 {
+    private ?string $title = null;
+    /** @var list<AnsiStyle> ANSI code for the table title */
+    private array $titleStyle = [];
     /** @var list<string>*/
     private array $headers = [];
-    /** @var list<array<string>> */
+    /** @var list<AnsiStyle> ANSI code for the full header */
+    private array $headerStyle = [];
+    /** @var list<list<cell>> */
     private array $rows = [];
-    private ?string $title = null;
+    /** @var rowStyle */
+    private array $rowStyle = [];
+    /** @var array<int, true> */
+    private array $rowSeparators = [];
 
-    private function __construct(
-        /** @var borderConfig */
-        private array $borders,
-        /** @var ?AnsiStyle ANSI code for the full header */
-        private ?AnsiStyle $headerColor = null,
-        /** @var ?AnsiStyle ANSI code for the table title */
-        private ?AnsiStyle $titleColor = null,
-        /** @var colorConfig */
-        private array $colorRules = []
-    ) {
+    public function addRowSeparator(): self
+    {
+        $this->rowSeparators[count($this->rows)] = true;
+
+        return $this;
+    }
+
+    /**
+     * @param borderConfig $borders
+     */
+    private function __construct(private array $borders)
+    {
     }
 
     public static function classic(): self
     {
-        return new self(
-            borders: [
-                'top' => ['left' => '┌', 'mid' => '┬', 'right' => '┐'],
-                'header_sep' => ['left' => '├', 'mid' => '┼', 'right' => '┤'],
-                'bottom' => ['left' => '└', 'mid' => '┴', 'right' => '┘'],
-            ],
-        );
+        return new self([
+            'top' => ['left' => '┌', 'mid' => '┬', 'right' => '┐'],
+            'header_sep' => ['left' => '├', 'mid' => '┼', 'right' => '┤'],
+            'bottom' => ['left' => '└', 'mid' => '┴', 'right' => '┘'],
+        ]);
     }
 
     public static function doubleLine(): self
     {
-        return new self(
-            borders: [
-                'top' => ['left' => '╔', 'mid' => '╦', 'right' => '╗'],
-                'header_sep' => ['left' => '╠', 'mid' => '╬', 'right' => '╣'],
-                'bottom' => ['left' => '╚', 'mid' => '╩', 'right' => '╝'],
-            ],
-        );
+        return new self([
+            'top' => ['left' => '╔', 'mid' => '╦', 'right' => '╗'],
+            'header_sep' => ['left' => '╠', 'mid' => '╬', 'right' => '╣'],
+            'bottom' => ['left' => '╚', 'mid' => '╩', 'right' => '╝'],
+        ]);
     }
 
     public static function dashed(): self
     {
-        return new self(
-            borders: [
-                'top' => ['left' => '+', 'mid' => '+', 'right' => '+'],
-                'header_sep' => ['left' => '+', 'mid' => '+', 'right' => '+'],
-                'bottom' => ['left' => '+', 'mid' => '+', 'right' => '+'],
-                'horizontal' => '-',
-                'vertical' => '|',
-            ],
-        );
+        return new self([
+            'top' => ['left' => '+', 'mid' => '+', 'right' => '+'],
+            'header_sep' => ['left' => '+', 'mid' => '+', 'right' => '+'],
+            'bottom' => ['left' => '+', 'mid' => '+', 'right' => '+'],
+            'horizontal' => '-',
+            'vertical' => '|',
+        ]);
     }
 
     public function setTitle(?string $title): self
@@ -93,9 +106,9 @@ final class ConsoleTable
         return $this;
     }
 
-    public function setTitleColor(?AnsiStyle $titleColor): self
+    public function setTitleStyle(AnsiStyle ...$titleStyle): self
     {
-        $this->titleColor = $titleColor;
+        $this->titleStyle = array_values($titleStyle);
 
         return $this;
     }
@@ -110,15 +123,15 @@ final class ConsoleTable
         return $this;
     }
 
-    public function setHeaderColor(?AnsiStyle $color): self
+    public function setHeaderStyle(AnsiStyle ...$color): self
     {
-        $this->headerColor = $color;
+        $this->headerStyle = array_values($color);
 
         return $this;
     }
 
     /**
-     * @param iterable<array<Stringable|string|float|int|null>> $rows
+     * @param iterable<array<string|Stringable|float|int|null|cell>> $rows
      *
      * @return $this
      */
@@ -132,23 +145,43 @@ final class ConsoleTable
     }
 
     /**
-     * @param array<Stringable|string|float|int|null> $row
+     * Add a row of cells. Supports colspan with array syntax:
+     * ['value' => 'My text', 'colspan' => 2]
      *
-     * @return $this
+     * @param array<string|Stringable|float|int|null|cell> $row
      */
     public function addRow(array $row): self
     {
-        $this->rows[] = array_map(fn (Stringable|string|float|int|null $value): string => (string) $value, $row);
+        $normalized = [];
+        foreach ($row as $cell) {
+            if (!is_array($cell)) {
+                $normalized[] = ['value' => (string) $cell, 'colspan' => 1];
+                continue;
+            }
+
+            if (isset($cell['value'])) {
+                $data = ['value' => (string) $cell['value'], 'colspan' => $cell['colspan'] ?? 1];
+                if (isset($cell['align'])) {
+                    $data['align'] = $cell['align'];
+                }
+
+                if (isset($cell['style'])) {
+                    $data['style'] = $cell['style'];
+                }
+                $normalized[] = $data;
+            }
+        }
+        $this->rows[] = $normalized;
 
         return $this;
     }
 
     /**
-     * @param colorConfig $colorRules
+     * @param rowStyle $rowStyles
      */
-    public function setRowsColor(array $colorRules): self
+    public function setRowStyle(array $rowStyles): self
     {
-        $this->colorRules = $colorRules;
+        $this->rowStyle = $rowStyles;
 
         return $this;
     }
@@ -158,9 +191,9 @@ final class ConsoleTable
      */
     public function format(): array
     {
-        $cellColorFn = self::createCellColorFn($this->colorRules);
+        $cellStyleFn = self::createCellStyleFn($this->rowStyle);
         $lines = [];
-        foreach ($this->build($this->headerColor, $cellColorFn) as $line) {
+        foreach ($this->build($cellStyleFn) as $line) {
             $lines[] = $line;
         }
 
@@ -172,8 +205,8 @@ final class ConsoleTable
             );
             $tableWidth = max($visibleWidths);
             $rawTitle = $this->title;
-            if (null !== $this->titleColor) {
-                $rawTitle = Ansi::write($rawTitle, $this->titleColor);
+            if ([] !== $this->titleStyle) {
+                $rawTitle = Ansi::write($rawTitle, ...$this->titleStyle);
             }
 
             $visibleTitleLen = mb_strwidth(Ansi::stripStyle($rawTitle));
@@ -194,22 +227,25 @@ final class ConsoleTable
     }
 
     /**
-     * @param Closure(int, string): list<AnsiStyle> $cellColorFn
+     * @param ?Closure(int, string): array{style: list<AnsiStyle>, align: 'left'|'center'|'right'|null} $cellStyleFn
      *
      * @return list<string>
      */
-    public function build(?AnsiStyle $headerColor = null, ?Closure $cellColorFn = null): array
+    private function build(?Closure $cellStyleFn): array
     {
         $widths = $this->computeColumnWidths();
         $numericColumns = $this->detectNumericColumns();
         $lines = [
             $this->buildBorder($widths, 'top'),
-            $this->buildHeaderRow($this->headers, $widths, $headerColor),
+            $this->buildHeaderRow($widths),
             $this->buildBorder($widths, 'header_sep'),
         ];
 
-        foreach ($this->rows as $row) {
-            $lines[] = $this->buildRow($row, $widths, $numericColumns, $cellColorFn);
+        foreach ($this->rows as $i => $row) {
+            if (isset($this->rowSeparators[$i])) {
+                $lines[] = $this->buildBorder($widths, 'header_sep');
+            }
+            $lines[] = $this->buildRow($row, $widths, $numericColumns, $cellStyleFn);
         }
 
         $lines[] = $this->buildBorder($widths, 'bottom');
@@ -218,19 +254,43 @@ final class ConsoleTable
     }
 
     /**
-     * @return list<int>
+     * @return array<int, int>
      */
     private function computeColumnWidths(): array
     {
         $columns = count($this->headers);
-        $widths = [];
+        $widths  = [];
 
+        // Initialize widths with header lengths
         for ($i = 0; $i < $columns; $i++) {
-            $max = mb_strwidth($this->headers[$i]);
-            foreach ($this->rows as $row) {
-                $max = max($max, mb_strwidth((string)($row[$i] ?? '')));
+            $widths[$i] = mb_strwidth($this->headers[$i]);
+        }
+
+        // Check each row
+        foreach ($this->rows as $row) {
+            $colIndex = 0;
+            foreach ($row as $cell) {
+                $colspan = $cell['colspan'];
+                $len = mb_strwidth($cell['value']);
+
+                if (1 === $colspan) {
+                    $widths[$colIndex] = max($widths[$colIndex], $len);
+                    $colIndex += $colspan;
+                    continue;
+                }
+
+                $currentSpanWidth = array_sum(array_slice($widths, $colIndex, $colspan));
+                if ($len > $currentSpanWidth) {
+                    $extra = $len - $currentSpanWidth;
+                    $perCol = intdiv($extra, $colspan);
+                    $remainder = $extra % $colspan;
+
+                    for ($k = 0; $k < $colspan; $k++) {
+                        $widths[$colIndex + $k] += $perCol + ($k < $remainder ? 1 : 0);
+                    }
+                }
+                $colIndex += $colspan;
             }
-            $widths[] = $max;
         }
 
         return $widths;
@@ -243,62 +303,92 @@ final class ConsoleTable
     {
         $numericColumns = [];
         foreach ($this->rows as $row) {
-            foreach ($row as $i => $cell) {
-                if (is_numeric($cell)) {
-                    $numericColumns[$i] = true;
+            $colIndex = 0;
+            foreach ($row as $cell) {
+                if (is_numeric($cell['value'])) {
+                    $numericColumns[$colIndex] = true;
                 }
+                $colIndex += $cell['colspan'] ?? 1;
             }
         }
-
         return $numericColumns;
     }
 
     /**
-     * @param list<int> $widths
+     * @param array<int, int> $widths
      */
     private function buildBorder(array $widths, string $type): string
     {
         $b = $this->borders[$type];
-        $h = $this->borders['horizontal'] ?? '─'; // fallback if missing
-        $parts = array_map(fn ($w) => str_repeat($h, $w + 2), $widths);
+        $h = $this->borders['horizontal'] ?? '─';
+        $parts = array_map(fn (int $w): string => str_repeat($h, $w + 2), $widths);
 
         return $b['left'].implode($b['mid'], $parts).$b['right'];
     }
 
     /**
-     * @param list<string> $headers
-     * @param list<int> $widths
+     * @param array<int, int> $widths
      */
-    private function buildHeaderRow(array $headers, array $widths, ?AnsiStyle $headerColor): string
+    private function buildHeaderRow(array $widths): string
     {
-        $color = null !== $headerColor ? [$headerColor] : [];
         $vertical = $this->borders['vertical'] ?? '│';
         $cells = [];
-        foreach ($headers as $i => $header) {
-            $cells[] = ' '.self::padDisplayWidth($header, $widths[$i], STR_PAD_RIGHT, ...$color).' ';
+        foreach ($this->headers as $i => $header) {
+            $cells[] = ' '.self::padDisplayWidth($header, $widths[$i], STR_PAD_RIGHT, ...$this->headerStyle).' ';
         }
         return $vertical.implode($vertical, $cells).$vertical;
     }
 
     /**
-     * @param array<string> $row
-     * @param list<int> $widths
+     * @param array<cell> $row
+     * @param array<int, int> $widths
      * @param array<true> $numericColumns
-     * @param Closure(int, string): list<AnsiStyle> $cellColorFn
+     * @param ?Closure(int, string): array{style: list<AnsiStyle>, align: 'left'|'center'|'right'|null} $cellStyleFn
      */
-    private function buildRow(array $row, array $widths, array $numericColumns, ?Closure $cellColorFn): string
+    private function buildRow(array $row, array $widths, array $numericColumns, ?Closure $cellStyleFn): string
     {
         $vertical = $this->borders['vertical'] ?? '│';
         $cells = [];
-        foreach ($row as $i => $cell) {
-            $isNumeric = isset($numericColumns[$i]);
-            $colors = null !== $cellColorFn ? $cellColorFn($i, $cell) : [];
-            $cells[] = ' '.self::padDisplayWidth(
-                (string)$cell,
-                $widths[$i],
-                $isNumeric ? STR_PAD_LEFT : STR_PAD_RIGHT,
-                ...$colors
-            ).' ';
+        $colIndex = 0;
+
+        foreach ($row as $cell) {
+            $colspan = $cell['colspan'];
+            $value = $cell['value'];
+
+            // Base content width (sum of all spanned columns)
+            $spanWidths = array_slice($widths, $colIndex, $colspan);
+            $contentWidth = array_sum($spanWidths);
+
+            // Each column normally has 2 spaces padding. Keep that for every column spanned.
+            $paddingWidth = $colspan * 2;
+
+            // Between merged columns, we lose (colspan - 1) vertical separators.
+            // Each missing separator would normally add 1 char.
+            $lostSeparators = $colspan - 1;
+
+            // Final total width available for text
+            $totalWidth = $contentWidth + $paddingWidth + $lostSeparators;
+
+            $isNumeric = (1 === $colspan && isset($numericColumns[$colIndex]));
+            $result = null !== $cellStyleFn ? $cellStyleFn($colIndex, $value) : ['style' => [], 'align' => null];
+            $align = $cell['align'] ?? $result['align'] ?? ($isNumeric ? 'right' : 'left');
+            $styles = $cell['style'] ?? $result['style'];
+
+            $padType = match ($align) {
+                'left' => STR_PAD_RIGHT,
+                'right' => STR_PAD_LEFT,
+                'center' => STR_PAD_BOTH,
+                default => STR_PAD_RIGHT,
+            };
+
+            $cells[] = self::padDisplayWidth(
+                $value,
+                $totalWidth,
+                $padType,
+                ...$styles
+            );
+
+            $colIndex += $colspan;
         }
 
         return $vertical.implode($vertical, $cells).$vertical;
@@ -323,47 +413,65 @@ final class ConsoleTable
     }
 
     /**
-     * @param array<array{column:int, color:AnsiStyle, below?:int, above?:int, equal?:int}> $rules
+     * @param array<cellStyle> $rules
      *
-     * @return Closure(int, string): list<AnsiStyle>
+     * @return Closure(int, string): array{style: list<AnsiStyle>, align: 'left'|'center'|'right'|null}
      */
-    private static function createCellColorFn(array $rules): Closure
+    private static function createCellStyleFn(array $rules): Closure
     {
-        /**
-         * @var array<int, array<colorRule>> $grouped
-         */
+        /** @var array<int, array<cellStyle>> $grouped */
         $grouped = [];
         foreach ($rules as $rule) {
             $grouped[$rule['column']][] = $rule;
         }
 
         return function (int $col, string $value) use ($grouped): array {
+            $style = [];
+            $align = null;
             if (!isset($grouped[$col])) {
-                return [];
+                return ['style' => $style, 'align' => $align];
             }
 
-            $colors = [];
             $numericValue = is_numeric($value) ? $value + 0 : null;
-            /** @var colorRule $rule */
+
+            /** @var cellStyle $rule */
             foreach ($grouped[$col] as $rule) {
-                if (null !== $numericValue) {
-                    if (isset($rule['below']) && $numericValue < $rule['below']) {
-                        $colors[] = $rule['color'];
+                $rule['style'] = $rule['style'] ?? [];
+
+                $hasBelow = array_key_exists('below', $rule);
+                $hasAbove = array_key_exists('above', $rule);
+                $hasEqual = array_key_exists('equal', $rule);
+                $hasAnyCondition = $hasBelow || $hasAbove || $hasEqual;
+
+                $matches = !$hasAnyCondition;
+
+                if (!$matches) {
+                    $matches = true;
+                    if ($hasBelow) {
+                        $matches = (null !== $numericValue && $numericValue < $rule['below']);
                     }
 
-                    if (isset($rule['above']) && $numericValue > $rule['above']) {
-                        $colors[] = $rule['color'];
+                    if ($hasAbove) {
+                        $matches = (null !== $numericValue && $numericValue > $rule['above']);
                     }
 
-                    if (isset($rule['equal']) && $numericValue === $rule['equal']) {
-                        $colors[] = $rule['color'];
+                    if ($hasEqual) {
+                        $expected = $rule['equal'];
+                        if (null !== $numericValue && is_numeric($expected)) {
+                            $matches = $numericValue === $expected;
+                        } else {
+                            $matches = $value === (string) $expected;
+                        }
                     }
                 }
 
-                $colors[] = $rule['color'];
+                if ($matches) {
+                    $style = array_merge($style, $rule['style']);
+                    $align = $rule['align'] ?? $align;
+                }
             }
 
-            return $colors;
+            return ['style' => $style, 'align' => $align];
         };
     }
 }

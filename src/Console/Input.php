@@ -561,7 +561,7 @@ final class Input implements JsonSerializable
      * @param list<non-empty-string> $visibilities
      *
      */
-    public function withMethodVisbility(array $visibilities): self
+    public function withMethodVisibility(array $visibilities): self
     {
         $foundNonEmptyString = [];
         foreach ($visibilities as $tag) {
@@ -954,7 +954,7 @@ final class Input implements JsonSerializable
 <fg=green>  -h, --help</>                     Display this help message
 <fg=green>  -V, --version</>                  Display the version and exit
 <fg=green>  -t, --tags=TAGS</>                Only run the profiles for the listed tag(s)
-<fg=green>  --file-suffix=SUFFIX</>           Only run the profiles for the listed file enditng with the listed suffxies
+<fg=green>  --file-suffix=SUFFIX</>           Only run the profiles for the listed file ending with the listed suffixes
 <fg=green>  --method-visibility=VISIBILITY</> Only run the profiles for the method with the listed visibility (public, protected, private), (default: all)
 <fg=green>  --no-progress</>                  Disable output of profiling execution progress
 

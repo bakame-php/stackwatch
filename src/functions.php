@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Bakame\Stackwatch\Profile;
+use Bakame\Stackwatch\AggregatorMode;
 use Bakame\Stackwatch\Profiler;
 
-if (!function_exists('pf')) {
+if (!function_exists('pf_dump')) {
     /**
      * Profile a callable and dump the stats to console.
      *
@@ -14,13 +14,13 @@ if (!function_exists('pf')) {
      *
      * @throws Throwable
      */
-    function pf(callable $callback, int $iterations = 3, int $warmup = 0, string $type = Profile::SUMMARY): void
+    function pf_dump(callable $callback, int $iterations = 3, int $warmup = 0, ?AggregatorMode $type = null): void
     {
         Profiler::dump($callback, $iterations, $warmup, $type);
     }
 }
 
-if (!function_exists('pfd')) {
+if (!function_exists('pf_dd')) {
     /**
      * Profile a callable and dump the stats to console, then exit.
      *
@@ -29,7 +29,7 @@ if (!function_exists('pfd')) {
      *
      * @throws Throwable
      */
-    function pfd(callable $callback, int $iterations = 3, int $warmup = 0, string $type = Profile::SUMMARY): never
+    function pf_dd(callable $callback, int $iterations = 3, int $warmup = 0, ?AggregatorMode $type = null): never
     {
         Profiler::dd($callback, $iterations, $warmup, $type);
     }

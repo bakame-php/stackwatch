@@ -8,6 +8,7 @@ use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\Exporter\Exporter as BasicExporter;
 use Bakame\Stackwatch\Metrics;
 use Bakame\Stackwatch\Report;
+use Bakame\Stackwatch\Snapshot;
 use Bakame\Stackwatch\Statistics;
 
 interface Exporter extends BasicExporter
@@ -19,4 +20,6 @@ interface Exporter extends BasicExporter
     public function exportEnvironment(Environment $environment): void;
 
     public function exportStatistics(Statistics $statistics): void;
+
+    public function exportSnapshot(Snapshot $snapshot): void;
 }

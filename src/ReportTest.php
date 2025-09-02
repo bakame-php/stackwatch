@@ -23,9 +23,13 @@ final class ReportTest extends TestCase
             cpuTime: $statsNano,
             executionTime: $statsNano,
             memoryUsage: $statsBytes,
+            memoryUsageGrowth: $statsBytes,
             peakMemoryUsage: $statsBytes,
+            peakMemoryUsageGrowth: $statsBytes,
             realMemoryUsage: $statsBytes,
+            realMemoryUsageGrowth: $statsBytes,
             realPeakMemoryUsage: $statsBytes,
+            realPeakMemoryUsageGrowth: $statsBytes,
         );
 
         $array = $report->toArray();
@@ -50,8 +54,8 @@ final class ReportTest extends TestCase
     #[Test]
     public function it_can_be_instantiated_from_metrics_aggregates(): void
     {
-        $metric1 = new Metrics(100, 200, 300, 400, 500, 600);
-        $metric2 = new Metrics(110, 210, 310, 410, 510, 610);
+        $metric1 = new Metrics(100, 200, 300, 300, 400, 400, 500, 500, 600, 600);
+        $metric2 = new Metrics(110, 210, 310, 310, 410, 410, 510, 510, 610, 600);
 
         $report = Report::fromMetrics($metric1, $metric2);
 
@@ -76,9 +80,13 @@ final class ReportTest extends TestCase
             'cpu_time' => $statsNano->toArray(),
             'execution_time' => $statsNano->toArray(),
             'memory_usage' => $statsBytes->toArray(),
+            'memory_usage_growth' => $statsBytes->toArray(),
             'real_memory_usage' => $statsBytes->toArray(),
+            'real_memory_usage_growth' => $statsBytes->toArray(),
             'peak_memory_usage' => $statsBytes->toArray(),
+            'peak_memory_usage_growth' => $statsBytes->toArray(),
             'real_peak_memory_usage' => $statsBytes->toArray(),
+            'real_peak_memory_usage_growth' => $statsBytes->toArray(),
         ];
 
         self::assertSame($array, Report::fromArray($array)->toArray());
@@ -93,9 +101,13 @@ final class ReportTest extends TestCase
             'cpu_time' => $statsBytes->toArray(),
             'execution_time' => $statsBytes->toArray(),
             'memory_usage' => $statsBytes->toArray(),
+            'memory_usage_growth' => $statsBytes->toArray(),
             'real_memory_usage' => $statsBytes->toArray(),
+            'real_memory_usage_growth' => $statsBytes->toArray(),
             'peak_memory_usage' => $statsBytes->toArray(),
+            'peak_memory_usage_growth' => $statsBytes->toArray(),
             'real_peak_memory_usage' => $statsBytes->toArray(),
+            'real_peak_memory_usage_growth' => $statsBytes->toArray(),
         ];
 
         $this->expectException(InvalidArgument::class);

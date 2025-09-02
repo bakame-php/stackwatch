@@ -6,6 +6,8 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Added
 
+- Added `Metrics::sum`, `Metrics::range`,`Metrics::minimum`,`Metrics::maximun`,`Metrics::median`, `Metrics::aggregate`
+- Adding the `AggregateMode` Enum to improve `Profiler::metrics`, the `Profile` Attribute and the `Metrics` usage.
 - **BC BREAK:** `Summary` is renamed `Span`.
 - `CallLocation` class to allow recording where the package `Snapshot` was called from [#8](https://github.com/bakame-php/stackwatch/pull/8)
 - `CallRange` class to allow manipulating location range within the `Summary` class.
@@ -22,8 +24,8 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - **BC BREAK:** `State` is renamed `Feature`
 - **BC BREAK:** `Input::TABLE_FORMAT` is renamed `Input::TEXT_FORMAT`
 - Added a `Translator` class to improve human-readable key translation.
-- Added `Profiler::dump` and its global function counterpart `pf` to profile, and dump a human-readable result into the output stream.
-- Added `Profiler::dump` and its global function counterpart `pfd` to profile, dump a human-readable result into the output stream and die.
+- Added `Profiler::dump` and its global function counterpart `pf_dump` to profile, and dump a human-readable result into the output stream.
+- Added `Profiler::dd` and its global function counterpart `pf_dd` to profile, dump a human-readable result into the output stream and die.
 - Added `forHuman()` method to return a human-readable version of `toArray`
 - Added `human()` method to return the human-redable version of a single property.
 - Added Snapshot relation method `compareTo` and its aliases `isBefore*` `isAfter*` and `isAtSameTime` using the `Snapshot::hrtime` property
@@ -37,6 +39,8 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - Adding support for `Timeline` on `Metrics::sum` and `Metrics::average` static methods.
 - **BC BREAK:** Fix `Report` and `Environment` keys used for `toArray` and `forHuman`
 - **BC BREAK:** Fix `Statistics::count` is not `Statistics::iterations`  keys used for `toArray` and `forHuman`
+- **BC BREAK:** Fix `Metrics` calculation
+- **BC BREAK:** the `Profile` attribute default to showing the full detailed metrics.
 
 ### Deprecated
 
@@ -46,6 +50,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 - **BC BREAK:** `Summary` is removed and replaced by `Span`.
 - **BC BREAK:** `forHuman()` method is removed and replaced by 2 methods `toHuman()` and `human()`.
+- **BC BREAK:** the constants attached to the `Profile` attribute use the `AggregateMode` enum instead.
 
 ## [0.13.0 - Marrakesh](https://github.com/bakame-php/stackwatch/compare/0.12.0...0.13.0) - 2025-08-14
 

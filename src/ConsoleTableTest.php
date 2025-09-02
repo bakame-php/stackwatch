@@ -106,15 +106,22 @@ final class ConsoleTableTest extends TestCase
     public function testColorRulesApply(): void
     {
         $rules = [
-            ['column' => 1, 'color' => AnsiStyle::Red, 'below' => 50],
-            ['column' => 1, 'color' => AnsiStyle::Green, 'above' => 50],
+            ['column' => 1, 'style' => [AnsiStyle::Red], 'below' => 50],
+            ['column' => 1, 'style' => [AnsiStyle::Green], 'above' => 50],
+            ['column' => 1, 'style' => [AnsiStyle::Blue], 'equal' => 50],
+            ['column' => 0, 'style' => [AnsiStyle::Cyan]],
         ];
 
-        $table = ConsoleTable::classic()
+        $table = ConsoleTable::dashed()
             ->setHeader(['Name', 'Score'])
-            ->setRowsColor($rules)
-            ->addRow(['Alice', 30])  // should be red
-            ->addRow(['Bob', 80]);   // should be green
+            ->setHeaderStyle(AnsiStyle::Magenta, AnsiStyle::Bold)
+            ->setRowStyle($rules)
+            ->addRow(['Alice', 30])                                 // Alice should be Cyan, 30 should be red
+            ->addRow([
+                ['value' => 'Bob', 'style' => [AnsiStyle::Yellow]], // 'Bob' should be Yellow
+                80,                                                  // should be green
+            ])
+            ->addRow(['Dave', 50]);
 
         $lines = $table->format();
 
