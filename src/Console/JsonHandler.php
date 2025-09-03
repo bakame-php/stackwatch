@@ -7,9 +7,10 @@ namespace Bakame\Stackwatch\Console;
 use Bakame\Stackwatch\Environment;
 use Psr\Log\LoggerInterface;
 
+use function fopen;
+
 use const JSON_BIGINT_AS_STRING;
 use const JSON_PRETTY_PRINT;
-use const STDOUT;
 
 final class JsonHandler implements Handler
 {
@@ -24,7 +25,8 @@ final class JsonHandler implements Handler
         $jsonOptions = $input->jsonPrettyPrint->isEnabled()
             ? JSON_PRETTY_PRINT | JSON_BIGINT_AS_STRING
             : JSON_BIGINT_AS_STRING;
-        $stream = $input->output ?? STDOUT;
+        /** @var resource $stream */
+        $stream = $input->output ?? fopen('php://stdout', 'wb');
         $profiler = PathProfiler::forJson($input, $stream, $jsonOptions, $this->logger);
         if ($input->infoSection->isVisible()) {
             $formatter = $profiler->formatter;

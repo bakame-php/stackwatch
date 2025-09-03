@@ -15,8 +15,6 @@ use function sprintf;
 use function str_repeat;
 use function trim;
 
-use const PHP_EOL;
-
 final class LeaderPrinter
 {
     /** @var list<array{0:string, 1:string}> */
@@ -28,6 +26,15 @@ final class LeaderPrinter
         private ?AnsiStyle $colorKey = AnsiStyle::Green,
         private ?AnsiStyle $colorValue = AnsiStyle::Cyan,
     ) {
+    }
+
+    public static function stylesheet(): string
+    {
+        return <<<CSS
+.bkm-sw-dotted-list {width: 100%; list-style: none; padding:0;}
+.bkm-sw-dotted-item {display: flex; padding: .3em .7em; align-items: center;}
+.bkm-sw-dotted-item .bkm-sw-dots {flex: 1;border-bottom: 1px dotted #666;margin: 0 0.5em; color:transparent;}
+CSS;
     }
 
     /**
@@ -52,15 +59,12 @@ final class LeaderPrinter
     }
 
     /**
-     * Format a leader list with left-aligned keys, right-aligned values,
-     * and dots filling the space in between.
-     *
-     * @return list<string> Formatted lines
+     * Format a leader list for console output.
      */
-    public function format(?int $terminalWitdh = null): array
+    public function render(): string
     {
         $lines = [];
-        $terminalWitdh ??= self::detectTerminalWidth();
+        $terminalWitdh = self::detectTerminalWidth();
         foreach ($this->pairs as [$key, $value]) {
             $dotsCount = $terminalWitdh - mb_strlen($value) - mb_strlen($key) - (2 * $this->padExtra);
             $lines[] = sprintf(
@@ -71,15 +75,21 @@ final class LeaderPrinter
             );
         }
 
-        return $lines;
+        return implode("\n", $lines);
     }
 
     /**
-     * Render formatted lines as a single string.
+     * Format a leader list for HTML output.
      */
-    public function render(?int $terminalWitdh = null, string $separator = PHP_EOL): string
+    public function renderHtml(): string
     {
-        return implode($separator, $this->format($terminalWitdh));
+        $lines = ['<ul class="bkm-sw-dotted-list bkm-sw-ansi-green bkm-sw-ansi-bold">'];
+        foreach ($this->pairs as [$key, $value]) {
+            $lines[] = '<li class="bkm-sw-dotted-item"><span>'.$key.'</span><span class="bkm-sw-dots">:</span><span>'.$value.'</span></li>';
+        }
+        $lines[] = '</ul>';
+
+        return implode("\n", $lines);
     }
 
     /**

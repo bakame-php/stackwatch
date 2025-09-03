@@ -12,6 +12,7 @@ use function filter_var;
 use function getenv;
 use function gethostname;
 use function implode;
+use function in_array;
 use function ini_get;
 use function is_int;
 use function is_readable;
@@ -221,6 +222,11 @@ final class Environment implements JsonSerializable
     public function isUnixLike(): bool
     {
         return ! $this->isWindows();
+    }
+
+    public function isCli(): bool
+    {
+        return in_array($this->sapi, ['cli', 'phpdbg', 'embed'], true);
     }
 
     /**

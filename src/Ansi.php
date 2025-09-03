@@ -6,15 +6,12 @@ namespace Bakame\Stackwatch;
 
 use Stringable;
 
-use function array_map;
+use function fopen;
 use function function_exists;
 use function getenv;
-use function implode;
 use function posix_isatty;
-use function preg_replace;
 
 use const DIRECTORY_SEPARATOR;
-use const STDOUT;
 
 final class Ansi
 {
@@ -56,13 +53,7 @@ final class Ansi
      */
     public static function write(Stringable|string|float|int|null $text, AnsiStyle... $styles): string
     {
-        if (!self::enabled()) {
-            return (string) $text;
-        }
-
-        $prefix = implode('', array_map(fn (AnsiStyle $s) => $s->value, $styles));
-
-        return $prefix.$text.AnsiStyle::Reset->value;
+        return !self::enabled() ? (string) $text : AnsiStyle::wrap($text, ...$styles);
     }
 
     /**
@@ -76,10 +67,13 @@ final class Ansi
     private static function isOutputPiped(): bool
     {
         if (function_exists('posix_isatty')) {
-            return !posix_isatty(STDOUT);
+            /** @var resource $stream */
+            $stream = Warning::cloak(fopen(...), 'php://stdout', 'wb');
+
+            return !posix_isatty($stream);
         }
 
-        return DIRECTORY_SEPARATOR === '\\' ? (false === getenv('TERM')) : false;
+        return DIRECTORY_SEPARATOR === '\\' && false === getenv('TERM');
     }
 
     private static function detectTerminalSupport(): bool
@@ -88,7 +82,7 @@ final class Ansi
             return false !== getenv('ANSICON')
                 || 'ON' === getenv('ConEmuANSI')
                 || 'xterm' === getenv('TERM')
-                || (function_exists('sapi_windows_vt100_support') && Warning::cloak(sapi_windows_vt100_support(...), STDOUT)); /* @phpstan-ignore-line */
+                || (function_exists('sapi_windows_vt100_support') && Warning::cloak(sapi_windows_vt100_support(...), fopen('php://stdout', 'w'))); /* @phpstan-ignore-line */
         }
 
         return false !== getenv('TERM')
@@ -113,10 +107,5 @@ final class Ansi
     public static function info(Stringable|string|float|int|null $text): string
     {
         return self::write($text, AnsiStyle::Cyan);
-    }
-
-    public static function stripStyle(string $text): string
-    {
-        return preg_replace('/\033\[[0-9;]*m/', '', $text) ?? $text;
     }
 }

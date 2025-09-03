@@ -20,9 +20,8 @@ use function array_map;
 use function array_unique;
 use function array_values;
 use function count;
+use function header;
 use function trim;
-
-use const STDOUT;
 
 /**
  * @implements IteratorAggregate<int, Span>
@@ -139,22 +138,14 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
             default => self::metrics($callback, $iterations, $warmup, $type),
         };
 
-        $callLocation = CallLocation::fromLastInternalCall(__NAMESPACE__, ['*Test.php']);
-
-        //console rendering
-        $exporter = new StatsExporter(STDOUT);
-        $exporter->writeln(
-            Ansi::write('Path: ', AnsiStyle::Green)
-            .Ansi::writeln($callLocation->path.':'.$callLocation->line, AnsiStyle::Yellow)
-            .Ansi::write('Iterations: ', AnsiStyle::Green)
-            .Ansi::write($iterations, AnsiStyle::Yellow)
-            .'; '
-            .Ansi::write('Warmup: ', AnsiStyle::Green)
-            .Ansi::write($warmup, AnsiStyle::Yellow)
-            ."\n"
+        /** @var resource $stream */
+        $stream = Warning::cloak(fopen(...), 'php://stdout', 'wb');
+        $renderer = new Renderer(new StatsExporter($stream));
+        $renderer->render(
+            new Profile($type, $iterations, $warmup),
+            CallLocation::fromLastInternalCall(__NAMESPACE__, ['*Test.php']),
+            $stats
         );
-
-        $stats instanceof Report ? $exporter->exportReport($stats) : $exporter->exportMetrics($stats);
     }
 
     /**
@@ -167,8 +158,21 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public static function dd(callable $callback, int $iterations = 3, int $warmup = 0, ?AggregatorMode $type = null): never
     {
+        ob_start();
         self::dump($callback, $iterations, $warmup, $type);
+        $dumpOutput = ob_get_clean();
 
+        if (Environment::current()->isCli()) {
+            echo $dumpOutput;
+            exit(1);
+        }
+
+        if (!headers_sent()) {
+            header('HTTP/1.1 500 Internal Server Error');
+            header('Content-Type: text/html; charset=utf-8');
+        }
+
+        echo $dumpOutput;
         exit(1);
     }
 

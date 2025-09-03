@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch;
 
 use Closure;
+use Generator;
 use Stringable;
 
 use function array_map;
@@ -40,7 +41,7 @@ use const STR_PAD_RIGHT;
  * @phpstan-type cellStyle array{column:int, style?:list<AnsiStyle>, below?:int, above?:int, equal?:int, align?: 'left'|'right'|'center'}
  * @phpstan-type rowStyle List<cellStyle>
  */
-final class ConsoleTable
+final class Table
 {
     private ?string $title = null;
     /** @var list<AnsiStyle> ANSI code for the table title */
@@ -55,6 +56,20 @@ final class ConsoleTable
     private array $rowStyle = [];
     /** @var array<int, true> */
     private array $rowSeparators = [];
+
+    public static function stylesheet(): string
+    {
+        return <<<'STYLE'
+.bkm-sw-table {margin: 0 auto;border-collapse: collapse;width: 100%; font-size:12px}
+.bkm-sw-table td,
+.bkm-sw-table th {padding: .7em;border: 1px solid #5c636a;text-align: right; color: yellow;}
+.bkm-sw-table tbody tr {background-color: #111;}
+.bkm-sw-table tbody tr:nth-child(odd) {background-color: #222;}
+.bkm-sw-table tbody tr:hover {background-color: #333;}
+.bkm-sw-table tbody td {transition:border .2s}
+.bkm-sw-table tbody td:hover {border-left: 2px solid #ffa;border-right: 1px solid #ffa;}
+STYLE;
+    }
 
     public function addRowSeparator(): self
     {
@@ -132,8 +147,6 @@ final class ConsoleTable
 
     /**
      * @param iterable<array<string|Stringable|float|int|null|cell>> $rows
-     *
-     * @return $this
      */
     public function setRows(iterable $rows): self
     {
@@ -186,10 +199,72 @@ final class ConsoleTable
         return $this;
     }
 
+    public function renderHtml(): string
+    {
+        $html = ['<table class="bkm-sw-table">'];
+        if (null !== $this->title) {
+            $html[] = '<caption style="caption-side:top; text-align:center;'.AnsiStyle::inlineRules(...$this->titleStyle).'">'.$this->title.'</caption>';
+        }
+
+        if ([] !== $this->headers) {
+            $html[] = '<thead>';
+            $html[] = '<tr>';
+            foreach ($this->headers as $header) {
+                $html[] = '<th style="text-align:center;'.AnsiStyle::inlineRules(...$this->headerStyle).'">'.$header.'</th>';
+            }
+            $html[] = '</tr>';
+            $html[] = '</thead>';
+        }
+
+        if ([] !== $this->rows) {
+            $cellStyleFn = self::createCellStyleFn($this->rowStyle);
+            foreach ($this->buildTbody($cellStyleFn) as $row) {
+                $html [] = $row;
+            }
+        }
+        $html [] = '</table>';
+
+        return implode(PHP_EOL, $html);
+    }
+
     /**
-     * @return list<string>
+     * @param ?Closure(int, string): array{style: list<AnsiStyle>, align: 'left'|'center'|'right'|null} $cellStyleFn
+     *
+     * @return Generator<string>
      */
-    public function format(): array
+    private function buildTbody(?Closure $cellStyleFn): Generator
+    {
+        yield '<tbody>';
+        foreach ($this->rows as $row) {
+            yield $this->buildTr($row, $cellStyleFn);
+        }
+        yield '</tbody>';
+    }
+
+    /**
+     * @param array<cell> $row
+     * @param ?Closure(int, string): array{style: list<AnsiStyle>, align: 'left'|'center'|'right'|null} $cellStyleFn
+     */
+    private function buildTr(array $row, ?Closure $cellStyleFn): string
+    {
+        $html = ['<tr>'];
+        $colIndex = 0;
+        foreach ($row as $cell) {
+            $colspan = $cell['colspan'] ?? 1;
+            $value = $cell['value'];
+            $result = null !== $cellStyleFn ? $cellStyleFn($colIndex, $value) : ['style' => [], 'align' => null];
+            $align = $cell['align'] ?? $result['align'] ?? 'right';
+            $styles = $cell['style'] ?? $result['style'];
+            $html[] = '<td style="'.AnsiStyle::inlineRules(...$styles).';text-align:'.$align.'" colspan="'.$colspan.'">'.$value.'</td>';
+            $colIndex += $colspan;
+        }
+
+        $html[] = '</tr>';
+
+        return implode('', $html);
+    }
+
+    public function render(): string
     {
         $cellStyleFn = self::createCellStyleFn($this->rowStyle);
         $lines = [];
@@ -200,7 +275,7 @@ final class ConsoleTable
         if (null !== $this->title) {
             /** @var non-empty-list<int<0, max>> $visibleWidths */
             $visibleWidths = array_map(
-                fn (string $line): int => mb_strwidth(Ansi::stripStyle($line)),
+                fn (string $line): int => mb_strwidth(AnsiStyle::unwrap($line)),
                 $lines
             );
             $tableWidth = max($visibleWidths);
@@ -209,21 +284,13 @@ final class ConsoleTable
                 $rawTitle = Ansi::write($rawTitle, ...$this->titleStyle);
             }
 
-            $visibleTitleLen = mb_strwidth(Ansi::stripStyle($rawTitle));
+            $visibleTitleLen = mb_strwidth(AnsiStyle::unwrap($rawTitle));
             $padding = max(0, intdiv($tableWidth - $visibleTitleLen, 2));
 
             array_unshift($lines, str_repeat(' ', $padding).$rawTitle);
         }
 
-        return $lines;
-    }
-
-    /**
-     * @param non-empty-string $separator
-     */
-    public function render(string $separator = PHP_EOL): string
-    {
-        return implode($separator, $this->format());
+        return implode("\n", $lines);
     }
 
     /**

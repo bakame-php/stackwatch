@@ -7,8 +7,10 @@ namespace Bakame\Stackwatch;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(ConsoleTable::class)]
-final class ConsoleTableTest extends TestCase
+use function explode;
+
+#[CoversClass(Table::class)]
+final class TableTest extends TestCase
 {
     protected function setUp(): void
     {
@@ -18,12 +20,12 @@ final class ConsoleTableTest extends TestCase
 
     public function testClassicTableWithHeaderAndRow(): void
     {
-        $table = ConsoleTable::classic()
+        $table = Table::classic()
             ->setHeader(['Name', 'Age'])
             ->addRow(['Alice', 30])
             ->addRow(['Bob', 25]);
 
-        $lines = $table->format();
+        $lines = explode("\n", $table->render());
 
         self::assertIsArray($lines);
         self::assertNotEmpty($lines);
@@ -39,63 +41,49 @@ final class ConsoleTableTest extends TestCase
 
     public function testDoubleLineBorders(): void
     {
-        $table = ConsoleTable::doubleLine()
+        $table = Table::doubleLine()
             ->setHeader(['Item', 'Price'])
             ->addRow(['Book', 12]);
 
-        $lines = $table->format();
+        $lines = explode("\n", $table->render());
 
-        self::assertStringStartsWith('╔', (string) $lines[0]);
+        self::assertStringStartsWith('╔', $lines[0]);
         self::assertStringStartsWith('╚', (string) end($lines));
     }
 
     public function testDashedBorders(): void
     {
-        $table = ConsoleTable::dashed()
+        $table = Table::dashed()
             ->setHeader(['Col1', 'Col2'])
             ->addRow(['A', 'B']);
 
-        $lines = $table->format();
+        $lines = explode("\n", $table->render());
 
         self::assertStringStartsWith('+', $lines[0]);
         self::assertStringStartsWith('+', (string) end($lines));
         self::assertStringContainsString('|', $lines[1]);
     }
 
-    public function testRenderWithCustomSeparator(): void
-    {
-        $table = ConsoleTable::classic()
-            ->setHeader(['Key', 'Value'])
-            ->addRow(['One', 1])
-            ->addRow(['Two', 2]);
-
-        $output = $table->render(';');
-
-        self::assertIsString($output);
-        self::assertStringContainsString(';', $output);
-    }
-
     public function testTitleIsCentered(): void
     {
-        $table = ConsoleTable::classic()
+        $table = Table::classic()
             ->setHeader(['A', 'B'])
             ->addRow(['x', 'y'])
             ->setTitle('My Table');
 
-        $lines = $table->format();
+        $lines = explode("\n", $table->render());
 
-        // First line should be the title
         self::assertStringContainsString('My Table', $lines[0]);
     }
 
     public function testNumericColumnsAreRightAligned(): void
     {
-        $table = ConsoleTable::classic()
+        $table = Table::classic()
             ->setHeader(['Name', 'Score'])
             ->addRow(['Alice', 100])
             ->addRow(['Bob', 5]);
 
-        $lines = $table->format();
+        $lines = explode("\n", $table->render());
 
         // Row lines should have numbers aligned to the right
         $row = $lines[3]; // after top, header, header_sep
@@ -112,7 +100,7 @@ final class ConsoleTableTest extends TestCase
             ['column' => 0, 'style' => [AnsiStyle::Cyan]],
         ];
 
-        $table = ConsoleTable::dashed()
+        $table = Table::dashed()
             ->setHeader(['Name', 'Score'])
             ->setHeaderStyle(AnsiStyle::Magenta, AnsiStyle::Bold)
             ->setRowStyle($rules)
@@ -123,7 +111,7 @@ final class ConsoleTableTest extends TestCase
             ])
             ->addRow(['Dave', 50]);
 
-        $lines = $table->format();
+        $lines = explode("\n", $table->render());
 
         self::assertStringContainsString(AnsiStyle::Red->value, $lines[3]);
         self::assertStringContainsString(AnsiStyle::Green->value, $lines[4]);

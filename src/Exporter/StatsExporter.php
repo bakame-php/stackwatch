@@ -5,17 +5,16 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch\Exporter;
 
 use Bakame\Stackwatch\AnsiStyle;
-use Bakame\Stackwatch\ConsoleTable;
 use Bakame\Stackwatch\DurationUnit;
 use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\LeaderPrinter;
 use Bakame\Stackwatch\Metrics;
-use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Report;
 use Bakame\Stackwatch\Result;
 use Bakame\Stackwatch\Snapshot;
 use Bakame\Stackwatch\Span;
 use Bakame\Stackwatch\Statistics;
+use Bakame\Stackwatch\Table;
 use Bakame\Stackwatch\Timeline;
 use Bakame\Stackwatch\Translator;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -35,13 +34,18 @@ final class StatsExporter
 {
     /** @var resource|OutputInterface */
     private $output;
+    public readonly Environment $environment;
 
     /**
      * @param resource|OutputInterface $output
      */
-    public function __construct(mixed $output, public readonly Translator $translator = new Translator())
-    {
+    public function __construct(
+        mixed $output,
+        public readonly Translator $translator = new Translator(),
+        ?Environment $environment = null,
+    ) {
         $this->output = $output;
+        $this->environment = $environment ?? Environment::current();
     }
 
     public function write(string $content): int|false
@@ -57,13 +61,7 @@ final class StatsExporter
 
     public function writeln(string $content): int|false
     {
-        if ($this->output instanceof OutputInterface) {
-            $this->output->writeln($content);
-
-            return 0;
-        }
-
-        return fwrite($this->output, $content."\n");
+        return $this->write($content."\n");
     }
 
     /**
@@ -71,11 +69,15 @@ final class StatsExporter
      */
     private function writeLeaderPrinter(array $data): void
     {
-        $this->writeln(
-            (new LeaderPrinter())
-                ->setPairs($this->translator->translateArrayKeys($data))
-                ->render()
-        );
+        $renderer = (new LeaderPrinter())->setPairs($this->translator->translateArrayKeys($data));
+
+        if ($this->environment->isCli()) {
+            $this->writeln($renderer->render());
+
+            return;
+        }
+
+        echo $renderer->renderHtml();
     }
 
     public function exportSnapshot(Snapshot $snapshot): void
@@ -113,19 +115,24 @@ final class StatsExporter
             $rows[] = array_values(array_merge([$this->translator->translate($name)], $statsForHuman));
         }
 
-        $this->writeln(
-            ConsoleTable::dashed()
-                ->setHeader($headers)
-                ->setHeaderStyle(AnsiStyle::Green)
-                ->setRows($rows)
-                ->setRowStyle([['column' => 0, 'style' => [AnsiStyle::Green, AnsiStyle::Bold]]])
-                ->render("\n")
-        );
+        $tableRenderer = Table::dashed()
+            ->setHeader($headers)
+            ->setHeaderStyle(AnsiStyle::BrightGreen)
+            ->setRows($rows)
+            ->setRowStyle([['column' => 0, 'style' => [AnsiStyle::BrightGreen, AnsiStyle::Bold], 'align' => 'left']]);
+
+        if ($this->environment->isCli()) {
+            $this->writeln($tableRenderer->render());
+
+            return;
+        }
+
+        echo $tableRenderer->renderHtml();
     }
 
     public function exportTimeline(Timeline $timeline): void
     {
-        $tableRenderer = ConsoleTable::dashed()
+        $tableRenderer = Table::dashed()
             ->setHeader([
                 $this->translator->translate('label'),
                 $this->translator->translate('call_location'),
@@ -136,9 +143,9 @@ final class StatsExporter
                 $this->translator->translate('peak_memory_usage'),
                 $this->translator->translate('real_peak_memory_usage'),
             ])
-            ->setHeaderStyle(AnsiStyle::Green)
+            ->setHeaderStyle(AnsiStyle::BrightGreen)
             ->setTitle($timeline->identifier())
-            ->setTitleStyle(AnsiStyle::Green, AnsiStyle::Bold)
+            ->setTitleStyle(AnsiStyle::BrightGreen, AnsiStyle::Bold)
             ->setRowStyle([
                 ['column' => 3, 'align' => 'right'],
                 ['column' => 4, 'align' => 'right'],
@@ -151,12 +158,17 @@ final class StatsExporter
                 [
                     'value' => 'Not enough snapshot to generate an export',
                     'align' => 'center',
-                    'style' => [AnsiStyle::Red, AnsiStyle::Bold],
+                    'style' => [AnsiStyle::BrightRed, AnsiStyle::Bold],
                     'colspan' => 8,
                 ],
             ]);
-            $this->writeln($tableRenderer->render("\n"));
+            if ($this->environment->isCli()) {
+                $this->writeln($tableRenderer->render());
 
+                return;
+            }
+
+            echo $tableRenderer->renderHtml();
             return;
         }
 
@@ -176,19 +188,21 @@ final class StatsExporter
         $tableRenderer->addRowSeparator();
         $summary = $timeline->summarize('summary')->metrics->toHuman();
         $tableRenderer->addRow([
-            ['value' => 'Summary ', 'style' => [AnsiStyle::Green], 'align' => 'right', 'colspan' => 2],
-            ['value' => $summary['execution_time'], 'style' => [AnsiStyle::Green]],
-            ['value' => $summary['cpu_time'], 'style' => [AnsiStyle::Green]],
-            ['value' => $summary['memory_usage'], 'style' => [AnsiStyle::Green]],
-            ['value' => $summary['real_memory_usage'], 'style' => [AnsiStyle::Green]],
-            ['value' => $summary['peak_memory_usage'], 'style' => [AnsiStyle::Green]],
-            ['value' => $summary['real_peak_memory_usage'], 'style' => [AnsiStyle::Green]],
+            ['value' => 'Summary ', 'style' => [AnsiStyle::BrightGreen], 'align' => 'right', 'colspan' => 2],
+            ['value' => $summary['execution_time'], 'style' => [AnsiStyle::BrightGreen]],
+            ['value' => $summary['cpu_time'], 'style' => [AnsiStyle::BrightGreen]],
+            ['value' => $summary['memory_usage'], 'style' => [AnsiStyle::BrightGreen]],
+            ['value' => $summary['real_memory_usage'], 'style' => [AnsiStyle::BrightGreen]],
+            ['value' => $summary['peak_memory_usage'], 'style' => [AnsiStyle::BrightGreen]],
+            ['value' => $summary['real_peak_memory_usage'], 'style' => [AnsiStyle::BrightGreen]],
         ]);
 
-        $this->writeln($tableRenderer->render("\n"));
-    }
+        if ($this->environment->isCli()) {
+            $this->writeln($tableRenderer->render());
 
-    public function exportProfiler(Profiler $profiler, ?string $label = null): void
-    {
+            return;
+        }
+
+        echo $tableRenderer->renderHtml();
     }
 }

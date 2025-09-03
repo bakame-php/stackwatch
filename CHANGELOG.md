@@ -51,6 +51,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - **BC BREAK:** `Summary` is removed and replaced by `Span`.
 - **BC BREAK:** `forHuman()` method is removed and replaced by 2 methods `toHuman()` and `human()`.
 - **BC BREAK:** the constants attached to the `Profile` attribute use the `AggregateMode` enum instead.
+- **BC BREAK:** Removed open telemetry exporter
 
 ## [0.13.0 - Marrakesh](https://github.com/bakame-php/stackwatch/compare/0.12.0...0.13.0) - 2025-08-14
 

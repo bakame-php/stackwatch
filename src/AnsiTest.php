@@ -97,17 +97,6 @@ final class AnsiTest extends TestCase
         self::assertSame($expected, Ansi::info('Info'));
     }
 
-    public function testStripStyleRemovesAllAnsiCodes(): void
-    {
-        $styled = AnsiStyle::Red->value.AnsiStyle::Bold->value.'Hello'.AnsiStyle::Reset->value;
-        self::assertSame('Hello', Ansi::stripStyle($styled));
-    }
-
-    public function testStripStyleWithoutAnsiIsUnchanged(): void
-    {
-        self::assertSame('PlainText', Ansi::stripStyle('PlainText'));
-    }
-
     public function testDetectTerminalSupportOnUnix(): void
     {
         // Simulate TERM set
