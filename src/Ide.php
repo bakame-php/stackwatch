@@ -7,6 +7,7 @@ namespace Bakame\Stackwatch;
 use function http_build_query;
 use function is_string;
 use function ltrim;
+use function str_replace;
 use function strtolower;
 
 enum Ide: string
@@ -27,7 +28,7 @@ enum Ide: string
         return self::tryFrom(strtolower((string) $value)) ?? self::PhpStorm;
     }
 
-    public function uri(CallLocation $location, ?string $project = null): string
+    public function uri(CallLocation $location, string $project = 'UNKNOWN_PROJECT'): string
     {
         return match ($this) {
             self::JetBrains => 'jetbrains://php-storm/navigate/reference?'.http_build_query(['project' => $project, 'path' => $location->path, 'line' => $location->line]),
@@ -38,7 +39,7 @@ enum Ide: string
 
     public function path(CallLocation $location): string
     {
-        return $location->path.':'.$location->line;
+        return str_replace('\\', '/', (string) $location->path).':'.$location->line;
     }
 
     public function link(CallLocation $location, ?string $project = null, AnsiStyle ...$styles): string
@@ -48,6 +49,6 @@ enum Ide: string
             return $path;
         }
 
-        return '<a class="'.AnsiStyle::inlineClasses(...$styles).'" href="'.$this->uri($location, $project).'">'.$path.'</a>';
+        return '<a class="'.AnsiStyle::inlineClasses(...$styles).'" href="'.$this->uri($location, $project ?? 'UNKNOWN_PROJECT').'">'.$path.'</a>';
     }
 }

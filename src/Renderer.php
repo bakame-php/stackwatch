@@ -191,7 +191,7 @@ CSS;
         $header[] = '<p class="bkm-sw-header">';
         if (null !== $callLocation) {
             $header[] = AnsiStyle::wrapHtml('class', 'Path: ', AnsiStyle::BrightGreen);
-            $header[] = Ide::fromEnv()->link($callLocation, null, AnsiStyle::White);
+            $header[] = Ide::fromEnv()->link($callLocation, null, AnsiStyle::BrightCyan, AnsiStyle::Bold);
             $header[] = '<br>';
         }
 

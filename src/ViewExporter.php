@@ -65,7 +65,12 @@ final class ViewExporter implements Exporter
 
     public function exportSnapshot(Snapshot $snapshot): void
     {
-        $this->exportLeaderPrinter($snapshot->toHuman());
+        $data = $snapshot->toHuman();
+        $location = new CallLocation($snapshot->originPath, $snapshot->originLine);
+        unset($data['origin_path'], $data['origin_line']);
+        $data['call_location'] = Ide::fromEnv()->link($location, null, AnsiStyle::BrightCyan, AnsiStyle::Bold);
+
+        $this->exportLeaderPrinter($data);
     }
 
     public function exportMetrics(Result|Span|Metrics $metrics): void
@@ -86,10 +91,11 @@ final class ViewExporter implements Exporter
             Span::class => $span,
         };
 
+        $ide = Ide::fromEnv();
         $this->exportLeaderPrinter([
             'label' => $source->label,
-            'call_location_start' => Ide::fromEnv()->link($source->range->start, null, AnsiStyle::White),
-            'call_location_end' => Ide::fromEnv()->link($source->range->end, null, AnsiStyle::White),
+            'call_location_start' => $ide->link($source->range->start, null, AnsiStyle::BrightCyan, AnsiStyle::Bold),
+            'call_location_end' => $ide->link($source->range->end, null, AnsiStyle::BrightCyan, AnsiStyle::Bold),
         ]);
         $this->exportMetrics($source->metrics);
     }
@@ -211,7 +217,7 @@ final class ViewExporter implements Exporter
             $data = $snapshot->toHuman();
             $tableRenderer->addRow([
                 $data['label'],
-                $data['origin_path'].':'.$data['origin_line'],
+                Ide::fromEnv()->link(new CallLocation($data['origin_path'], (int) $data['origin_line']), 'UNKNOWN_PROJECT', AnsiStyle::Bold, AnsiStyle::BrightCyan),
                 $snapshot->timestamp->format('U.u'),
                 DurationUnit::format($snapshot->cpuUserTime + $snapshot->cpuSystemTime, 3),
                 $data['memory_usage'],
