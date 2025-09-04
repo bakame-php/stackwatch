@@ -20,7 +20,7 @@ enum Ide: string
         $value = $default;
         if (isset($_GET['ide']) && is_string($_GET['ide'])) {
             $value = $_GET['ide'];
-        } elseif (isset($_ENV['IDE'])) {
+        } elseif (isset($_ENV['IDE']) && is_string($_ENV['IDE'])) {
             $value = $_ENV['IDE'];
         }
 
@@ -31,7 +31,7 @@ enum Ide: string
     {
         return match ($this) {
             self::JetBrains => 'jetbrains://php-storm/navigate/reference?'. http_build_query(['project' => $project, 'path' => $location->path, 'line'=> $location->line]),
-            self::VSCode => 'vscode://file/'.ltrim($location->path, '/').':'.$location->line,
+            self::VSCode => 'vscode://file/'.ltrim((string) $location->path, '/').':'.$location->line,
             default => 'phpstorm://open?'.http_build_query(['file' => $location->path, 'line'=> $location->line]),
         };
     }

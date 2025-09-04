@@ -1,133 +1,166 @@
 {
-    "identifier": "test",
+    "identifier": "profiling my callback",
     "summaries": [
         {
-            "label": "toto",
+            "label": "first_run",
             "snapshots": [
                 {
                     "label": "start",
-                    "timestamp": "2025-07-11T11:24:32.665701+00:00",
-                    "hrtime": 2000443688348833,
-                    "cpu": {
-                        "ru_utime.tv_usec": 36008,
-                        "ru_utime.tv_sec": 0,
-                        "ru_stime.tv_usec": 9396,
-                        "ru_stime.tv_sec": 0
-                    },
-                    "memory_usage": 2284656,
+                    "timestamp": "2025-09-04T13:41:29.040446+00:00",
+                    "hrtime": 278944510186250,
+                    "cpu_user_time": 30893000,
+                    "cpu_system_time": 9628000,
+                    "memory_usage": 1837592,
                     "real_memory_usage": 4194304,
-                    "peak_memory_usage": 2771296,
-                    "real_peak_memory_usage": 4194304
+                    "peak_memory_usage": 2212096,
+                    "real_peak_memory_usage": 4194304,
+                    "origin_path": "\/path\/to\/your\/script.php",
+                    "origin_line": 16
                 },
                 {
                     "label": "end",
-                    "timestamp": "2025-07-11T11:24:32.666966+00:00",
-                    "hrtime": 2000443689613166,
-                    "cpu": {
-                        "ru_utime.tv_usec": 36018,
-                        "ru_utime.tv_sec": 0,
-                        "ru_stime.tv_usec": 9401,
-                        "ru_stime.tv_sec": 0
-                    },
-                    "memory_usage": 2285712,
+                    "timestamp": "2025-09-04T13:41:29.040618+00:00",
+                    "hrtime": 278944510357125,
+                    "cpu_user_time": 30987000,
+                    "cpu_system_time": 9664000,
+                    "memory_usage": 1838160,
                     "real_memory_usage": 4194304,
-                    "peak_memory_usage": 2771296,
-                    "real_peak_memory_usage": 4194304
+                    "peak_memory_usage": 2212096,
+                    "real_peak_memory_usage": 4194304,
+                    "origin_path": "\/path\/to\/your\/script.php",
+                    "origin_line": 16
                 }
             ],
+            "range": {
+                "start_path": "\/path\/to\/your\/script.php",
+                "start_line": 16,
+                "end_path": "\/path\/to\/your\/script.php",
+                "end_line": 16,
+                "length": 0,
+                "line_span": 1,
+                "same_file": true,
+                "complete": true,
+                "forward": true
+            },
             "metrics": {
-                "cpu_time": 15000,
-                "execution_time": 1264333,
-                "memory_usage": 1056,
-                "real_memory_usage": 0,
-                "peak_memory_usage": 0,
-                "real_peak_memory_usage": 0
+                "cpu_time": 130000,
+                "execution_time": 170875,
+                "memory_usage": 1838160,
+                "memory_usage_growth": 568,
+                "real_memory_usage": 4194304,
+                "real_memory_usage_growth": 0,
+                "peak_memory_usage": 2212096,
+                "peak_memory_usage_growth": 0,
+                "real_peak_memory_usage": 4194304,
+                "real_peak_memory_usage_growth": 0
             }
         },
         {
-            "label": "toto",
+            "label": "last_run",
             "snapshots": [
                 {
                     "label": "start",
-                    "timestamp": "2025-07-11T11:24:32.667018+00:00",
-                    "hrtime": 2000443689665750,
-                    "cpu": {
-                        "ru_utime.tv_usec": 36044,
-                        "ru_utime.tv_sec": 0,
-                        "ru_stime.tv_usec": 9428,
-                        "ru_stime.tv_sec": 0
-                    },
-                    "memory_usage": 2288600,
+                    "timestamp": "2025-09-04T13:41:29.041170+00:00",
+                    "hrtime": 278944510908958,
+                    "cpu_user_time": 31467000,
+                    "cpu_system_time": 9736000,
+                    "memory_usage": 1943104,
                     "real_memory_usage": 4194304,
-                    "peak_memory_usage": 2771296,
-                    "real_peak_memory_usage": 4194304
+                    "peak_memory_usage": 2212096,
+                    "real_peak_memory_usage": 4194304,
+                    "origin_path": "\/path\/to\/your\/script.php",
+                    "origin_line": 17
                 },
                 {
                     "label": "end",
-                    "timestamp": "2025-07-11T11:24:32.668280+00:00",
-                    "hrtime": 2000443690927083,
-                    "cpu": {
-                        "ru_utime.tv_usec": 36052,
-                        "ru_utime.tv_sec": 0,
-                        "ru_stime.tv_usec": 9430,
-                        "ru_stime.tv_sec": 0
-                    },
-                    "memory_usage": 2289656,
+                    "timestamp": "2025-09-04T13:41:29.041319+00:00",
+                    "hrtime": 278944511058333,
+                    "cpu_user_time": 31488000,
+                    "cpu_system_time": 9739000,
+                    "memory_usage": 1943672,
                     "real_memory_usage": 4194304,
-                    "peak_memory_usage": 2771296,
-                    "real_peak_memory_usage": 4194304
+                    "peak_memory_usage": 2212096,
+                    "real_peak_memory_usage": 4194304,
+                    "origin_path": "\/path\/to\/your\/script.php",
+                    "origin_line": 17
                 }
             ],
+            "range": {
+                "start_path": "\/path\/to\/your\/script.php",
+                "start_line": 17,
+                "end_path": "\/path\/to\/your\/script.php",
+                "end_line": 17,
+                "length": 0,
+                "line_span": 1,
+                "same_file": true,
+                "complete": true,
+                "forward": true
+            },
             "metrics": {
-                "cpu_time": 10000,
-                "execution_time": 1261333,
-                "memory_usage": 1056,
-                "real_memory_usage": 0,
-                "peak_memory_usage": 0,
-                "real_peak_memory_usage": 0
+                "cpu_time": 24000,
+                "execution_time": 149375,
+                "memory_usage": 1943672,
+                "memory_usage_growth": 568,
+                "real_memory_usage": 4194304,
+                "real_memory_usage_growth": 0,
+                "peak_memory_usage": 2212096,
+                "peak_memory_usage_growth": 0,
+                "real_peak_memory_usage": 4194304,
+                "real_peak_memory_usage_growth": 0
             }
         },
         {
-            "label": "tata",
+            "label": "a4f35d689f24",
             "snapshots": [
                 {
                     "label": "start",
-                    "timestamp": "2025-07-11T11:24:32.668290+00:00",
-                    "hrtime": 2000443690937083,
-                    "cpu": {
-                        "ru_utime.tv_usec": 36061,
-                        "ru_utime.tv_sec": 0,
-                        "ru_stime.tv_usec": 9431,
-                        "ru_stime.tv_sec": 0
-                    },
-                    "memory_usage": 2291112,
+                    "timestamp": "2025-09-04T13:41:29.041349+00:00",
+                    "hrtime": 278944511087833,
+                    "cpu_user_time": 31518000,
+                    "cpu_system_time": 9740000,
+                    "memory_usage": 1945752,
                     "real_memory_usage": 4194304,
-                    "peak_memory_usage": 2771296,
-                    "real_peak_memory_usage": 4194304
+                    "peak_memory_usage": 2212096,
+                    "real_peak_memory_usage": 4194304,
+                    "origin_path": "\/path\/to\/your\/script.php",
+                    "origin_line": 18
                 },
                 {
                     "label": "end",
-                    "timestamp": "2025-07-11T11:24:32.669549+00:00",
-                    "hrtime": 2000443692196541,
-                    "cpu": {
-                        "ru_utime.tv_usec": 36068,
-                        "ru_utime.tv_sec": 0,
-                        "ru_stime.tv_usec": 9433,
-                        "ru_stime.tv_sec": 0
-                    },
-                    "memory_usage": 2292168,
+                    "timestamp": "2025-09-04T13:41:29.041497+00:00",
+                    "hrtime": 278944511235666,
+                    "cpu_user_time": 31535000,
+                    "cpu_system_time": 9743000,
+                    "memory_usage": 1946320,
                     "real_memory_usage": 4194304,
-                    "peak_memory_usage": 2771296,
-                    "real_peak_memory_usage": 4194304
+                    "peak_memory_usage": 2212096,
+                    "real_peak_memory_usage": 4194304,
+                    "origin_path": "\/path\/to\/your\/script.php",
+                    "origin_line": 18
                 }
             ],
+            "range": {
+                "start_path": "\/path\/to\/your\/script.php",
+                "start_line": 18,
+                "end_path": "\/path\/to\/your\/script.php",
+                "end_line": 18,
+                "length": 0,
+                "line_span": 1,
+                "same_file": true,
+                "complete": true,
+                "forward": true
+            },
             "metrics": {
-                "cpu_time": 9000,
-                "execution_time": 1259458,
-                "memory_usage": 1056,
-                "real_memory_usage": 0,
-                "peak_memory_usage": 0,
-                "real_peak_memory_usage": 0
+                "cpu_time": 20000,
+                "execution_time": 147833,
+                "memory_usage": 1946320,
+                "memory_usage_growth": 568,
+                "real_memory_usage": 4194304,
+                "real_memory_usage_growth": 0,
+                "peak_memory_usage": 2212096,
+                "peak_memory_usage_growth": 0,
+                "real_peak_memory_usage": 4194304,
+                "real_peak_memory_usage_growth": 0
             }
         }
     ]

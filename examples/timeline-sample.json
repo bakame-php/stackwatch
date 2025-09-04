@@ -1,35 +1,44 @@
 {
-    "identifier": "test",
+    "identifier": "timeline sample",
     "snapshots": [
         {
-            "label": "start",
-            "timestamp": "2025-07-11T11:25:10.348768+00:00",
-            "hrtime": 2000481371705166,
-            "cpu": {
-                "ru_utime.tv_usec": 32339,
-                "ru_utime.tv_sec": 0,
-                "ru_stime.tv_usec": 8391,
-                "ru_stime.tv_sec": 0
-            },
-            "memory_usage": 2219040,
+            "label": "init",
+            "timestamp": "2025-09-04T13:43:53.438353+00:00",
+            "hrtime": 279088909355333,
+            "cpu_user_time": 25927000,
+            "cpu_system_time": 6440000,
+            "memory_usage": 1836416,
             "real_memory_usage": 4194304,
-            "peak_memory_usage": 2769856,
-            "real_peak_memory_usage": 4194304
+            "peak_memory_usage": 2211440,
+            "real_peak_memory_usage": 4194304,
+            "origin_path": "\/path\/to\/your\/script.php",
+            "origin_line": 10
+        },
+        {
+            "label": "middle",
+            "timestamp": "2025-09-04T13:43:53.439684+00:00",
+            "hrtime": 279088910686166,
+            "cpu_user_time": 25988000,
+            "cpu_system_time": 6469000,
+            "memory_usage": 1837360,
+            "real_memory_usage": 4194304,
+            "peak_memory_usage": 2211440,
+            "real_peak_memory_usage": 4194304,
+            "origin_path": "\/path\/to\/your\/script.php",
+            "origin_line": 12
         },
         {
             "label": "end",
-            "timestamp": "2025-07-11T11:25:10.350056+00:00",
-            "hrtime": 2000481372993125,
-            "cpu": {
-                "ru_utime.tv_usec": 32360,
-                "ru_utime.tv_sec": 0,
-                "ru_stime.tv_usec": 8408,
-                "ru_stime.tv_sec": 0
-            },
-            "memory_usage": 2220472,
+            "timestamp": "2025-09-04T13:43:53.441043+00:00",
+            "hrtime": 279088912045583,
+            "cpu_user_time": 26043000,
+            "cpu_system_time": 6493000,
+            "memory_usage": 1837928,
             "real_memory_usage": 4194304,
-            "peak_memory_usage": 2769856,
-            "real_peak_memory_usage": 4194304
+            "peak_memory_usage": 2211440,
+            "real_peak_memory_usage": 4194304,
+            "origin_path": "\/path\/to\/your\/script.php",
+            "origin_line": 14
         }
     ]
 }

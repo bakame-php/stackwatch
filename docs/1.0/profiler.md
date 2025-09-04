@@ -244,3 +244,34 @@ Profiler::dd(
 );
 ```
 
+### Global functions
+
+The `Stackwatch` component provides two global functions, `pf_dump()` and `pf_dd()`, which you can use instead of `Bakame\Stackwatch\Profiler::dump`.
+you can rewrite the previous example as:
+
+```php
+// Dump full detailed metrics (no aggregation type specified) after 5 iterations, skipping 2 warm-up runs
+pf_dump(fn () => $service->calculateHeavyStuff(), 5, 2);
+
+// Dump metrics using median aggregation (halts execution afterward)
+pf_dd(
+    callback: $service->calculateHeavyStuff(...),
+    iterations: 5,
+    type: AggregatorType::Median
+);
+```
+
+<p class="message-info">The <code>pf_dump()</code> function returns the computed <code>Metrics</code> or <code>Report</code> object from profiling.</p>
+<p class="message-info">Use <code>pf_dump()</code> when you want to programmatically access the profiling result, and <code>pf_dd()</code> when you just want to inspect it and stop execution.</p>
+
+
+```php
+// Dump full detailed metrics (no aggregation type specified) after 5 iterations, skipping 2 warm-up runs
+use Bakame\Stackwatch\AggregatorType;
+
+// Dump metrics using median aggregation and returns the Metrics for the Media
+$metrics = pf_dump(fn () => $service->calculateHeavyStuff(), 5, 2, AggregatorType::Median);
+
+//Access the median executionTime in nanoseconds
+$metrics->executionTime; 
+```
