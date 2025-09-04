@@ -6,8 +6,8 @@ namespace Bakame\Stackwatch\Console;
 
 use Bakame\Stackwatch\LeaderPrinter;
 use Bakame\Stackwatch\Report;
-use Bakame\Stackwatch\ViewExporter;
 use Bakame\Stackwatch\Translator;
+use Bakame\Stackwatch\ViewExporter;
 use Throwable;
 
 final class ConsoleFormatter implements Formatter

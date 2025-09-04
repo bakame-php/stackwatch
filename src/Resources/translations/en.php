@@ -18,6 +18,8 @@ return [
     'origin_path' => 'Call Location Path',
     'origin_line' => 'Call Location Line',
     'call_location' => 'Call Location',
+    'call_location_start' => 'Call Location Start',
+    'call_location_end' => 'Call Location End',
     'memory_usage' => 'Memory Usage',
     'memory_usage_growth' => 'Memory Usage Growth',
     'real_memory_usage' => 'Real Memory Usage',

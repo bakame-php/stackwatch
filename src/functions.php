@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Bakame\Stackwatch\AggregatorType;
 use Bakame\Stackwatch\Metrics;
 use Bakame\Stackwatch\Profiler;
-use Bakame\Stackwatch\Renderer;
 use Bakame\Stackwatch\Report;
 
 if (!function_exists('pf_dump')) {

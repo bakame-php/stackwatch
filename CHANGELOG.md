@@ -7,7 +7,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 ### Added
 
 - Added `ViewExporter` and `Renderer` to allow viewing the log in browser or in the CLI
-- Added `dump()` and `dd()` methods to `Profiler`, `Timeline`, `SpanAggregator`, `Snapshot`, `Metrics`, `Report`
+- Added `dump()` and `dd()` methods to `Profiler`, `Timeline`, `SpanAggregator`, `Snapshot`, `Metrics`, `Span`, `Report`
 - Added `Metrics::sum`, `Metrics::range`,`Metrics::minimum`,`Metrics::maximun`,`Metrics::median`, `Metrics::aggregate`
 - Adding the `AggregationType` Enum to improve `Profiler::metrics`, the `Profile` Attribute and the `Metrics` usage.
 - **BC BREAK:** `Summary` is renamed `Span`.

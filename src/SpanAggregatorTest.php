@@ -87,7 +87,7 @@ final class SpanAggregatorTest extends TestCase
         /** @var array<SpanMap> $data */
         $data = json_decode($json, true); /** @phpstan-ignore-line */
         /** @var SpanMap $spanMaps */
-        $spanMaps = $data['summaries'][0];  /* @phpstan-ignore-line */
+        $spanMaps = $data['spans'][0];  /* @phpstan-ignore-line */
 
         self::assertIsArray($spanMaps);
         self::assertArrayHasKey('label', $spanMaps);

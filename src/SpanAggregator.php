@@ -131,28 +131,28 @@ final class SpanAggregator implements JsonSerializable, IteratorAggregate, Count
     /**
      * @return array{
      *     identifier: non-empty-string,
-     *     summaries: list<SpanMap>
+     *     spans: list<SpanMap>
      * }
      */
     public function toArray(): array
     {
         return [
             'identifier' => $this->identifier,
-            'summaries' => array_map(fn (Span $span): array => $span->toArray(), $this->spans),
+            'spans' => array_map(fn (Span $span): array => $span->toArray(), $this->spans),
         ];
     }
 
     /**
      * @return array{
      *     identifier: non-empty-string,
-     *     summaries: list<Span>
+     *     spans: list<Span>
      * }
      */
     public function jsonSerialize(): array
     {
         return [
             'identifier' => $this->identifier,
-            'summaries' => $this->spans,
+            'spans' => $this->spans,
         ];
     }
 

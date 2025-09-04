@@ -79,6 +79,21 @@ final class ViewExporter implements Exporter
         $this->exportLeaderPrinter($source->toHuman());
     }
 
+    public function exportSpan(Result|Span $span): void
+    {
+        $source = match ($span::class) {
+            Result::class => $span->span,
+            Span::class => $span,
+        };
+
+        $this->exportLeaderPrinter([
+            'label' => $source->label,
+            'call_location_start' => Ide::fromEnv()->link($source->range->start, null, AnsiStyle::White),
+            'call_location_end' => Ide::fromEnv()->link($source->range->end, null, AnsiStyle::White),
+        ]);
+        $this->exportMetrics($source->metrics);
+    }
+
     public function exportEnvironment(Environment $environment): void
     {
         $this->exportLeaderPrinter($environment->toHuman());
@@ -107,6 +122,9 @@ final class ViewExporter implements Exporter
         $this->export($tableRenderer);
     }
 
+    /**
+     * @param (callable(Span): bool)|string|null $label
+     */
     public function exportSpanAggregator(SpanAggregator $spanAggregator, callable|string|null $label = null): void
     {
         $input = match (true) {

@@ -78,6 +78,21 @@ CSS;
         echo '</div>', PHP_EOL;
     }
 
+    public function renderSpan(Result|Span $span): void
+    {
+        if ($this->exporter->environment->isCli()) {
+            $this->exporter->exportSpan($span);
+
+            return;
+        }
+
+        self::loadCss();
+
+        echo '<div class="bkm-sw-container" id="bkm-sw-span-'.random_int(0, 100_000).'">';
+        $this->exporter->exportSpan($span);
+        echo '</div>', PHP_EOL;
+    }
+
     /**
      * @param ?callable(Snapshot): bool $filter
      */
@@ -176,7 +191,7 @@ CSS;
         $header[] = '<p class="bkm-sw-header">';
         if (null !== $callLocation) {
             $header[] = AnsiStyle::wrapHtml('class', 'Path: ', AnsiStyle::BrightGreen);
-            $header[] = '<a href="'.Ide::fromEnv()->uri($callLocation).'" class="'.AnsiStyle::inlineClasses(AnsiStyle::White).'">'.$callLocation->path.':'.$callLocation->line.'</a>';
+            $header[] = Ide::fromEnv()->link($callLocation, null, AnsiStyle::White);
             $header[] = '<br>';
         }
 

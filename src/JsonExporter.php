@@ -106,7 +106,7 @@ final class JsonExporter implements Exporter
         $this->write($metrics);
     }
 
-    public function exportSpan(Result|Span $span, Timeline|SpanAggregator|null $parent = null): void
+    public function exportSpan(Result|Span $span): void
     {
         if ($span instanceof Result) {
             $span = $span->span;
@@ -115,18 +115,36 @@ final class JsonExporter implements Exporter
         $this->write($span);
     }
 
+    /**
+     * @param (callable(Span): bool)|string|null $label
+     */
     public function exportSpanAggregator(SpanAggregator $spanAggregator, callable|string|null $label = null): void
     {
         $this->write(match (true) {
             null === $label => $spanAggregator,
-            is_callable($label) => $spanAggregator->filter($label),
-            default => $spanAggregator->getAll($label),
+            is_callable($label) => [
+                'identifier' => $spanAggregator->identifier(),
+                'spans' => $spanAggregator->filter($label),
+            ],
+            default => [
+                'identifier' => $spanAggregator->identifier(),
+                'spans' => $spanAggregator->getAll($label),
+            ],
         });
     }
 
-    public function exportTimeline(Timeline $timeline): void
+    /**
+     * @param ?callable(Snapshot): bool $filter
+     */
+    public function exportTimeline(Timeline $timeline, ?callable $filter = null): void
     {
-        $this->write($timeline);
+        $this->write(match (true) {
+            null === $filter => $timeline,
+            is_callable($filter) => [
+                'identifier' => $timeline->identifier(),
+                'snapshots' => $timeline->filter($filter),
+            ],
+        });
     }
 
     public function exportReport(Report $report): void
