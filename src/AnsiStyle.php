@@ -61,7 +61,7 @@ enum AnsiStyle: string
 
     public static function stylesheet(): string
     {
-        $lines = array_map(fn (self $style): string => '.'.$style->toCssClass().' {'.$style->toCssRule().'}', self::cases());
+        $lines = array_map(fn (self $style): string => '.'.$style->toCssClass().' {'.$style->toCssRule().'}'.'.hover\\:'.$style->toCssClass().':hover {'.$style->toCssRule().'}', self::cases());
         sort($lines);
 
         return implode("\n", $lines);
@@ -120,6 +120,10 @@ enum AnsiStyle: string
         };
     }
 
+    public function toCssHoverClass(): string
+    {
+        return 'hover:'.$this->toCssClass();
+    }
 
     /**
      * Return CSS rules as a string.
@@ -187,6 +191,14 @@ enum AnsiStyle: string
     public static function inlineClasses(self ...$styles): string
     {
         return implode(' ', array_map(fn (self $style) => $style->toCssClass(), $styles));
+    }
+
+    /**
+     * Merge multiple styles into a single CSS class string.
+     */
+    public static function inlineHoverClasses(self ...$styles): string
+    {
+        return implode(' ', array_map(fn (self $style) => $style->toCssHoverClass(), $styles));
     }
 
     /**

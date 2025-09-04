@@ -11,8 +11,12 @@ use ValueError;
 use function array_diff_key;
 use function array_keys;
 use function array_sum;
+use function header;
+use function headers_sent;
 use function implode;
 use function number_format;
+use function ob_get_clean;
+use function ob_start;
 use function preg_replace;
 use function strtolower;
 
@@ -265,5 +269,32 @@ final class Statistics implements JsonSerializable
         $humans = $this->toHuman();
         $propertyNormalized = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '_$0', $property));
         return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown statistics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
+    }
+
+    public function dump(): self
+    {
+        (new Renderer())->renderStatistics($this);
+
+        return $this;
+    }
+
+    public function dd(): never
+    {
+        ob_start();
+        self::dump();
+        $dumpOutput = ob_get_clean();
+
+        if (Environment::current()->isCli()) {
+            echo $dumpOutput;
+            exit(1);
+        }
+
+        if (!headers_sent()) {
+            header('HTTP/1.1 500 Internal Server Error');
+            header('Content-Type: text/html; charset=utf-8');
+        }
+
+        echo $dumpOutput;
+        exit(1);
     }
 }

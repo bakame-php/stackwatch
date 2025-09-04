@@ -6,12 +6,12 @@ namespace Bakame\Stackwatch;
 
 use Stringable;
 
+use function array_values;
 use function exec;
 use function implode;
 use function is_numeric;
 use function max;
 use function preg_match;
-use function sprintf;
 use function str_repeat;
 use function trim;
 
@@ -20,12 +20,30 @@ final class LeaderPrinter
     /** @var list<array{0:string, 1:string}> */
     private array $pairs = [];
 
+    /**
+     * @param list<AnsiStyle> $stylesKey
+     * @param list<AnsiStyle> $stylesValue
+     */
     public function __construct(
         private string $filler = '.',
         private int $padExtra = 1,
-        private ?AnsiStyle $colorKey = AnsiStyle::BrightGreen,
-        private ?AnsiStyle $colorValue = AnsiStyle::Cyan,
+        private array $stylesKey = [],
+        private array $stylesValue = [],
     ) {
+    }
+
+    public function setStylesKey(AnsiStyle ...$styles): self
+    {
+        $this->stylesKey = array_values($styles);
+
+        return $this;
+    }
+
+    public function setStylesValue(AnsiStyle ...$styles): self
+    {
+        $this->stylesValue = array_values($styles);
+
+        return $this;
     }
 
     public static function stylesheet(): string
@@ -33,6 +51,7 @@ final class LeaderPrinter
         return <<<CSS
 .bkm-sw-dotted-list {width: 100%; list-style: none; padding:0;}
 .bkm-sw-dotted-item {display: flex; padding: .3em .7em; align-items: center;}
+.bkm-sw-dotted-item:hover {background-color: #333;}
 .bkm-sw-dotted-item .bkm-sw-dots {flex: 1;border-bottom: 1px dotted #666;margin: 0 0.5em; color:transparent;}
 CSS;
     }
@@ -67,12 +86,9 @@ CSS;
         $terminalWitdh = self::detectTerminalWidth();
         foreach ($this->pairs as [$key, $value]) {
             $dotsCount = $terminalWitdh - mb_strlen($value) - mb_strlen($key) - (2 * $this->padExtra);
-            $lines[] = sprintf(
-                '%s %s %s',
-                null !== $this->colorKey ? Ansi::write($key, $this->colorKey) : $key,
-                str_repeat($this->filler, max(1, $dotsCount)),
-                null !== $this->colorValue ? Ansi::write($value, $this->colorValue) : $value,
-            );
+            $lines[] = Ansi::write($key, ...$this->stylesKey).' '
+                .str_repeat($this->filler, max(1, $dotsCount)).' '
+                .Ansi::write($value, ...$this->stylesValue);
         }
 
         return implode("\n", $lines);
@@ -86,9 +102,9 @@ CSS;
         $lines = ['<ul class="bkm-sw-dotted-list bkm-sw-ansi-bold">'];
         foreach ($this->pairs as [$key, $value]) {
             $lines[] = '<li class="bkm-sw-dotted-item">'
-                .(null !== $this->colorKey ? AnsiStyle::wrapHtml('class', $key, $this->colorKey) : $key)
+                .AnsiStyle::wrapHtml('class', $key, ...$this->stylesKey)
                 .'<span class="bkm-sw-dots">:</span>'
-                .(null !== $this->colorValue ? AnsiStyle::wrapHtml('class', $value, $this->colorValue) : $value)
+                .AnsiStyle::wrapHtml('class', $value, ...$this->stylesValue)
                 .'</li>';
         }
         $lines[] = '</ul>';

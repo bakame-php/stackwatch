@@ -53,12 +53,12 @@ final class Profile implements JsonSerializable
         );
     }
 
-    public static function isValidIterations(int $iterations): void
+    private static function isValidIterations(int $iterations): void
     {
         1 <= $iterations || throw new InvalidArgument('The iterations argument must be a positive integer greater than or equal to 1.');
     }
 
-    public static function isValidWarmup(int $warmup): void
+    private static function isValidWarmup(int $warmup): void
     {
         0 <= $warmup || throw new InvalidArgument('The warmup must be a positive integer or zero.');
     }

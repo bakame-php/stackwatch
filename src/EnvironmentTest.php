@@ -23,8 +23,8 @@ final class EnvironmentTest extends TestCase
             machine: 'x86_64',
             phpIntSize: 8,
             phpArchitecture: '64bit',
-            sapi: 'cli',
             phpVersion: '8.3.24',
+            sapi: 'cli',
             memoryLimit: 1024 * 1024 * 1024, // 1 GB
             rawMemoryLimit: '1G',
             cpuCores: 4,

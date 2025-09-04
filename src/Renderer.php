@@ -78,6 +78,21 @@ CSS;
         echo '</div>', PHP_EOL;
     }
 
+    public function renderStatistics(Statistics $statistics): void
+    {
+        if ($this->exporter->environment->isCli()) {
+            $this->exporter->exportStatistics($statistics);
+
+            return;
+        }
+
+        self::loadCss();
+
+        echo '<div class="bkm-sw-container" id="bkm-sw-span-'.random_int(0, 100_000).'">';
+        $this->exporter->exportStatistics($statistics);
+        echo '</div>', PHP_EOL;
+    }
+
     public function renderSpan(Result|Span $span): void
     {
         if ($this->exporter->environment->isCli()) {
@@ -190,20 +205,20 @@ CSS;
 
         $header[] = '<p class="bkm-sw-header">';
         if (null !== $callLocation) {
-            $header[] = AnsiStyle::wrapHtml('class', 'Path: ', AnsiStyle::BrightGreen);
-            $header[] = Ide::fromEnv()->link($callLocation, null, AnsiStyle::BrightCyan, AnsiStyle::Bold);
+            $header[] = AnsiStyle::wrapHtml('class', 'Path: ', AnsiStyle::BrightGreen, AnsiStyle::Bold);
+            $header[] = $this->exporter->formatPath($callLocation, AnsiStyle::BrightCyan, AnsiStyle::Bold);
             $header[] = '<br>';
         }
 
         if (null !== $profile) {
-            $header[] = AnsiStyle::wrapHtml('class', 'Iterations: ', AnsiStyle::BrightGreen);
-            $header[] = AnsiStyle::wrapHtml('class', $profile->iterations, AnsiStyle::Yellow);
+            $header[] = AnsiStyle::wrapHtml('class', 'Iterations: ', AnsiStyle::BrightGreen, AnsiStyle::Bold);
+            $header[] = AnsiStyle::wrapHtml('class', $profile->iterations, AnsiStyle::Yellow, AnsiStyle::Bold);
             $header[] = AnsiStyle::wrapHtml('class', '; ');
-            $header[] = AnsiStyle::wrapHtml('class', 'Warmup: ', AnsiStyle::BrightGreen);
-            $header[] = AnsiStyle::wrapHtml('class', $profile->warmup, AnsiStyle::Yellow);
+            $header[] = AnsiStyle::wrapHtml('class', 'Warmup: ', AnsiStyle::BrightGreen, AnsiStyle::Bold);
+            $header[] = AnsiStyle::wrapHtml('class', $profile->warmup, AnsiStyle::Yellow, AnsiStyle::Bold);
             $header[] = AnsiStyle::wrapHtml('class', '; ');
-            $header[] = AnsiStyle::wrapHtml('class', 'Type: ', AnsiStyle::BrightGreen);
-            $header[] = AnsiStyle::wrapHtml('class', null !== $profile->type ? ucfirst($profile->type->value).' only' : 'Detailed', AnsiStyle::Yellow);
+            $header[] = AnsiStyle::wrapHtml('class', 'Type: ', AnsiStyle::BrightGreen, AnsiStyle::Bold);
+            $header[] = AnsiStyle::wrapHtml('class', null !== $profile->type ? ucfirst($profile->type->value).' only' : 'Detailed', AnsiStyle::Yellow, AnsiStyle::Bold);
             $header[] = AnsiStyle::wrapHtml('class', '; ');
         }
 

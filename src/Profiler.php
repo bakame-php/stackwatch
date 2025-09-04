@@ -6,6 +6,7 @@ namespace Bakame\Stackwatch;
 
 use Throwable;
 
+use function gc_collect_cycles;
 use function header;
 use function headers_sent;
 use function ob_get_clean;

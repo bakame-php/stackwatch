@@ -53,13 +53,27 @@ final class ViewExporter implements Exporter
         echo $tableRenderer->renderHtml();
     }
 
+    public function formatPath(CallLocation $location, AnsiStyle ...$styles): string
+    {
+        $ide = Ide::fromEnv();
+        $path = $ide->path($location);
+        if ($this->environment->isCli()) {
+            return $path;
+        }
+
+        return '<a class="'.AnsiStyle::inlineClasses(...$styles).' hover:bkm-sw-ansi-bright-white" href="'.$ide->uri($location).'">'.$path.'</a>';
+    }
+
     /**
      * @param array<string, string> $data
      */
     private function exportLeaderPrinter(array $data): void
     {
         $this->export(
-            (new LeaderPrinter())->setPairs($this->translator->translateArrayKeys($data))
+            (new LeaderPrinter())
+                ->setStylesKey(AnsiStyle::BrightGreen, AnsiStyle::Bold)
+                ->setStylesValue(AnsiStyle::BrightCyan, AnsiStyle::Bold)
+                ->setPairs($this->translator->translateArrayKeys($data))
         );
     }
 
@@ -68,7 +82,7 @@ final class ViewExporter implements Exporter
         $data = $snapshot->toHuman();
         $location = new CallLocation($snapshot->originPath, $snapshot->originLine);
         unset($data['origin_path'], $data['origin_line']);
-        $data['call_location'] = Ide::fromEnv()->link($location, null, AnsiStyle::BrightCyan, AnsiStyle::Bold);
+        $data['call_location'] = $this->formatPath($location, AnsiStyle::BrightCyan, AnsiStyle::Bold);
 
         $this->exportLeaderPrinter($data);
     }
@@ -94,8 +108,8 @@ final class ViewExporter implements Exporter
         $ide = Ide::fromEnv();
         $this->exportLeaderPrinter([
             'label' => $source->label,
-            'call_location_start' => $ide->link($source->range->start, null, AnsiStyle::BrightCyan, AnsiStyle::Bold),
-            'call_location_end' => $ide->link($source->range->end, null, AnsiStyle::BrightCyan, AnsiStyle::Bold),
+            'call_location_start' => $this->formatPath($source->range->start, AnsiStyle::BrightCyan, AnsiStyle::Bold),
+            'call_location_end' => $this->formatPath($source->range->end, AnsiStyle::BrightCyan, AnsiStyle::Bold),
         ]);
         $this->exportMetrics($source->metrics);
     }
@@ -217,7 +231,7 @@ final class ViewExporter implements Exporter
             $data = $snapshot->toHuman();
             $tableRenderer->addRow([
                 $data['label'],
-                Ide::fromEnv()->link(new CallLocation($data['origin_path'], (int) $data['origin_line']), 'UNKNOWN_PROJECT', AnsiStyle::Bold, AnsiStyle::BrightCyan),
+                $this->formatPath(new CallLocation($data['origin_path'], (int) $data['origin_line']), AnsiStyle::Bold, AnsiStyle::BrightCyan),
                 $snapshot->timestamp->format('U.u'),
                 DurationUnit::format($snapshot->cpuUserTime + $snapshot->cpuSystemTime, 3),
                 $data['memory_usage'],

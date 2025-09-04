@@ -11,12 +11,16 @@ use function defined;
 use function filter_var;
 use function getenv;
 use function gethostname;
+use function header;
+use function headers_sent;
 use function implode;
 use function in_array;
 use function ini_get;
 use function is_int;
 use function is_readable;
 use function max;
+use function ob_get_clean;
+use function ob_start;
 use function php_sapi_name;
 use function php_uname;
 use function phpversion;
@@ -296,5 +300,32 @@ final class Environment implements JsonSerializable
     public function jsonSerialize(): array
     {
         return $this->toArray();
+    }
+
+    public function dump(): self
+    {
+        (new Renderer())->renderEnvironment($this);
+
+        return $this;
+    }
+
+    public function dd(): never
+    {
+        ob_start();
+        self::dump();
+        $dumpOutput = ob_get_clean();
+
+        if (Environment::current()->isCli()) {
+            echo $dumpOutput;
+            exit(1);
+        }
+
+        if (!headers_sent()) {
+            header('HTTP/1.1 500 Internal Server Error');
+            header('Content-Type: text/html; charset=utf-8');
+        }
+
+        echo $dumpOutput;
+        exit(1);
     }
 }
