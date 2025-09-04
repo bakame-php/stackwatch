@@ -4,6 +4,7 @@ version:
             Installation: '/1.0/'
         Documentation:
             Profiler: '/1.0/profiler/'
+            Span Aggregator: '/1.0/span-aggregator/'
             Timeline: '/1.0/timeline/'
             CLI command: '/1.0/command/'
             Exporters: '/1.0/exporters/'

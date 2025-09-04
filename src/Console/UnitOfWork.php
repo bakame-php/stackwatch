@@ -360,7 +360,7 @@ final class UnitOfWork implements JsonSerializable
         /** @var string $template */
         static $template = 'Target: {name}; Path: {file}; Iterations: {iterations}; Warmup: {warmup};';
 
-        $this->template ??= null === $this->profile->type ? '(Full) '.$template : '('.ucfirst($this->profile->type->value).') '.$template;
+        $this->template ??= null === $this->profile->type ? $template.' Type: <fg=yellow>Full</>;' : $template.' Type: <fg=yellow>'.ucfirst($this->profile->type->value).'</>;';
 
         return $this->template;
     }

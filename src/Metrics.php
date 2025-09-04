@@ -14,9 +14,13 @@ use function array_keys;
 use function array_map;
 use function array_shift;
 use function count;
+use function header;
+use function headers_sent;
 use function implode;
 use function intdiv;
 use function iterator_to_array;
+use function ob_get_clean;
+use function ob_start;
 use function preg_replace;
 use function strtolower;
 
@@ -144,7 +148,7 @@ final class Metrics implements JsonSerializable
         }
     }
 
-    public static function sum(Timeline|Profiler|Result|Span|Metrics ...$items): self
+    public static function sum(Timeline|SpanAggregator|Result|Span|Metrics ...$items): self
     {
         $sum = self::none();
         foreach (self::yieldFrom(...$items) as $metric) {
@@ -154,19 +158,19 @@ final class Metrics implements JsonSerializable
         return $sum;
     }
 
-    public static function aggregate(AggregatorMode $mode, Timeline|Profiler|Result|Span|Metrics ...$metrics): self
+    public static function aggregate(AggregatorType $type, Timeline|SpanAggregator|Result|Span|Metrics ...$metrics): self
     {
-        return match ($mode) {
-            AggregatorMode::Average => self::average(...$metrics),
-            AggregatorMode::Median => self::median(...$metrics),
-            AggregatorMode::Sum => self::sum(...$metrics),
-            AggregatorMode::Maximum => self::max(...$metrics),
-            AggregatorMode::Minimum => self::min(...$metrics),
-            AggregatorMode::Range => self::range(...$metrics),
+        return match ($type) {
+            AggregatorType::Average => self::average(...$metrics),
+            AggregatorType::Median => self::median(...$metrics),
+            AggregatorType::Sum => self::sum(...$metrics),
+            AggregatorType::Maximum => self::max(...$metrics),
+            AggregatorType::Minimum => self::min(...$metrics),
+            AggregatorType::Range => self::range(...$metrics),
         };
     }
 
-    public static function median(Timeline|Profiler|Result|Span|Metrics ...$metrics): self
+    public static function median(Timeline|SpanAggregator|Result|Span|Metrics ...$metrics): self
     {
         /** @var array<Metrics> $all */
         $all = iterator_to_array(self::yieldFrom(...$metrics));
@@ -213,7 +217,7 @@ final class Metrics implements JsonSerializable
         );
     }
 
-    public static function average(Timeline|Profiler|Result|Span|Metrics ...$metrics): self
+    public static function average(Timeline|SpanAggregator|Result|Span|Metrics ...$metrics): self
     {
         $cpuTime = 0.0;
         $executionTime = 0.0;
@@ -257,7 +261,7 @@ final class Metrics implements JsonSerializable
         );
     }
 
-    public static function min(Timeline|Profiler|Result|Span|Metrics ...$metrics): self
+    public static function min(Timeline|SpanAggregator|Result|Span|Metrics ...$metrics): self
     {
         if ([] === $metrics) {
             return self::none();
@@ -306,7 +310,7 @@ final class Metrics implements JsonSerializable
         );
     }
 
-    public static function max(Timeline|Profiler|Result|Span|Metrics ...$metrics): self
+    public static function max(Timeline|SpanAggregator|Result|Span|Metrics ...$metrics): self
     {
         if ([] === $metrics) {
             return self::none();
@@ -355,7 +359,7 @@ final class Metrics implements JsonSerializable
         );
     }
 
-    public static function range(Timeline|Profiler|Result|Span|Metrics ...$metrics): self
+    public static function range(Timeline|SpanAggregator|Result|Span|Metrics ...$metrics): self
     {
         $min = self::min(...$metrics);
         $max = self::max(...$metrics);
@@ -381,7 +385,7 @@ final class Metrics implements JsonSerializable
      * - `Metrics` — yields the object itself.
      * - `Span` — yields the `metrics` property.
      * - `Result` — yields the `metrics` of its `span`.
-     * - `Profiler` — yields the `metrics` of each contained `Span`.
+     * - `SpanAggregator` — yields the `metrics` of each contained `Span`.
      * - `Timeline` — yields the `metrics` of each `Span` returned by `deltas()`.
      *
      * The returned generator is **lazy**, meaning no arrays are built internally,
@@ -389,14 +393,14 @@ final class Metrics implements JsonSerializable
      *
      * @return Generator<Metrics>
      */
-    public static function yieldFrom(Timeline|Profiler|Result|Span|Metrics ...$metrics): Generator
+    public static function yieldFrom(Timeline|SpanAggregator|Result|Span|Metrics ...$metrics): Generator
     {
         foreach ($metrics as $metric) {
             yield from match ($metric::class) {
                 Metrics::class  => [$metric],
                 Span::class => [$metric->metrics],
                 Result::class => [$metric->span->metrics],
-                Profiler::class => array_map(fn (Span $span) => $span->metrics, iterator_to_array($metric, false)),
+                SpanAggregator::class => array_map(fn (Span $span) => $span->metrics, iterator_to_array($metric, false)),
                 Timeline::class => array_map(fn (Span $span) => $span->metrics, iterator_to_array($metric->deltas(), false)),
             };
         }
@@ -477,5 +481,32 @@ final class Metrics implements JsonSerializable
         $propertyNormalized = strtolower((string) preg_replace('/(?<!^)[A-Z]/', '_$0', $property));
 
         return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown metrics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
+    }
+
+    public function dump(): self
+    {
+        (new Renderer())->renderMetrics($this);
+
+        return $this;
+    }
+
+    public function dd(): never
+    {
+        ob_start();
+        self::dump();
+        $dumpOutput = ob_get_clean();
+
+        if (Environment::current()->isCli()) {
+            echo $dumpOutput;
+            exit(1);
+        }
+
+        if (!headers_sent()) {
+            header('HTTP/1.1 500 Internal Server Error');
+            header('Content-Type: text/html; charset=utf-8');
+        }
+
+        echo $dumpOutput;
+        exit(1);
     }
 }

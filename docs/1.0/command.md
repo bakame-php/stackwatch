@@ -24,14 +24,16 @@ declare(strict_types=1);
 
 namespace Foobar\Baz;
 
+use Bakame\Stackwatch\AggregatorType;
 use Bakame\Stackwatch\Profile;
+
 use function random_int;
 use function usleep;
 
 require 'vendor/autoload.php';
 
 trait TimerTrait {
-    #[Profile(type: Profile::SUMMARY, iterations: 10)]
+    #[Profile(type: AggregatorType::Average, iterations: 10)]
     private function test() : int {
         usleep(100);
 
@@ -46,7 +48,7 @@ enum Foobar
     case Foobar;
 }
 
-#[Profile(type: Profile::DETAILED, iterations: 20, warmup: 2)]
+#[Profile(iterations: 20, warmup: 2)]
 function test() : int {
     usleep(100);
 
@@ -61,30 +63,41 @@ php vendor/bin/stackwatch --path=/path/profiler/test.php
 It will output the following:
 
 ```bash
-stackwatch v0.13.0 (Marrakesh) by Ignace Nyamagana Butera and contributors.
+stackwatch v0.14.0 (Nouakchott) by Ignace Nyamagana Butera and contributors.
 
-Runtime: PHP 8.3.24 OS: Linux Memory Limit: 64M
+Runtime: PHP 8.3.7 OS: Linux Memory Limit: 64M
 
-(Average) Target: Foobar\Baz\Foobar::test; Path: /path/to/profiling/code.php; Iterations: 3; Warmup: 0;
+............................
 
-CPU Time ............................................................. 19.000 µs
-Execution Time ...................................................... 144.611 µs
-Memory Usage ............................................................ 1.0 KB
-Real Memory Usage ........................................................ 0.0 B
-Peak Memory Usage ........................................................ 0.0 B
-Real Peak Memory Usage ................................................... 0.0 B
+Target: Foobar\Baz\Foobar::test; Path: /path/profiler/test.php; Iterations: 10; Warmup: 0; Type: Average;
 
-(Detailed) Target: Foobar\Baz\test; Path: /path/to/test.php; Iterations: 20; Warmup: 2:
-+------------------------+---------------+------------+------------+--------------+------------+-----------+------------+------------+----------+-----------+
-| Metric                 | Nb Iterations | Min Value  | Max Value  | Median Value | Sum        | Range     | Average    | Variance   | Std Dev  | Coef Var  |
-+------------------------+---------------+------------+------------+--------------+------------+-----------+------------+------------+----------+-----------+
-| CPU Time               | 20            | 9.000 µs   | 20.000 µs  | 12.000 µs    | 240.000 µs | 11.000 µs | 12.000 µs  | 6.300 μs²  | 2.510 µs | 20.9165 % |
-| Execution Time         | 20            | 135.166 µs | 169.833 µs | 149.979 µs   | 2.980 ms   | 34.667 µs | 149.021 µs | 65.499 μs² | 8.093 µs | 5.4309 %  |
-| Memory Usage           | 20            | 1.031 KB   | 1.031 KB   | 1.031 KB     | 20.625 KB  | 0.000 B   | 1.031 KB   | 0.000 B²   | 0.000 B  | 0.0000 %  |
-| Peak Memory Usage      | 20            | 0.000 B    | 0.000 B    | 0.000 B      | 0.000 B    | 0.000 B   | 0.000 B    | 0.000 B²   | 0.000 B  | 0.0000 %  |
-| Real Memory Usage      | 20            | 0.000 B    | 0.000 B    | 0.000 B      | 0.000 B    | 0.000 B   | 0.000 B    | 0.000 B²   | 0.000 B  | 0.0000 %  |
-| Real Peak Memory Usage | 20            | 0.000 B    | 0.000 B    | 0.000 B      | 0.000 B    | 0.000 B   | 0.000 B    | 0.000 B²   | 0.000 B  | 0.0000 %  |
-+------------------------+---------------+------------+------------+--------------+------------+-----------+------------+------------+----------+-----------+
+CPU Time ............................................................. 20.100 µs
+Execution Time ...................................................... 140.025 µs
+Memory Usage ............................................................ 3.4 MB
+Memory Usage Growth .................................................... 568.0 B
+Real Memory Usage ....................................................... 4.0 MB
+Real Memory Usage Growth ................................................. 0.0 B
+Peak Memory Usage ....................................................... 3.5 MB
+Peak Memory Usage Growth ................................................. 0.0 B
+Real Peak Memory Usage .................................................. 4.0 MB
+Real Peak Memory Usage Growth ............................................ 0.0 B
+
+Target: Foobar\Baz\test; Path: /path/profiler/test.php; Iterations: 20; Warmup: 2; Type: Full;
+
++-------------------------------+------------+------------+------------+----------+------------+------------+--------------+-----------------+-----------+----------+
+| Metrics                       | iterations | Min Value  | Max Value  | Range    | Sum        | Average    | Median Value | Variance        | Std Dev   | Coef Var |
++-------------------------------+------------+------------+------------+----------+------------+------------+--------------+-----------------+-----------+----------+
+|CPU Time                       |          20|11.000 µs   |13.000 µs   |2.000 µs  |238.000 µs  |11.900 µs   |12.000 µs     |390,000.000 ns²  |624.500 n  |5.2479 %  |
+|Execution Time                 |          20|136.625 µs  |139.792 µs  |3.167 µs  |2.751 ms    |137.525 µs  |137.334 µs    |695,881.528 ns²  |834.195 n  |0.6066 %  |
+|Memory Usage                   |          20|3.392 MB    |3.397 MB    |4.836 KB  |67.889 MB   |3.394 MB    |3.394 MB      |2.008 KB²        |1.417 KB   |0.0408 %  |
+|Memory Usage Growth            |          20|568.000 B   |568.000 B   |0.000 B   |11.094 KB   |568.000 B   |568.000 B     |0.000 B²         |0.000 B    |0.0000 %  |
+|Real Memory Usage              |          20|4.000 MB    |4.000 MB    |0.000 B   |80.000 MB   |4.000 MB    |4.000 MB      |0.000 B²         |0.000 B    |0.0000 %  |
+|Real Memory Usage Growth       |          20|0.000 B     |0.000 B     |0.000 B   |0.000 B     |0.000 B     |0.000 B       |0.000 B²         |0.000 B    |0.0000 %  |
+|Peak Memory Usage              |          20|3.512 MB    |3.512 MB    |0.000 B   |70.242 MB   |3.512 MB    |3.512 MB      |0.000 B²         |0.000 B    |0.0000 %  |
+|Peak Memory Usage Growth       |          20|0.000 B     |0.000 B     |0.000 B   |0.000 B     |0.000 B     |0.000 B       |0.000 B²         |0.000 B    |0.0000 %  |
+|Real Peak Memory Usage         |          20|4.000 MB    |4.000 MB    |0.000 B   |80.000 MB   |4.000 MB    |4.000 MB      |0.000 B²         |0.000 B    |0.0000 %  |
+|Real Peak Memory Usage Growth  |          20|4.000 MB    |4.000 MB    |0.000 B   |80.000 MB   |4.000 MB    |4.000 MB      |0.000 B²         |0.000 B    |0.0000 %  |
++-------------------------------+------------+------------+------------+----------+------------+------------+--------------+-----------------+-----------+----------+
 ```
 
 - the leader list shows the average metrics for the `Foobar::test` method.
@@ -114,19 +127,26 @@ Functions or methods <strong>that declare one or more arguments will not be prof
 
 ## Attribute properties
 
-- `type`: (`string`) Level of detail in the profiling output, (default to: `Profile::SUMMARY` ).
-    - `Profile::SUMMARY`: Outputs core statistics such as average execution time.
-    - `Profile::DETAILED`: Tags enable grouping and filtering in profiling reports, helping users focus on specific categories or subsets of profiled code.
-- `iterations`: (`int`) Controls how many times the target will be executed during profiling to ensure statistical significance. Larger values provide more accurate metrics but increase profiling time. **Must be > 0** (default to `3`)
-- `warmup`: Allows the profiler to run the target code several times before recording metrics, which helps mitigate effects like JIT compilation or caching impacting the results. **Must be >= 0** (default to `0`)
-- `tags`: Tags enable grouping and filtering in profiling reports, helping users focus on specific categories or subsets of profiled code.  **Must be a list of non-emptu string** (default to an empty array)
+The attribute accept the same arguments as `Profiler::metrics()`:
+
+- the number of **iterations**,
+- the number of **warm-up** runs to skip,
+- and an optional aggregation type (`AggregatorType`).
+
+If no aggregation type is specified, the output will include the full profiling details, similar to what `Profiler::report()` returns.
+
+It optionally also accepts an array of **tags** to enable grouping and filtering in profiling reports, helping users focus on specific categories or subsets of profiled code.  
+ **Must be a list of non-emptu string** (default to an empty array)
 
 ## Attribute usage
 
 **On a function**
 
 ```php
-#[Profile(iterations: 500, type: Profile::SUMMARY)]
+use Bakame\Stackwatch\AggregatorType;
+use Bakame\Stackwatch\Profile;
+
+#[Profile(iterations: 500, type: AggregatorType::Median)]
 function calculateSomething(): void
 {
     // ...
@@ -136,9 +156,11 @@ function calculateSomething(): void
 **On a method**
 
 ```php
+use Bakame\Stackwatch\Profile;
+
 class Example 
 {
-    #[Profile(iterations: 1000, warmup: 50, type: Profile::DETAILED, tags: ['api'])]
+    #[Profile(iterations: 1000, warmup: 50, tags: ['api'])]
     protected function fetchData(): array
     {
         // ...
@@ -149,7 +171,10 @@ class Example
 **On a class**
 
 ```php
-#[Profile(iterations: 100, type: Profile::SUMMARY)]
+use Bakame\Stackwatch\AggregatorType;
+use Bakame\Stackwatch\Profile;
+
+#[Profile(iterations: 100, type: AggregatorType::Median)]
 class MyService 
 {
     public function methodOne() 
@@ -157,7 +182,7 @@ class MyService
         /* profiled with class-level config */
     }
 
-    #[Profile(iterations: 50, type: Profile::DETAILED)]
+    #[Profile(iterations: 50)]
     private function methodTwo()
     { 
         /* profiled using the method-level attribute */
@@ -194,7 +219,7 @@ Apart from the `path` argument, all the other command line options **are optiona
 
 **`-p, --path=PATH`**  
 Path to scan for PHP files to profile. **Required.** The path can be a file or a directory.
-If it is a directory it will be recursively scan.
+If it is a directory, it will be recursively scan.
 
 **`-i, --info`**  
 Show additional system and environment information.

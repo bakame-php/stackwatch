@@ -29,7 +29,7 @@ final class Profile implements JsonSerializable
      * @param array<string> $tags
      */
     public function __construct(
-        public readonly ?AggregatorMode $type = null,
+        public readonly ?AggregatorType $type = null,
         public readonly int $iterations = 3,
         public readonly int $warmup = 0,
         array $tags = [],
@@ -46,7 +46,7 @@ final class Profile implements JsonSerializable
     public static function fromArray(array $data): self
     {
         return new self(
-            type: null !== $data['type'] ? AggregatorMode::from($data['type']) : null,
+            type: null !== $data['type'] ? AggregatorType::from($data['type']) : null,
             iterations: $data['iterations'],
             warmup: $data['warmup'],
             tags: $data['tags']

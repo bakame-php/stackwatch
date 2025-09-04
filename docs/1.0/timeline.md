@@ -179,7 +179,7 @@ $duration = $timeline->take('end')->metrics->executionTime; // returns 1271000
 echo DurationUnit::format($duration); //returns "1.271 ms"
 ````
 
-#### Identifier
+## Identifier
 
 Every `Timeline` instance has a unique identifier accessible via the `identifier` method.
 
@@ -199,7 +199,41 @@ If not provided, a generated unique name will be assigned to the instance.
 The identifier can be used for logging, debugging or for correlation when
 multiple profilers and/or timelines are running in parallel.
 
-#### Logging
+## Filtering
+
+The `Timeline` class provides a `filter()` method to extract a subset of its `Snapshot` objects.
+
+- The method expects a **callback** that receives a `Snapshot` instance.
+- The callback must return `true` for a Snapshot to be included in the results.
+- The method returns a list of matching Snapshots.
+
+### Example
+
+```php
+use Bakame\Stackwatch\MemoryUnit;
+use Bakame\Stackwatch\Timeline;
+use Bakame\Stackwatch\Snapshot;
+
+$timeline = Timeline::start('init', 'timeline');
+dump(fopen('php://stdout', 'wb'));
+$timeline->capture('after_dump');
+$result = $db->query("SELECT ...");
+$timeline->capture('after_query');
+// another part of the codebase
+$timeline->capture('the_end');
+$timeline->complete();
+
+// Filter only snapshots taken before line 23 of /path/to/my/script.php
+// (specifying the label is optional)
+$snapshots = $timeline->filter(
+    fn (Snapshot $snapshot): bool => 
+        $snapshot->originPath = '/path/to/my/script/php' &&
+        $snapshot->originLine < 23);
+```
+
+<p class="message-info">Using <code>filter()</code> lets you narrow down the <code>Timeline</code> to the <code>Snapshots</code> that are most relevant to your analysis.</p>
+
+## Logging
 
 You can optionally log profiling activity using any logger that
 implements `Psr\Log\LoggerInterface`.
@@ -224,3 +258,63 @@ $timeline->take('render', 'server_cycle');
 <div class="message-info">
 When logging the `Timeline` identifier is added to the log to ease identifying which instance is generating the log entries.
 </div>
+
+## Dumping Aggregates
+
+The `Timeline` provides `dump()` and `dd()` methods to inspect its aggregated `Snapshots` objects. These methods work
+similarly to the ones in `Profiler` but focus on aggregated `Span`s instead of raw profiling metrics.
+
+- `dump()`: Outputs the aggregated `Snapshots` but allows the program to continue running.
+- `dd()`: Outputs the aggregated `Snapshots` and immediately stops execution.
+
+Both methods automatically detect the environment:
+
+- In the **console**, aggregates are printed in a human-readable text format.
+- In the **browser**, aggregates are displayed as an HTML table or list.
+
+### Basic Usage
+
+```php
+use Bakame\Stackwatch\Timeline;
+
+$timeline = Timeline::start('init', 'timeline');
+dump(fopen('php://stdout', 'wb'));
+$timeline->capture('after_dump');
+// another part of the codebase
+$timeline->capture('after_pf_dump');
+// another part of the codebase
+$timeline->capture('the_end');
+$timeline->complete();
+
+// Dump aggregated snapshots without stopping execution
+$timeline->dump();
+
+// Dump aggregated snapshots and halt execution
+$timeline->dd();
+```
+
+### Filtering Aggregates
+
+You can optionally filter which `Snapshots` objects to inspect using a **callback**:
+
+```php
+use Bakame\Stackwatch\MemoryUnit;
+use Bakame\Stackwatch\Timeline;
+use Bakame\Stackwatch\Snapshot;
+
+$timeline = Timeline::start('init', 'timeline');
+dump(fopen('php://stdout', 'wb'));
+$timeline->capture('after_dump');
+$result = $db->query("SELECT ...");
+$timeline->capture('after_query');
+// another part of the codebase
+$timeline->capture('the_end');
+$timeline->complete();
+
+ // you will only see the Snapshot located before the 23rd line of the `/path/to/my/script/php`
+ // if it is where the snapshot was taken
+ // specifying the label is not mandatory
+$timeline->dd(fn (Snapshot $snapshot, string $label) => $snapshot->originPath = '/path/to/my/script/php' && $snapshot->originLine < 23);
+```
+
+<p class="message-info">Using <code>callbacks</code> allows you to focus on specific subsets of <strong>Snapshot</strong> when dumping or debugging.</p>

@@ -19,6 +19,10 @@ use function array_map;
 use function array_search;
 use function array_values;
 use function count;
+use function header;
+use function headers_sent;
+use function ob_get_clean;
+use function ob_start;
 use function trim;
 
 /**
@@ -293,6 +297,43 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
         $this->capture($label);
 
         return $this->summarize($spanLabel);
+    }
+
+    /**
+     * @param callable(Snapshot): bool $filter
+     *
+     * @return list<Snapshot>
+     */
+    public function filter(callable $filter): array
+    {
+        return array_values(array_filter($this->snapshots, $filter));
+    }
+
+    public function dump(): self
+    {
+        (new Renderer())->renderTimeline($this);
+
+        return $this;
+    }
+
+    public function dd(): never
+    {
+        ob_start();
+        self::dump();
+        $dumpOutput = ob_get_clean();
+
+        if (Environment::current()->isCli()) {
+            echo $dumpOutput;
+            exit(1);
+        }
+
+        if (!headers_sent()) {
+            header('HTTP/1.1 500 Internal Server Error');
+            header('Content-Type: text/html; charset=utf-8');
+        }
+
+        echo $dumpOutput;
+        exit(1);
     }
 
     /**

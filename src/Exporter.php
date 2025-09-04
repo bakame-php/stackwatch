@@ -2,24 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch\Console;
+namespace Bakame\Stackwatch;
 
-use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\Exporter\Exporter as BasicExporter;
-use Bakame\Stackwatch\Metrics;
-use Bakame\Stackwatch\Report;
-use Bakame\Stackwatch\Snapshot;
-use Bakame\Stackwatch\Statistics;
-
-interface Exporter extends BasicExporter
+interface Exporter
 {
     public function exportMetrics(Metrics $metrics): void;
-
     public function exportReport(Report $report): void;
-
     public function exportEnvironment(Environment $environment): void;
-
     public function exportStatistics(Statistics $statistics): void;
-
     public function exportSnapshot(Snapshot $snapshot): void;
+    public function exportSpanAggregator(SpanAggregator $spanAggregator, callable|string|null $label = null): void;
+    public function exportTimeline(Timeline $timeline): void;
 }

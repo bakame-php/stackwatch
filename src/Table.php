@@ -203,7 +203,7 @@ STYLE;
     {
         $html = ['<table class="bkm-sw-table">'];
         if (null !== $this->title) {
-            $html[] = '<caption style="caption-side:top; text-align:center;'.AnsiStyle::inlineRules(...$this->titleStyle).'">'.$this->title.'</caption>';
+            $html[] = '<caption style="caption-side:top; text-align:center; padding:1em;'.AnsiStyle::inlineRules(...$this->titleStyle).'">'.$this->title.'</caption>';
         }
 
         if ([] !== $this->headers) {

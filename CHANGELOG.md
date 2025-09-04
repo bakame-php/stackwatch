@@ -6,12 +6,14 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Added
 
+- Added `ViewExporter` and `Renderer` to allow viewing the log in browser or in the CLI
+- Added `dump()` and `dd()` methods to `Profiler`, `Timeline`, `SpanAggregator`, `Snapshot`, `Metrics`, `Report`
 - Added `Metrics::sum`, `Metrics::range`,`Metrics::minimum`,`Metrics::maximun`,`Metrics::median`, `Metrics::aggregate`
-- Adding the `AggregateMode` Enum to improve `Profiler::metrics`, the `Profile` Attribute and the `Metrics` usage.
+- Adding the `AggregationType` Enum to improve `Profiler::metrics`, the `Profile` Attribute and the `Metrics` usage.
 - **BC BREAK:** `Summary` is renamed `Span`.
 - `CallLocation` class to allow recording where the package `Snapshot` was called from [#8](https://github.com/bakame-php/stackwatch/pull/8)
 - `CallRange` class to allow manipulating location range within the `Summary` class.
-- `Environment::forHuman` method
+- `Environment::toHuman` and `Environment::human` methods
 - `Metrics::yieldFrom` to lazily yield Metrics from other objects (`Report`, `Timeline`, `Profiler`, `Span` and `Metrics`)
 - Added `withers` method on the `Input`
 - Added `Input::toArguments` to ease constructing the CLI command out of the `Input` instance.
@@ -26,9 +28,10 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - Added a `Translator` class to improve human-readable key translation.
 - Added `Profiler::dump` and its global function counterpart `pf_dump` to profile, and dump a human-readable result into the output stream.
 - Added `Profiler::dd` and its global function counterpart `pf_dd` to profile, dump a human-readable result into the output stream and die.
-- Added `forHuman()` method to return a human-readable version of `toArray`
+- Added `toHuman()` method to return a human-readable version of `toArray`
 - Added `human()` method to return the human-redable version of a single property.
 - Added Snapshot relation method `compareTo` and its aliases `isBefore*` `isAfter*` and `isAtSameTime` using the `Snapshot::hrtime` property
+- **BC BREAK:** `Profiler` class is split into two classes `Profiler` and `SpanAggregator`
 
 ### Fixed
 

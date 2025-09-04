@@ -2,19 +2,8 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch\Exporter;
+namespace Bakame\Stackwatch;
 
-use Bakame\Stackwatch\Console\Exporter;
-use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\Metrics;
-use Bakame\Stackwatch\Profiler;
-use Bakame\Stackwatch\Report;
-use Bakame\Stackwatch\Result;
-use Bakame\Stackwatch\Snapshot;
-use Bakame\Stackwatch\Span;
-use Bakame\Stackwatch\Statistics;
-use Bakame\Stackwatch\Timeline;
-use Bakame\Stackwatch\Warning;
 use ErrorException;
 use JsonException;
 use RuntimeException;
@@ -117,7 +106,7 @@ final class JsonExporter implements Exporter
         $this->write($metrics);
     }
 
-    public function exportSpan(Result|Span $span, Timeline|Profiler|null $parent = null): void
+    public function exportSpan(Result|Span $span, Timeline|SpanAggregator|null $parent = null): void
     {
         if ($span instanceof Result) {
             $span = $span->span;
@@ -126,11 +115,13 @@ final class JsonExporter implements Exporter
         $this->write($span);
     }
 
-    public function exportProfiler(Profiler $profiler, ?string $label = null): void
+    public function exportSpanAggregator(SpanAggregator $spanAggregator, callable|string|null $label = null): void
     {
-        $input = null === $label ? $profiler : $profiler->getAll($label);
-
-        $this->write($input);
+        $this->write(match (true) {
+            null === $label => $spanAggregator,
+            is_callable($label) => $spanAggregator->filter($label),
+            default => $spanAggregator->getAll($label),
+        });
     }
 
     public function exportTimeline(Timeline $timeline): void

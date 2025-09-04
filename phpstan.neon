@@ -7,7 +7,6 @@ parameters:
     level: max
     paths:
         - src
-        - benchmark
     ignoreErrors:
         - identifier: offsetAccess.notFound
     reportUnmatchedIgnoredErrors: true

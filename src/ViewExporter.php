@@ -2,87 +2,70 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch\Exporter;
+namespace Bakame\Stackwatch;
 
-use Bakame\Stackwatch\AnsiStyle;
-use Bakame\Stackwatch\DurationUnit;
-use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\LeaderPrinter;
-use Bakame\Stackwatch\Metrics;
-use Bakame\Stackwatch\Report;
-use Bakame\Stackwatch\Result;
-use Bakame\Stackwatch\Snapshot;
-use Bakame\Stackwatch\Span;
-use Bakame\Stackwatch\Statistics;
-use Bakame\Stackwatch\Table;
-use Bakame\Stackwatch\Timeline;
-use Bakame\Stackwatch\Translator;
 use Symfony\Component\Console\Output\OutputInterface;
 
+use function array_key_first;
+use function array_key_last;
 use function array_keys;
 use function array_map;
 use function array_merge;
 use function array_values;
-use function fwrite;
+use function is_callable;
+use function iterator_to_array;
 
 /**
  * @phpstan-import-type MetricsHumanReadable from Metrics
  * @phpstan-import-type EnvironmentHumanReadable from Environment
  * @phpstan-import-type SnapshotHumanReadable from Snapshot
  */
-final class StatsExporter
+final class ViewExporter implements Exporter
 {
-    /** @var resource|OutputInterface */
-    private $output;
     public readonly Environment $environment;
 
-    /**
-     * @param resource|OutputInterface $output
-     */
     public function __construct(
-        mixed $output,
+        public readonly StreamWriter|OutputInterface $output = new StreamWriter(),
         public readonly Translator $translator = new Translator(),
         ?Environment $environment = null,
     ) {
-        $this->output = $output;
         $this->environment = $environment ?? Environment::current();
     }
 
-    public function write(string $content): int|false
+    public function write(string $content): void
     {
-        if ($this->output instanceof OutputInterface) {
-            $this->output->write($content);
-
-            return 0;
-        }
-
-        return fwrite($this->output, $content);
+        $this->output->write($content);
     }
 
-    public function writeln(string $content): int|false
+    public function writeln(string $content): void
     {
-        return $this->write($content."\n");
+        $this->write($content."\n");
+    }
+
+    private function export(Table|LeaderPrinter $tableRenderer): void
+    {
+        if ($this->environment->isCli()) {
+            $this->writeln($tableRenderer->render());
+
+            return;
+        }
+
+        echo $tableRenderer->renderHtml();
     }
 
     /**
      * @param array<string, string> $data
      */
-    private function writeLeaderPrinter(array $data): void
+    private function exportLeaderPrinter(array $data): void
     {
-        $renderer = (new LeaderPrinter())->setPairs($this->translator->translateArrayKeys($data));
-
-        if ($this->environment->isCli()) {
-            $this->writeln($renderer->render());
-
-            return;
-        }
-
-        echo $renderer->renderHtml();
+        $this->export(
+            (new LeaderPrinter())->setPairs($this->translator->translateArrayKeys($data))
+        );
     }
 
     public function exportSnapshot(Snapshot $snapshot): void
     {
-        $this->writeLeaderPrinter($snapshot->toHuman());
+        $this->exportLeaderPrinter($snapshot->toHuman());
     }
 
     public function exportMetrics(Result|Span|Metrics $metrics): void
@@ -93,17 +76,17 @@ final class StatsExporter
             Metrics::class => $metrics,
         };
 
-        $this->writeLeaderPrinter($source->toHuman());
+        $this->exportLeaderPrinter($source->toHuman());
     }
 
     public function exportEnvironment(Environment $environment): void
     {
-        $this->writeLeaderPrinter($environment->toHuman());
+        $this->exportLeaderPrinter($environment->toHuman());
     }
 
     public function exportStatistics(Statistics $statistics): void
     {
-        $this->writeLeaderPrinter($statistics->toHuman());
+        $this->exportLeaderPrinter($statistics->toHuman());
     }
 
     public function exportReport(Report $report): void
@@ -121,16 +104,54 @@ final class StatsExporter
             ->setRows($rows)
             ->setRowStyle([['column' => 0, 'style' => [AnsiStyle::BrightGreen, AnsiStyle::Bold], 'align' => 'left']]);
 
-        if ($this->environment->isCli()) {
-            $this->writeln($tableRenderer->render());
+        $this->export($tableRenderer);
+    }
+
+    public function exportSpanAggregator(SpanAggregator $spanAggregator, callable|string|null $label = null): void
+    {
+        $input = match (true) {
+            null === $label => iterator_to_array($spanAggregator),
+            is_callable($label) => $spanAggregator->filter($label),
+            default => $spanAggregator->getAll($label),
+        };
+
+        $tableRenderer = Table::dashed()
+            ->setHeader(array_map($this->translator->translate(...), [...['label'], ...array_keys(Metrics::none()->toArray())]))
+            ->setHeaderStyle(AnsiStyle::BrightGreen)
+            ->setTitle($spanAggregator->identifier())
+            ->setTitleStyle(AnsiStyle::BrightGreen, AnsiStyle::Bold)
+            ->setRowStyle([
+                ['column' => 0, 'style' => [AnsiStyle::BrightGreen, AnsiStyle::Bold]],
+            ])
+        ;
+
+        if ([] === $input) {
+            $tableRenderer->addRow([
+                [
+                    'value' => 'Not enough span to generate an export',
+                    'align' => 'center',
+                    'style' => [AnsiStyle::BrightRed, AnsiStyle::Bold],
+                    'colspan' => 10,
+                ],
+            ]);
+            $this->export($tableRenderer);
 
             return;
         }
 
-        echo $tableRenderer->renderHtml();
+        /** @var Span $span */
+        foreach ($input as $span) {
+            $data = [...['label' => $span->label], ...$span->metrics->toHuman()];
+            $tableRenderer->addRow($data);
+        }
+
+        $this->export($tableRenderer);
     }
 
-    public function exportTimeline(Timeline $timeline): void
+    /**
+     * @param ?callable(Snapshot): bool $filter
+     */
+    public function exportTimeline(Timeline $timeline, ?callable $filter = null): void
     {
         $tableRenderer = Table::dashed()
             ->setHeader([
@@ -153,7 +174,9 @@ final class StatsExporter
                 ['column' => 6, 'align' => 'right'],
                 ['column' => 7, 'align' => 'right'],
             ]);
-        if ($timeline->hasNoSnapshots()) {
+
+        $snapshots = null !== $filter ? $timeline->filter($filter) : iterator_to_array($timeline);
+        if ([] === $snapshots) {
             $tableRenderer->addRow([
                 [
                     'value' => 'Not enough snapshot to generate an export',
@@ -162,17 +185,11 @@ final class StatsExporter
                     'colspan' => 8,
                 ],
             ]);
-            if ($this->environment->isCli()) {
-                $this->writeln($tableRenderer->render());
-
-                return;
-            }
-
-            echo $tableRenderer->renderHtml();
+            $this->export($tableRenderer);
             return;
         }
 
-        foreach ($timeline as $snapshot) {
+        foreach ($snapshots as $snapshot) {
             $data = $snapshot->toHuman();
             $tableRenderer->addRow([
                 $data['label'],
@@ -185,8 +202,21 @@ final class StatsExporter
                 $data['real_peak_memory_usage'],
             ]);
         }
-        $tableRenderer->addRowSeparator();
+
+        if (2 < count($snapshots)) {
+            $this->export($tableRenderer);
+
+            return;
+        }
+
         $summary = $timeline->summarize('summary')->metrics->toHuman();
+        if (null !== $filter) {
+            $from = array_key_first($snapshots);
+            $to = array_key_last($snapshots);
+            $summary = (new Span('summary', $snapshots[$from], $snapshots[$to]))->metrics->toHuman();
+        }
+
+        $tableRenderer->addRowSeparator();
         $tableRenderer->addRow([
             ['value' => 'Summary ', 'style' => [AnsiStyle::BrightGreen], 'align' => 'right', 'colspan' => 2],
             ['value' => $summary['execution_time'], 'style' => [AnsiStyle::BrightGreen]],
@@ -197,12 +227,6 @@ final class StatsExporter
             ['value' => $summary['real_peak_memory_usage'], 'style' => [AnsiStyle::BrightGreen]],
         ]);
 
-        if ($this->environment->isCli()) {
-            $this->writeln($tableRenderer->render());
-
-            return;
-        }
-
-        echo $tableRenderer->renderHtml();
+        $this->export($tableRenderer);
     }
 }

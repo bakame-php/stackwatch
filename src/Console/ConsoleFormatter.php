@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
-use Bakame\Stackwatch\Exporter\ConsoleExporter;
 use Bakame\Stackwatch\LeaderPrinter;
 use Bakame\Stackwatch\Report;
+use Bakame\Stackwatch\ViewExporter;
 use Bakame\Stackwatch\Translator;
 use Throwable;
 
 final class ConsoleFormatter implements Formatter
 {
     public function __construct(
-        public readonly ConsoleExporter $exporter,
+        public readonly ViewExporter $exporter,
         public readonly LeaderPrinter $leaderPrinter = new LeaderPrinter(),
         public readonly Feature $dryRun = Feature::Disabled,
         public readonly Translator $translator = new Translator(),
@@ -41,8 +41,7 @@ final class ConsoleFormatter implements Formatter
                 continue;
             }
 
-            $data = $this->leaderPrinter->setPairs($this->translator->translateArrayKeys($stats->toHuman()))->render();
-            $this->exporter->output->writeln($data);
+            $this->exporter->exportMetrics($stats);
             $this->exporter->output->writeln('');
         }
     }

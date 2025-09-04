@@ -2,17 +2,8 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch\Exporter;
+namespace Bakame\Stackwatch;
 
-use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\Metrics;
-use Bakame\Stackwatch\Profiler;
-use Bakame\Stackwatch\Result;
-use Bakame\Stackwatch\Snapshot;
-use Bakame\Stackwatch\Span;
-use Bakame\Stackwatch\Statistics;
-use Bakame\Stackwatch\Timeline;
-use Bakame\Stackwatch\Unit;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -124,7 +115,7 @@ final class JsonExporterTest extends TestCase
         $timeline = Timeline::start('yo');
         usleep(100);
         $timeline->capture('mtv');
-        $profiler = new Profiler(function () {
+        $profiler = new SpanAggregator(function () {
             usleep(100);
         });
         $profiler->run();
@@ -135,7 +126,7 @@ final class JsonExporterTest extends TestCase
 
         $exporter->exportMetrics(Metrics::none());
         $exporter->exportTimeline($timeline);
-        $exporter->exportProfiler($profiler);
+        $exporter->exportSpanAggregator($profiler);
         $exporter->exportReport($report);
 
         /** @var string $ndjson */

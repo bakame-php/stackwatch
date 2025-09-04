@@ -70,9 +70,9 @@ final class UnitOfWorkGenerator
     }
 
     /**
-     * @param ReflectionClass<object|UnitEnum>|ReflectionFunctionAbstract $ref
+     * @param ReflectionClass<object>|ReflectionEnum<UnitEnum>|ReflectionFunctionAbstract $ref
      */
-    private function findProfile(ReflectionClass|ReflectionFunctionAbstract $ref): ?Profile
+    private function findProfile(ReflectionClass|ReflectionEnum|ReflectionFunctionAbstract $ref): ?Profile
     {
         $attributes = $ref->getAttributes(Profile::class);
 

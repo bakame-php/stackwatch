@@ -23,7 +23,7 @@ final class LeaderPrinter
     public function __construct(
         private string $filler = '.',
         private int $padExtra = 1,
-        private ?AnsiStyle $colorKey = AnsiStyle::Green,
+        private ?AnsiStyle $colorKey = AnsiStyle::BrightGreen,
         private ?AnsiStyle $colorValue = AnsiStyle::Cyan,
     ) {
     }
@@ -83,9 +83,13 @@ CSS;
      */
     public function renderHtml(): string
     {
-        $lines = ['<ul class="bkm-sw-dotted-list bkm-sw-ansi-green bkm-sw-ansi-bold">'];
+        $lines = ['<ul class="bkm-sw-dotted-list bkm-sw-ansi-bold">'];
         foreach ($this->pairs as [$key, $value]) {
-            $lines[] = '<li class="bkm-sw-dotted-item"><span>'.$key.'</span><span class="bkm-sw-dots">:</span><span>'.$value.'</span></li>';
+            $lines[] = '<li class="bkm-sw-dotted-item">'
+                .(null !== $this->colorKey ? AnsiStyle::wrapHtml('class', $key, $this->colorKey) : $key)
+                .'<span class="bkm-sw-dots">:</span>'
+                .(null !== $this->colorValue ? AnsiStyle::wrapHtml('class', $value, $this->colorValue) : $value)
+                .'</li>';
         }
         $lines[] = '</ul>';
 

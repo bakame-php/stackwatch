@@ -41,17 +41,21 @@ $metrics = Profiler::metrics($service->calculateHeavyStuff(...));
 $metrics->executionTime;
 $metrics->cpuTime; 
 $metrics->memoryUsage;
+$metrics->memoryUsageGrowth;
 $metrics->peakMemoryUsage;
+$metrics->peakMemoryUsageGrowth;
 $metrics->realMemoryUsage;
+$metrics->realMemoryUsageGrowth;
 $metrics->realPeakMemoryUsage;
+$metrics->realPeakMemoryUsageGrowth;
 ````
 
 All duration values are expressed in nanoseconds, while memory-related metrics are measured in bytes. You can retrieve
-the `Metrics` statistics in a human-readable format using the instance `forHuman()` method.
+the `Metrics` statistics in a human-readable format using the instance `toHuman()` and `human` methods.
 You can either:
 
-- Call the method without arguments to retrieve **all metrics** as formatted strings in an associative `array`.
-- Or pass the name of a specific metric to retrieve **only that value**, formatted for human readability.
+- Call the `toHuman()` to retrieve **all metrics** as formatted strings in an associative `array`.
+- Or pass the name of a specific metric to `human()` to retrieve **only that value**, formatted for human readability.
 
 ```php
 use Bakame\Stackwatch\Profiler;
@@ -59,7 +63,7 @@ use Bakame\Stackwatch\Profiler;
 // you create a new Profiler by passing the callback you want to profile
 $metrics = Profiler::metrics($service->calculateHeavyStuff(...));
 
-$metrics->forHuman();
+$metrics->toHuman();
 // returns 
 // [
 //   "cpu_time" => "30.000 µs"
@@ -70,7 +74,7 @@ $metrics->forHuman();
 //   "real_peak_memory_usage" => "0.0 B"
 // ]
 
-$metrics->forHuman('memory_usage'); //returns "2.5 KB"
+$metrics->human('memory_usage'); //returns "2.5 KB"
 ```
 
 ## Iterations
@@ -85,6 +89,56 @@ use Bakame\Stackwatch\Profiler;
 $cpuTime = Profiler::metrics($service->calculateHeavyStuff(...), 5)->cpuTime;
 // the average CPU Time used when executing 5 times the code.
 ````
+
+## Warm-up Iterations
+
+In some cases, your code may require a few "warm-up" runs before profiling is meaningful—for example, to resolve
+dependencies, initialize caches, or handle complex setup.
+To account for this, you can specify the number of warm-up iterations as the **third argument** to `Profiler::metrics()`.
+These warm-up runs will be executed but **not recorded** in the profiling results:
+
+```php
+use Bakame\Stackwatch\Profiler;
+
+$cpuTime = Profiler::metrics($service->calculateHeavyStuff(...), 5, 2)->cpuTime;
+// the average CPU Time used when executing 5 times the code.
+// after two iterations of warmup which are not recorded
+````
+
+## Aggregation Type
+
+By default, the metrics method returns the **average** value across all recorded iterations.
+In some scenarios, however, a different aggregation may provide better insight—for example, using the **median** to reduce the effect of outliers.
+
+You can control this behavior by passing an `AggregatorType` enum as the **fourth argument**:
+
+```php
+use Bakame\Stackwatch\AggregatorType;
+use Bakame\Stackwatch\Profiler;
+
+$cpuTime = Profiler::metrics(
+  callback: $service->calculateHeavyStuff(...), 
+  iterations: 5, 
+  type: AggregatorType::Median
+)->cpuTime;
+// the median CPU Time used when executing 5 times the code is now returned
+````
+
+### Available Aggregation Types
+
+The `AggregatorType` enum supports the following strategies:
+
+```php
+enum AggregatorType: string
+{
+    case Average = 'average'; // Default: arithmetic mean
+    case Median = 'median';   // Middle value, resistant to outliers
+    case Minimum = 'minimum'; // Lowest observed value
+    case Maximum = 'maximum'; // Highest observed value
+    case Sum = 'sum';         // Total across all iterations
+    case Range = 'range';     // Difference between min and max
+}
+```
 
 ## Full report
 
@@ -110,20 +164,25 @@ $report->executionTime->average; // Average execution time
 $report->executionTime->stdDev;  // Standard deviation
 
 // Get human-readable representations
-$report->executionTime->forHuman('minimum'); // e.g., "42.318 μs"
-$report->executionTime->forHuman();          // array of all formatted metrics
+$report->executionTime->human('minimum'); // e.g., "42.318 μs"
+$report->executionTime->toHuman();        // array of all formatted metrics
 
 // The same applies to other profiling metrics:
 $report->cpuTime;
 $report->memoryUsage;
+$report->memoryUsageGrowth;
 $report->peakMemoryUsage;
+$report->peakMemoryUsageGrowth;
 $report->realMemoryUsage;
+$report->realMemoryUsageGrowth;
 $report->realPeakMemoryUsage;
+$report->realPeakMemoryUsageGrowth;
 ````
 Each `Statistics` instance provides:
 
 - `toArray` – for machine-readable data
-- `forHuman` – for formatted, human-friendly output
+- `toHuman` – for formatted, human-friendly output
+- `human` – for formatted, human-friendly output for a specific property
 - implements the `JsonSerializable` interface to enable easy JSON export
 
 Use this structure to analyze performance in depth, log profiles, or visualize trends over time.
@@ -148,168 +207,40 @@ $result->span->label;   // returns an identifier as a string
 $result->span->range;   // returns a CallRange instance containing information where the profiling occurs
 ````
 
-## Metrics recording
+## Dumping Results
 
-Beyond its static methods, the `Profiler` also supports recording multiple individual calls.
-To enable this, create a new `Profiler` instance by passing in the callback you wish to profile.
+If you want to quickly inspect profiling results, `Profiler` provides two utility methods: `dump()` and `dd()`.
+
+ - `Profiler::dump()`: Outputs the profiling metrics but allows the program to continue running.
+ - `Profiler::dd()`: Outputs the profiling metrics and then immediately stops execution.
+
+Both methods automatically detect the environment:
+
+- In the **console**, metrics are printed in a human-readable text format.
+- In the **browser**, metrics are displayed as an HTML table or list.
+
+These methods accept the same arguments as `Profiler::metrics()`:
+
+- the **callback** to profile,
+- the number of **iterations**,
+- the number of **warm-up** runs to skip,
+- and an optional aggregation type (`AggregatorType`).
+
+If no aggregation type is specified, the output will include the full profiling details, similar to what `Profiler::report()` returns.
+
+### Example
 
 ```php
 use Bakame\Stackwatch\Profiler;
 
-// Create a new Profiler by passing the callback to profile
-$profiler = new Profiler($service->calculateHeavyStuff(...));
+// Dump full detailed metrics (no aggregation type specified) after 5 iterations, skipping 2 warm-up runs
+Profiler::dump(fn () => $service->calculateHeavyStuff(), 5, 2);
 
-//we invoke the `run` method of the Profiler which will execute the callback
-//$result is the result of executing the calculateHeavyStuff method
-$result = $profiler->run(new DateTimeImmutable('2024-12-24'));
-// you can use `__invoke` as a syntactic sugar method.
-
-$span = $profiler->latest(); // returns the Span from the last call
-// the $span->metrics property returns a Metrics instance
-$metrics = $span->metrics;
-
-$metrics->executionTime;
-$metrics->cpuTime; 
-$metrics->memoryUsage;
-$metrics->peakMemoryUsage;
-$metrics->realMemoryUsage;
-$metrics->realPeakMemoryUsage;
-````
-
-You can execute the `Profiler` instance as many times as needed — it will record all
-execution metrics each time.
-
-```php
-$result1 = $profiler(new DateTimeImmutable('2024-12-24'));
-$result2 = $profiler(new DateTimeImmutable('2025-03-02'));
-$result3 = $profiler(new DateTimeImmutable('2024-05-11'));
-
-count($profiler);          // the number of Span instances already recorded
-$profiler->latest();       // returns the Span from the last call
-$profiler->nth(-1);        // returns the same Span as Profile::last
-$profiler->first();        // returns the first Span ever generated
-$profiler->isEmpty();      // returns true when the profiler contains no span
-$profiler->hasSummaries(); // returns true when at least on Span is present
-$profiler->average();      // returns the average Metrics of all the calls
+// Dump metrics using median aggregation (halts execution afterwards)
+Profiler::dd(
+    callback: $service->calculateHeavyStuff(...),
+    iterations: 5,
+    type: AggregatorType::Median
+);
 ```
 
-You can access any `Span` by index using the `nth` method, or use the `first` and `latest` methods
-to quickly retrieve the first and last recorded `Span`. The `nth` method also accepts negative
-integers to simplify access from the end of the list.
-
-## Using labels
-
-To add a custom label to each run, use the `profile` method. This method works like the
-`run` method but allows you to assign a custom label to the returned `Span` object
-via its first argument.
-
-```php
-use Bakame\Stackwatch\Profiler;
-
-$callback = function (int ...$args): int|float => {
-    usleep(100)
-    
-    return array_sum($args);
-}; 
-
-$profiler = new Profiler($callback);
-$profiler(1, 2, 3); // returns 6
-$span = $profiler->latest();            // returns the last Span object from the last call
-$profiler->profile('my_test', 7, 8, 9);    // returns 24
-$namedSpan = $profiler->get('my_test'); // returns the associated Span
-
-$profiler->get('foobar');      // returns null because the `foobar` label does not exist
-$profiler->has('foobar');      // returns false because the label does not exist
-$profiler->labels();           // returns all the labels attached to the Profiler
-$profiler->average('my_test'); // returns the Metrics average for all the calls whose label is `my_test`
-````
-
-You can reuse the same label multiple times. The `Profiler::get()` method returns the most recent
-entry associated with the specified label. In contrast, `Profiler::getAll()` returns an `array`
-of all entries recorded under that label, ordered from oldest to newest.
-
-If the label is invalid or has never been used, `Profiler::getAll()` returns an empty `array`
-while `Profiler::get()` returns `null`. To determine whether a label exists, use `Profiler::has()`,
-which returns `true` if the label has been recorded, or `false` otherwise.
-
-## Resetting the Profiler
-
-At any given time you can reset the `Profiler` by clearing all the `Span` already recorded.
-
-```php
-use Bakame\Stackwatch\Profiler;
-
-$callback = function (int ...$args): int|float => {
-    usleep(100)
-    
-    return array_sum($args);
-}; 
-
-$profiler = new Profiler($callback);
-$profiler(1, 2, 3);
-$profiler->profile('my_test', 4, 5, 6);
-$profiler->run(7, 8, 9);
-
-count($profiler); // returns 3
-$profiler->isEmpty(); // return false
-
-$profiler->reset();
-
-count($profiler); // returns 0
-$profiler->isEmpty(); // return true
-```
-
-## Identifier
-
-Every `Profiler` instance has a unique identifier accessible via the `identifier` method.
-
-```php
-use Bakame\Stackwatch\Profiler;
-
-$profiler = new Profiler(function (): string {
-    usleep(1_000);
-    
-    return 'done';
-}, 'user_export');
-echo $profiler->identifier(); // 'user_export
-```
-
-If not provided, an internal generated unique identifier will be assigned to the property.
-The identifier can be used for logging, debugging or for correlation when
-multiple profilers and/or timelines are running in parallel.
-
-## Logging
-
-You can optionally log profiling activity using any logger that implements `Psr\Log\LoggerInterface`.
-
-To enable this feature, you need to provide your instance to the `Profiler` constructor. Below
-an example using `Monolog`.
-
-```php
-use Bakame\Stackwatch\Profiler;
-use Bakame\Stackwatch\Timeline;
-use Monolog\Level;
-use Monolog\Logger;
-use Monolog\Handler\StreamHandler;
-
-$logger = new Logger('profiler');
-$logger->pushHandler(new StreamHandler(STDOUT, Level::Debug));
-
-//logging with the Profiler instance
-
-$profiler = new Profiler(function () {
-    usleep(1_000);
-
-    return 'end';
-}, logger: $logger);
-
-$profiler->profile('toto');
-$profiler->profile('tata');
-```
-
-<div class="message-info">
-<p>Logging can be done also on the <code>Profiler</code> static methods, they all optionally accept a <code>LoggerInterface</code> argument.</p>
-</div>
-<div class="message-info">
-<p>When logging, the <code>Profiler</code> identifier is added to the log to ease identifying which instance is generating the log entries.</p>
-</div>

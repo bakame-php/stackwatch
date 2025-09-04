@@ -77,23 +77,33 @@ php vendor/bin/stackwatch --path=/path/to/profiling/code.php
 It will output the following with no complex setup.
 
 ```bash
-stackwatch v0.13.0 (Marrakesh) by Ignace Nyamagana Butera and contributors.
+stackwatch v0.14.0 (Nouakchott) by Ignace Nyamagana Butera and contributors.
 
-Runtime: PHP 8.3.24 OS: Linux Memory Limit: 64M
+Runtime: PHP 8.3.25 OS: Linux Memory Limit: 64M
 
-(Average) Target: Foobar\Baz\Foobar::test; Path: /path/to/profiling/code.php; Iterations: 3; Warmup: 0;
+............................
 
-CPU Time ............................................................. 19.000 µs
-Execution Time ...................................................... 144.611 µs
-Memory Usage ............................................................ 1.0 KB
-Real Memory Usage ........................................................ 0.0 B
-Peak Memory Usage ........................................................ 0.0 B
-Real Peak Memory Usage ................................................... 0.0 B
+Target: Foobar\Baz\MyEnum::test; Path: /path/to/profiling/code.php; Iterations: 3; Warmup: 0; Type: Full;
+
++-------------------------------+------------+------------+------------+------------+------------+------------+--------------+---------------+-----------+-----------+
+| Metrics                       | iterations | Min Value  | Max Value  | Range      | Sum        | Average    | Median Value | Variance      | Std Dev   | Coef Var  |
++-------------------------------+------------+------------+------------+------------+------------+------------+--------------+---------------+-----------+-----------+
+|CPU Time                       |           3|19.000 µs   |78.000 µs   |59.000 µs   |134.000 µs  |44.667 µs   |37.000 µs     |609.556 μs²    |24.689 µs  |55.2743 %  |
+|Execution Time                 |           3|143.500 µs  |192.375 µs  |48.875 µs   |486.625 µs  |162.208 µs  |150.750 µs    |463.774 μs²    |21.535 µs  |13.2764 %  |
+|Memory Usage                   |           3|3.292 MB    |3.392 MB    |101.578 KB  |10.076 MB   |3.359 MB    |3.391 MB      |2,287.987 KB²  |47.833 KB  |1.3908 %   |
+|Memory Usage Growth            |           3|568.000 B   |568.000 B   |0.000 B     |1.664 KB    |568.000 B   |568.000 B     |0.000 B²       |0.000 B    |0.0000 %   |
+|Real Memory Usage              |           3|4.000 MB    |4.000 MB    |0.000 B     |12.000 MB   |4.000 MB    |4.000 MB      |0.000 B²       |0.000 B    |0.0000 %   |
+|Real Memory Usage Growth       |           3|0.000 B     |0.000 B     |0.000 B     |0.000 B     |0.000 B     |0.000 B       |0.000 B²       |0.000 B    |0.0000 %   |
+|Peak Memory Usage              |           3|3.358 MB    |3.513 MB    |159.164 KB  |10.384 MB   |3.461 MB    |3.513 MB      |5,629.600 KB²  |75.031 KB  |2.1168 %   |
+|Peak Memory Usage Growth       |           3|0.000 B     |0.000 B     |0.000 B     |0.000 B     |0.000 B     |0.000 B       |0.000 B²       |0.000 B    |0.0000 %   |
+|Real Peak Memory Usage         |           3|4.000 MB    |4.000 MB    |0.000 B     |12.000 MB   |4.000 MB    |4.000 MB      |0.000 B²       |0.000 B    |0.0000 %   |
+|Real Peak Memory Usage Growth  |           3|4.000 MB    |4.000 MB    |0.000 B     |12.000 MB   |4.000 MB    |4.000 MB      |0.000 B²       |0.000 B    |0.0000 %   |
++-------------------------------+------------+------------+------------+------------+------------+------------+--------------+---------------+-----------+-----------+
 ```
 
 # Motivation
 
-**Stackwatch**  bridges the gap between basic timers and heavy profiling tools like [PHPBench](https://phpbench.readthedocs.io/en/latest/), [Xdebug](https://xdebug.org/) or [Blackfire](https://www.blackfire.io/).
+**Stackwatch** bridges the gap between basic timers and heavy profiling tools like [PHPBench](https://phpbench.readthedocs.io/en/latest/), [Xdebug](https://xdebug.org/) or [Blackfire](https://www.blackfire.io/).
 It is perfect for:
 
 - Isolated performance testing

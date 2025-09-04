@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
-use Bakame\Stackwatch\Exporter\ConsoleExporter;
 use Bakame\Stackwatch\Profile;
+use Bakame\Stackwatch\ViewExporter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -38,7 +38,7 @@ final class PathProfilerTest extends TestCase
         $logger = new Logger($this->stderr);
         $this->command = new PathProfiler(
             new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
-            new ConsoleFormatter(new ConsoleExporter($this->stdout)),
+            new ConsoleFormatter(new ViewExporter($this->stdout)),
             Input::fromInput(['path' => '/tmp'])->withProgressBar(Display::Hidden),
             $logger
         );
@@ -62,7 +62,7 @@ final class PathProfilerTest extends TestCase
 <?php
 namespace Test;
 
-use Bakame\Stackwatch\AggregatorMode;
+use Bakame\Stackwatch\AggregatorType;
 use Bakame\Stackwatch\Profile;
 
 #[Profile(iterations: 5, warmup: 1)]
@@ -73,7 +73,7 @@ function testFunction(): void
 
 class TestClass
 {
-    #[Profile(iterations: 3, warmup: 1, type: AggregatorMode::Average)]
+    #[Profile(iterations: 3, warmup: 1, type: AggregatorType::Average)]
     public function testMethod(): void
     {
         usleep(500);
@@ -87,8 +87,8 @@ PHP;
         $output = $this->stdout->fetch();
         $errorOutput = $this->stderr->fetch();
 
-        self::assertStringContainsString('(Average)', $output);
-        self::assertStringContainsString('(Full)', $output);
+        self::assertStringContainsString('Average', $output);
+        self::assertStringContainsString('Full', $output);
 
         self::assertEmpty($errorOutput, 'No errors expected');
     }
@@ -120,7 +120,7 @@ PHP;
         $output = $this->stdout->fetch();
         $errorOutput = $this->stderr->fetch();
 
-        self::assertStringContainsString('(Full)', $output);
+        self::assertStringContainsString('Full', $output);
         self::assertEmpty($errorOutput, 'No errors expected');
     }
 
@@ -131,14 +131,14 @@ PHP;
 <?php
 namespace Test;
 
-use Bakame\Stackwatch\AggregatorMode;
+use Bakame\Stackwatch\AggregatorType;
 use Bakame\Stackwatch\Profile;
 
 enum TestMethodWithArguments
 {
     case Foo;
 
-    #[Profile(iterations: 3, warmup: 1, type: AggregatorMode::Average)]
+    #[Profile(iterations: 3, warmup: 1, type: AggregatorType::Average)]
     public function testMethod(string $foo): string
     {
         return $foo;
@@ -165,12 +165,12 @@ PHP;
 <?php
 namespace Test;
 
-use Bakame\Stackwatch\AggregatorMode;
+use Bakame\Stackwatch\AggregatorType;
 use Bakame\Stackwatch\Profile;
 
 interface TestInterface
 {
-    #[Profile(iterations: 3, warmup: 1, type: AggregatorMode::Average)]
+    #[Profile(iterations: 3, warmup: 1, type: AggregatorType::Average)]
     public function testMethod(string $foo): string;
 }
 PHP;
@@ -191,7 +191,7 @@ PHP;
 <?php
 namespace Test;
 
-use Bakame\Stackwatch\AggregatorMode;
+use Bakame\Stackwatch\AggregatorType;
 use Bakame\Stackwatch\Profile;
 
 class TestConstructorsArgument
@@ -200,7 +200,7 @@ class TestConstructorsArgument
     {
     }
 
-    #[Profile(iterations: 3, warmup: 1, type: AggregatorMode::Average)]
+    #[Profile(iterations: 3, warmup: 1, type: AggregatorType::Average)]
     public function testMethod(): int
     {
         return 42;
@@ -225,12 +225,12 @@ PHP;
 <?php
 namespace Test;
 
-use Bakame\Stackwatch\AggregatorMode;
+use Bakame\Stackwatch\AggregatorType;
 use Bakame\Stackwatch\Profile;
 
 abstract class TestAbstractMethod
 {
-    #[Profile(iterations: 3, warmup: 1, type: AggregatorMode::Average)]
+    #[Profile(iterations: 3, warmup: 1, type: AggregatorType::Average)]
     public abstract function testMethod(): int;
 }
 PHP;
@@ -274,10 +274,10 @@ PHP;
 <?php
 namespace Test;
 
-use Bakame\Stackwatch\AggregatorMode;
+use Bakame\Stackwatch\AggregatorType;
 use Bakame\Stackwatch\Profile as Yolo;
 
-#[Yolo(iterations: 3, warmup: 1, type: AggregatorMode::Average)]
+#[Yolo(iterations: 3, warmup: 1, type: AggregatorType::Average)]
 function foo_with_arguments(string $foo): string
 {
     return $foo;
@@ -304,7 +304,7 @@ namespace Test;
 use Bakame\Stackwatch;
 
 trait PartielTimerTrait {
-    #[Stackwatch\Profile(type: Stackwatch\AggregatorMode::Average, iterations: 10)]
+    #[Stackwatch\Profile(type: Stackwatch\AggregatorType::Average, iterations: 10)]
     public function test() : int {
         usleep(100);
 
@@ -342,10 +342,10 @@ PHP;
 <?php
 namespace Test;
 
-use Bakame\Stackwatch\AggregatorMode;
+use Bakame\Stackwatch\AggregatorType;
 use Bakame\Stackwatch\Profile;
 
-#[Profile(type: AggregatorMode::Average, iterations: 10)]
+#[Profile(type: AggregatorType::Average, iterations: 10)]
 class PartialFoobarClass
 {
     public function test() : int

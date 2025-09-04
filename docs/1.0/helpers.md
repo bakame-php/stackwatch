@@ -135,35 +135,34 @@ $system->unlimitedMemory(); // returns true if there is no memory limit
 $system->isWindows();       // returns true if the OS is a Windows
 $system->isMac();           // returns true if the OS is a Mac
 $system->isUnixLike();      // returns true if the OS is a Unix like
+$system->isCli()            // returns true if the environment is in a CLI context
 ````
 
-The `ConsoleExporter` also provides an exporter for the class:
+The `ViewExporter` also provides an exporter for the class:
 
 ```php
-use Bakame\Stackwatch\Exporter\ConsoleExporter;
+use Bakame\Stackwatch\ViewExporter;
 use Bakame\Stackwatch\Environment;
 
-(new ConsoleExporter())->exportEnvironment($system);
+(new ViewExporter())->exportEnvironment($system);
 ```
 
 Will return
 
 ```bash
-+--------------------------------+
-| Operating System: Linux        |
-|        OS Family: Linux        |
-|         Hostname: example.org  |
-|     Architecture: x86_64       |
-| PHP Integer Size: 8            |
-| PHP Architecture: 64-bit       |
-|             SAPI: cli          |
-|      PHP Version: 8.3.7        |
-|     Memory Limit: 64 MB        |
-| Raw Memory Limit: 64M          |
-|        CPU Cores: 1            |
-|        Disk Size: 0            |
-|  Free Disk Space: 0            |
-+--------------------------------+
+Operating System ......................................................... Linux
+OS Family ................................................................ Linux
+Hostname ........................................................... example.org
+Architecture ............................................................ x86_64
+PHP Integer Size ............................................................. 8
+PHP Architecture ........................................................ 64-bit
+SAPI ....................................................................... cli
+PHP Version ............................................................. 8.3.25
+Memory Limit ............................................................. 64 MB
+Raw Memory Limit ........................................................... 64M
+CPU Cores .................................................................... 1
+Disk Size .................................................................... 0
+Free Disk Space .............................................................. 0
 ```
 
 ## Unit of Measurement

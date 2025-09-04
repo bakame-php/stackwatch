@@ -48,7 +48,7 @@ final class MetricsTest extends TestCase
         $span1 = $this->createSummary('profile1');
         $span2 = $this->createSummary('profile2');
 
-        $profiler = new Profiler(fn () => null);
+        $profiler = new SpanAggregator(fn () => null);
         $reflection = new ReflectionClass($profiler);
         $reflection->getProperty('spans')->setValue($profiler, [$span1, $span2]);
 

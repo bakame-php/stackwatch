@@ -49,11 +49,6 @@
             "src/functions_include.php"
         ]
     },
-    "autoload-dev": {
-        "files": [
-            "benchmark/Benchmark.php"
-        ]
-    },
     "bin": [
         "bin/stackwatch"
     ],
