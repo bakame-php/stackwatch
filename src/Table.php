@@ -60,14 +60,14 @@ final class Table
     public static function stylesheet(): string
     {
         return <<<'STYLE'
-.bkm-sw-table {margin: 0 auto;border-collapse: collapse;width: 100%; font-size:12px}
-.bkm-sw-table td,
-.bkm-sw-table th {padding: .7em;border: 1px solid #5c636a;text-align: right; color: yellow;}
-.bkm-sw-table tbody tr {background-color: #111;}
-.bkm-sw-table tbody tr:nth-child(odd) {background-color: #222;}
-.bkm-sw-table tbody tr:hover {background-color: #333;}
-.bkm-sw-table tbody td {transition:border .2s}
-.bkm-sw-table tbody td:hover {border-left: 2px solid #ffa;border-right: 1px solid #ffa;}
+.bkm-sw-container .bkm-sw-table {margin: 0 auto;border-collapse: collapse;width: 100%; font-size:12px}
+.bkm-sw-container .bkm-sw-table td,
+.bkm-sw-container .bkm-sw-table th {padding: .7em;border: 1px solid #5c636a;text-align: right; color: yellow;}
+.bkm-sw-container .bkm-sw-table tr {background-color: #111;}
+.bkm-sw-container .bkm-sw-table tbody tr:nth-child(odd) {background-color: #222;}
+.bkm-sw-container .bkm-sw-table tbody tr:hover {background-color: #333;}
+.bkm-sw-container .bkm-sw-table tbody td {transition:border .2s}
+.bkm-sw-container .bkm-sw-table tbody td:hover {border-left: 2px solid #ffa;border-right: 1px solid #ffa;}
 STYLE;
     }
 

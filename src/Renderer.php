@@ -18,7 +18,7 @@ final class Renderer
     {
         return <<<CSS
 .bkm-sw-container {border: 1px #c5cdd5 solid;background-color: #18171B;padding: .5em .5em;margin: 1em auto;font-family: "IBM Plex Mono", mono, source-code-pro, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;font-size:12px;}
-.bkm-sw-header {padding: .3em .7em; font-size: 12px;}
+.bkm-sw-container .bkm-sw-header {padding: .3em .7em; font-size: 12px;}
 CSS;
     }
 

@@ -49,10 +49,10 @@ final class LeaderPrinter
     public static function stylesheet(): string
     {
         return <<<CSS
-.bkm-sw-dotted-list {width: 100%; list-style: none; padding:0;}
-.bkm-sw-dotted-item {display: flex; padding: .3em .7em; align-items: center;}
-.bkm-sw-dotted-item:hover {background-color: #333;}
-.bkm-sw-dotted-item .bkm-sw-dots {flex: 1;border-bottom: 1px dotted #666;margin: 0 0.5em; color:transparent;}
+.bkm-sw-container .bkm-sw-dotted-list {width: 100%; list-style: none; padding:0;}
+.bkm-sw-container .bkm-sw-dotted-item {display: flex; padding: .3em .7em; align-items: center;}
+.bkm-sw-container .bkm-sw-dotted-item:hover {background-color: #333;}
+.bkm-sw-container .bkm-sw-dotted-item .bkm-sw-dots {flex: 1;border-bottom: 1px dotted #666;margin: 0 0.5em; color:transparent;}
 CSS;
     }
 

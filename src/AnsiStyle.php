@@ -61,7 +61,7 @@ enum AnsiStyle: string
 
     public static function stylesheet(): string
     {
-        $lines = array_map(fn (self $style): string => '.'.$style->toCssClass().' {'.$style->toCssRule().'}'.'.hover\\:'.$style->toCssClass().':hover {'.$style->toCssRule().'}', self::cases());
+        $lines = array_map(fn (self $style): string => '.bkm-sw-container .'.$style->toCssClass().' {'.$style->toCssRule().'}'.'.bkm-sw-container .hover\\:'.$style->toCssClass().':hover {'.$style->toCssRule().'}', self::cases());
         sort($lines);
 
         return implode("\n", $lines);

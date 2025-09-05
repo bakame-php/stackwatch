@@ -97,9 +97,8 @@ usleep();
 Snapshot::now('test')->equals($snapshot); // return false
 ```
 
-The built-in exporters (`JsonExporter`, `ConsoleExporter`, and `OpenTelemetryExporter`) can export a
-snapshot either internally or through a dedicated `exportSnapshot()` method. The exported format
-depends on the selected exporter.
+The built-in exporters (`JsonExporter`, `ViewExporter` can export a snapshot either internally
+or through a dedicated `exportSnapshot()` method. The exported format depends on the selected exporter.
 
 ## Environment
 
