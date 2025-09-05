@@ -4,16 +4,57 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch;
 
+use Closure;
+use Countable;
+use IteratorAggregate;
+use JsonSerializable;
+use Psr\Log\LoggerInterface;
 use Throwable;
+use Traversable;
 
+use function array_column;
+use function array_filter;
+use function array_key_last;
+use function array_map;
+use function array_unique;
+use function array_values;
+use function count;
 use function gc_collect_cycles;
 use function header;
 use function headers_sent;
+use function is_callable;
 use function ob_get_clean;
 use function ob_start;
+use function trim;
 
-final class Profiler
+/**
+ * @implements IteratorAggregate<int, Span>
+ * @phpstan-import-type SpanMap from Span
+ */
+final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 {
+    /** @var non-empty-string */
+    private readonly string $identifier;
+    private readonly Closure $callback;
+    private readonly ?LoggerInterface $logger;
+    /** @var list<Span> */
+    private array $spans;
+
+    /**
+     * @param ?non-empty-string $identifier
+     */
+    public function __construct(callable $callback, ?string $identifier = null, ?LoggerInterface $logger = null)
+    {
+        $identifier ??= self::generateLabel();
+        $identifier = trim($identifier);
+        '' !== $identifier || throw new InvalidArgument('The identifier must be a non-empty string.');
+
+        $this->identifier = $identifier;
+        $this->callback = $callback instanceof Closure ? $callback : $callback(...);
+        $this->logger = $logger;
+        $this->reset();
+    }
+
     /**
      * @return non-empty-string
      */
@@ -28,114 +69,256 @@ final class Profiler
         return $labelGenerator->generate();
     }
 
-    private static function warmup(int $warmup, callable $callback): void
+    public function reset(): void
     {
-        if (0 < $warmup) {
-            for ($i = 0; $i < $warmup; ++$i) {
-                $callback();
-            }
-        }
+        $this->spans = [];
+    }
+
+    public function identifier(): string
+    {
+        return $this->identifier;
     }
 
     /**
-     * Returns the value and the profiling data of the callback execution.
+     * @throws InvalidArgument|Throwable
+     */
+    public function run(mixed ...$args): mixed
+    {
+        return $this->profile(self::generateLabel(), ...$args);
+    }
+
+    /**
+     * @param non-empty-string $label
      *
      * @throws InvalidArgument|Throwable
      */
-    public static function execute(callable $callback): Result
+    public function profile(string $label, mixed ...$args): mixed
     {
         gc_collect_cycles();
-        $start = Snapshot::now('start');
-        $returnValue = ($callback)();
-        $end = Snapshot::now('end');
+        try {
+            $this->logger?->info('Profiler ['.$this->identifier.'] starting profiling for label: '.$label.'.', ['identifier' => $this->identifier, 'label' => $label]);
+            $start = Snapshot::now('start');
+            $returnValue = ($this->callback)(...$args);
+            $end = Snapshot::now('end');
+            $span = new Span($label, $start, $end);
+            $this->logger?->info('Profiler ['.$this->identifier.'] ending profiling for label: '.$label.'.', [...['identifier' => $this->identifier], ...$span->toArray()]);
 
-        return new Result($returnValue, new Span(self::generateLabel(), $start, $end));
+            $profiled = new Result($returnValue, $span);
+            $this->spans[] = $profiled->span;
+
+            return $profiled->returnValue;
+
+        } catch (Throwable $exception) {
+            $this->logger?->error('Profiler ['.$this->identifier.'] profiling aborted for label: '.$label.' due to an error in the executed code.', ['identifier' => $this->identifier, 'label' => $label, 'exception' => $exception]);
+
+            throw $exception;
+        }
+    }
+
+    public function count(): int
+    {
+        return count($this->spans);
     }
 
     /**
-     * Returns aggregated metrics associated with the callback.
-     *
-     * The aggregation mode (average, median, …) is controlled by $aggregatorMode.
-     *
-     * @param int<0, max> $warmup
-     * @param int<1, max> $iterations
-     *
-     * @throws InvalidArgument|Throwable
+     * @return Traversable<Span>
      */
-    public static function metrics(callable $callback, int $iterations = 1, int $warmup = 0, AggregatorType $type = AggregatorType::Average): Metrics
+    public function getIterator(): Traversable
     {
-        self::assertItCanBeRun($iterations, $warmup);
-        self::warmup($warmup, $callback);
-        $metrics = [];
-        for ($i = 0; $i < $iterations; ++$i) {
-            $metrics[] = self::execute($callback)->span->metrics;
+        yield from $this->spans;
+    }
+
+    /**
+     * @return array{
+     *     identifier: non-empty-string,
+     *     spans: list<SpanMap>
+     * }
+     */
+    public function toArray(): array
+    {
+        return [
+            'identifier' => $this->identifier,
+            'spans' => array_map(fn (Span $span): array => $span->toArray(), $this->spans),
+        ];
+    }
+
+    /**
+     * @return array{
+     *     identifier: non-empty-string,
+     *     spans: list<Span>
+     * }
+     */
+    public function jsonSerialize(): array
+    {
+        return [
+            'identifier' => $this->identifier,
+            'spans' => $this->spans,
+        ];
+    }
+
+    public function hasNoSpan(): bool
+    {
+        return [] === $this->spans;
+    }
+
+    public function hasSpans(): bool
+    {
+        return ! $this->hasNoSpan();
+    }
+
+    public function latest(): ?Span
+    {
+        return $this->nth(-1);
+    }
+
+    public function first(): ?Span
+    {
+        return $this->nth(0);
+    }
+
+    /**
+     * Returns the Summary using its index.
+     *
+     * Negative offsets are supported
+     */
+    public function nth(int $offset): ?Span
+    {
+        if ($offset < 0) {
+            $offset += count($this->spans);
         }
 
-        return Metrics::aggregate($type, ...$metrics);
+        return $this->spans[$offset] ?? null;
     }
 
     /**
-     * Returns the metrics associated with the callback.
-     *
-     * @param int<1, max> $iterations
-     * @param int<0, max> $warmup
-     *
-     * @throws InvalidArgument|Throwable
+     * Tells whether the label is present in the current profiler cache.
      */
-    public static function report(callable $callback, int $iterations = 1, int $warmup = 0): Report
+    public function has(string $label): bool
     {
-        self::assertItCanBeRun($iterations, $warmup);
-        self::warmup($warmup, $callback);
-        $metrics = [];
-        for ($i = 0; $i < $iterations; ++$i) {
-            $metrics[] = self::execute($callback)->span->metrics;
+        foreach ($this->spans as $span) {
+            if ($span->label === $label) {
+                return true;
+            }
         }
 
-        return Report::fromMetrics(...$metrics);
+        return false;
     }
 
     /**
-     * @throws InvalidArgument
+     * Returns the last Profile with the provided label.
      */
-    private static function assertItCanBeRun(int $iterations, int $warmup): void
+    public function get(string $label): ?Span
     {
-        1 <= $iterations || throw new InvalidArgument('The iterations argument must be a positive integer greater than or equal to 1.');
-        0 <= $warmup || throw new InvalidArgument('The warmup argument must be an integer greater than or equal to 0.');
+        $res = $this->getAll($label);
+
+        return [] === $res ? null : $res[array_key_last($res)];
     }
 
     /**
-     * Profile a callable and dump the stats to console.
+     * Returns all the Profiles with the provided label.
      *
-     * @param int<1, max> $iterations
-     * @param int<0, max> $warmup
-     *
-     * @throws Throwable
+     * @return list<Span>
      */
-    public static function dump(callable $callback, int $iterations = 3, int $warmup = 0, ?AggregatorType $type = null): Metrics|Report
+    public function getAll(string $label): array
     {
-        $stats = match ($type) {
-            null => self::report($callback, $iterations, $warmup),
-            default => self::metrics($callback, $iterations, $warmup, $type),
-        };
-
-        $renderer = new Renderer();
-        $renderer->render($stats, new Profile($type, $iterations, $warmup), CallLocation::fromLastInternalCall(__NAMESPACE__, ['*Test.php']));
-
-        return $stats;
+        return $this->filter(fn (Span $span): bool => $span->label === $label);
     }
 
     /**
-     * Profile a callable, dump the stats to console and die.
-     *
-     * @param int<1, max> $iterations
-     * @param int<0, max> $warmup
-     *
-     * @throws Throwable
+     * Returns the average metrics associated with the callback.
      */
-    public static function dd(callable $callback, int $iterations = 3, int $warmup = 0, ?AggregatorType $type = null): never
+    public function average(callable|string|null $label = null): Metrics
+    {
+        return Metrics::average(...match (true) {
+            null === $label => $this->spans,
+            is_callable($label) => $this->filter($label),
+            default => $this->getAll($label),
+        });
+    }
+
+    /**
+     * Returns the average metrics associated with the callback.
+     */
+    public function median(callable|string|null $label = null): Metrics
+    {
+        return Metrics::median(...match (true) {
+            null === $label => $this->spans,
+            is_callable($label) => $this->filter($label),
+            default => $this->getAll($label),
+        });
+    }
+
+    /**
+     * Returns the average metrics associated with the callback.
+     */
+    public function range(callable|string|null $label = null): Metrics
+    {
+        return Metrics::range(...match (true) {
+            null === $label => $this->spans,
+            is_callable($label) => $this->filter($label),
+            default => $this->getAll($label),
+        });
+    }
+
+    /**
+     * Returns the average metrics associated with the callback.
+     */
+    public function min(callable|string|null $label = null): Metrics
+    {
+        return Metrics::min(...match (true) {
+            null === $label => $this->spans,
+            is_callable($label) => $this->filter($label),
+            default => $this->getAll($label),
+        });
+    }
+
+    /**
+     * Returns the average metrics associated with the callback.
+     */
+    public function max(callable|string|null $label = null): Metrics
+    {
+        return Metrics::max(...match (true) {
+            null === $label => $this->spans,
+            is_callable($label) => $this->filter($label),
+            default => $this->getAll($label),
+        });
+    }
+
+    /**
+     * @param callable(Span): bool $filter
+     *
+     * @return list<Span>
+     */
+    public function filter(callable $filter): array
+    {
+        return array_values(array_filter($this->spans, $filter));
+    }
+
+    /**
+     * Returns the list of all distinct label present in the Profiler.
+     *
+     * @return list<string>
+     */
+    public function labels(): array
+    {
+        return array_values(
+            array_unique(
+                array_column($this->spans, 'label')
+            )
+        );
+    }
+
+    public function dump(callable|string|null $label = null): self
+    {
+        (new Renderer())->renderSpanAggregator($this, $label);
+
+        return $this;
+    }
+
+    public function dd(callable|string|null $label = null): never
     {
         ob_start();
-        self::dump($callback, $iterations, $warmup, $type);
+        self::dump($label);
         $dumpOutput = ob_get_clean();
 
         if (Environment::current()->isCli()) {

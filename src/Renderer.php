@@ -126,10 +126,10 @@ CSS;
         echo '</div>', PHP_EOL;
     }
 
-    public function renderSpanAggregator(SpanAggregator $spanAggregator, callable|string|null $label = null): void
+    public function renderSpanAggregator(Profiler $spanAggregator, callable|string|null $label = null): void
     {
         if ($this->exporter->environment->isCli()) {
-            $this->exporter->exportSpanAggregator($spanAggregator, $label);
+            $this->exporter->exportProfiler($spanAggregator, $label);
 
             return;
         }
@@ -137,7 +137,7 @@ CSS;
         self::loadCss();
 
         echo '<div class="bkm-sw-container" id="bkm-sw-span-aggregator-'.random_int(0, 100_000).'">';
-        $this->exporter->exportSpanAggregator($spanAggregator, $label);
+        $this->exporter->exportProfiler($spanAggregator, $label);
         echo '</div>', PHP_EOL;
     }
 

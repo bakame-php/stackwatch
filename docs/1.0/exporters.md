@@ -9,7 +9,7 @@ The package can help with exporting its metrics using different mechanisms.
 
 ## JSON
 
-Both the `SpanAggregator` and `Timeline` classes support JSON export via PHP's `json_encode` function.
+Both the `Profiler` and `Timeline` classes support JSON export via PHP's `json_encode` function.
 This allows you to serialize profiling data for inspection, storage, or transmission.
 
 Calling `json_encode($profiler)` will produce a JSON object containing:
@@ -45,9 +45,9 @@ streams, string path and `SplFileInfo` objects.
 
 ```php
 use Bakame\Stackwatch\JsonExporter;
-use Bakame\Stackwatch\Profiler;
+use Bakame\Stackwatch\Stack;
 
-$report = Profiler::report($service->calculateHeavyStuff(...), 500);
+$report = Stack::report($service->calculateHeavyStuff(...), 500);
 $exporter = new JsonExporter('path/to/store/the/profile.json', JSON_PRETTY_PRINT|JSON_BIGINT_AS_STRING);
 $exporter->exportReport($report);
 ```
@@ -60,10 +60,10 @@ and only the last export will be stored. To get the data appended provide an alr
 
 ## CLI
 
-You can display the `SpanAggregator` or the `Timeline` recorded data recorded using the `StatsExporter` class.
+You can display the `Profiler` or the `Timeline` recorded data recorded using the `StatsExporter` class.
 
 ```php
-use Bakame\Stackwatch\SpanAggregator;
+use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\ViewExporter;
 
 $callback = function (int ...$args): int {
@@ -72,13 +72,13 @@ $callback = function (int ...$args): int {
     return array_sum($args);
 };
 
-$aggregator = new SpanAggregator($callback);
+$aggregator = new Profiler($callback);
 $aggregator->profile('first_run', 1, 2);
 $aggregator->profile('last_run', 1, 2);
 $aggregator->run(1, 2);
 
 $exporter = new ViewExporter();
-$exporter->exportSpanAggregator($aggregator);
+$exporter->exportProfiler($aggregator);
 ```
 the following table will be outputted in your terminal.
 

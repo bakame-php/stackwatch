@@ -145,18 +145,18 @@ final class ViewExporter implements Exporter
     /**
      * @param (callable(Span): bool)|string|null $label
      */
-    public function exportSpanAggregator(SpanAggregator $spanAggregator, callable|string|null $label = null): void
+    public function exportProfiler(Profiler $profiler, callable|string|null $label = null): void
     {
         $input = match (true) {
-            null === $label => iterator_to_array($spanAggregator),
-            is_callable($label) => $spanAggregator->filter($label),
-            default => $spanAggregator->getAll($label),
+            null === $label => iterator_to_array($profiler),
+            is_callable($label) => $profiler->filter($label),
+            default => $profiler->getAll($label),
         };
 
         $tableRenderer = Table::dashed()
             ->setHeader(array_map($this->translator->translate(...), [...['label'], ...array_keys(Metrics::none()->toArray())]))
             ->setHeaderStyle(AnsiStyle::BrightGreen)
-            ->setTitle($spanAggregator->identifier())
+            ->setTitle($profiler->identifier())
             ->setTitleStyle(AnsiStyle::BrightGreen, AnsiStyle::Bold)
             ->setRowStyle([
                 ['column' => 0, 'style' => [AnsiStyle::BrightGreen, AnsiStyle::Bold]],

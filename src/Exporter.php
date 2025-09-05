@@ -15,7 +15,7 @@ interface Exporter
     /**
      * @param (callable(Span): bool)|string|null $label
      */
-    public function exportSpanAggregator(SpanAggregator $spanAggregator, callable|string|null $label = null): void;
+    public function exportProfiler(Profiler $profiler, callable|string|null $label = null): void;
     /**
      * @param ?callable(Snapshot): bool $filter
      */

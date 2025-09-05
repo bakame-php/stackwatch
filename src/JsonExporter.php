@@ -118,17 +118,17 @@ final class JsonExporter implements Exporter
     /**
      * @param (callable(Span): bool)|string|null $label
      */
-    public function exportSpanAggregator(SpanAggregator $spanAggregator, callable|string|null $label = null): void
+    public function exportProfiler(Profiler $profiler, callable|string|null $label = null): void
     {
         $this->write(match (true) {
-            null === $label => $spanAggregator,
+            null === $label => $profiler,
             is_callable($label) => [
-                'identifier' => $spanAggregator->identifier(),
-                'spans' => $spanAggregator->filter($label),
+                'identifier' => $profiler->identifier(),
+                'spans' => $profiler->filter($label),
             ],
             default => [
-                'identifier' => $spanAggregator->identifier(),
-                'spans' => $spanAggregator->getAll($label),
+                'identifier' => $profiler->identifier(),
+                'spans' => $profiler->getAll($label),
             ],
         });
     }

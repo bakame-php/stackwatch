@@ -119,7 +119,7 @@ final class Report implements JsonSerializable
         ];
     }
 
-    public static function fromMetrics(Timeline|SpanAggregator|Span|Metrics ...$metrics): self
+    public static function fromMetrics(Timeline|Profiler|Span|Metrics ...$metrics): self
     {
         $statistics = [
             'cpuTime' => [],

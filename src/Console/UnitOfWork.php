@@ -7,8 +7,8 @@ namespace Bakame\Stackwatch\Console;
 use Bakame\Stackwatch\InvalidArgument;
 use Bakame\Stackwatch\Metrics;
 use Bakame\Stackwatch\Profile;
-use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Report;
+use Bakame\Stackwatch\Stack;
 use Bakame\Stackwatch\UnableToProfile;
 use Closure;
 use DateTimeImmutable;
@@ -281,8 +281,8 @@ final class UnitOfWork implements JsonSerializable
             $callback = $this->getCallback();
             $this->runAt = new DateTimeImmutable('now', new DateTimeZone('UTC'));
             $this->result = match ($this->profile->type) {
-                null => Profiler::report($callback, $this->profile->iterations, $this->profile->warmup),
-                default => Profiler::metrics($callback, $this->profile->iterations, $this->profile->warmup, $this->profile->type),
+                null => Stack::report($callback, $this->profile->iterations, $this->profile->warmup),
+                default => Stack::metrics($callback, $this->profile->iterations, $this->profile->warmup, $this->profile->type),
             };
         }
     }

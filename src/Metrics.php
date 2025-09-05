@@ -148,7 +148,7 @@ final class Metrics implements JsonSerializable
         }
     }
 
-    public static function sum(Timeline|SpanAggregator|Result|Span|Metrics ...$items): self
+    public static function sum(Timeline|Profiler|Result|Span|Metrics ...$items): self
     {
         $sum = self::none();
         foreach (self::yieldFrom(...$items) as $metric) {
@@ -158,7 +158,7 @@ final class Metrics implements JsonSerializable
         return $sum;
     }
 
-    public static function aggregate(AggregatorType $type, Timeline|SpanAggregator|Result|Span|Metrics ...$metrics): self
+    public static function aggregate(AggregatorType $type, Timeline|Profiler|Result|Span|Metrics ...$metrics): self
     {
         return match ($type) {
             AggregatorType::Average => self::average(...$metrics),
@@ -170,7 +170,7 @@ final class Metrics implements JsonSerializable
         };
     }
 
-    public static function median(Timeline|SpanAggregator|Result|Span|Metrics ...$metrics): self
+    public static function median(Timeline|Profiler|Result|Span|Metrics ...$metrics): self
     {
         /** @var array<Metrics> $all */
         $all = iterator_to_array(self::yieldFrom(...$metrics));
@@ -217,7 +217,7 @@ final class Metrics implements JsonSerializable
         );
     }
 
-    public static function average(Timeline|SpanAggregator|Result|Span|Metrics ...$metrics): self
+    public static function average(Timeline|Profiler|Result|Span|Metrics ...$metrics): self
     {
         $cpuTime = 0.0;
         $executionTime = 0.0;
@@ -261,7 +261,7 @@ final class Metrics implements JsonSerializable
         );
     }
 
-    public static function min(Timeline|SpanAggregator|Result|Span|Metrics ...$metrics): self
+    public static function min(Timeline|Profiler|Result|Span|Metrics ...$metrics): self
     {
         if ([] === $metrics) {
             return self::none();
@@ -310,7 +310,7 @@ final class Metrics implements JsonSerializable
         );
     }
 
-    public static function max(Timeline|SpanAggregator|Result|Span|Metrics ...$metrics): self
+    public static function max(Timeline|Profiler|Result|Span|Metrics ...$metrics): self
     {
         if ([] === $metrics) {
             return self::none();
@@ -359,7 +359,7 @@ final class Metrics implements JsonSerializable
         );
     }
 
-    public static function range(Timeline|SpanAggregator|Result|Span|Metrics ...$metrics): self
+    public static function range(Timeline|Profiler|Result|Span|Metrics ...$metrics): self
     {
         $min = self::min(...$metrics);
         $max = self::max(...$metrics);
@@ -393,14 +393,14 @@ final class Metrics implements JsonSerializable
      *
      * @return Generator<Metrics>
      */
-    public static function yieldFrom(Timeline|SpanAggregator|Result|Span|Metrics ...$metrics): Generator
+    public static function yieldFrom(Timeline|Profiler|Result|Span|Metrics ...$metrics): Generator
     {
         foreach ($metrics as $metric) {
             yield from match ($metric::class) {
                 Metrics::class  => [$metric],
                 Span::class => [$metric->metrics],
                 Result::class => [$metric->span->metrics],
-                SpanAggregator::class => array_map(fn (Span $span) => $span->metrics, iterator_to_array($metric, false)),
+                Profiler::class => array_map(fn (Span $span) => $span->metrics, iterator_to_array($metric, false)),
                 Timeline::class => array_map(fn (Span $span) => $span->metrics, iterator_to_array($metric->deltas(), false)),
             };
         }

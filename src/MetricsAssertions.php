@@ -20,6 +20,6 @@ trait MetricsAssertions
         int $warmup = 0,
         AggregatorType $type = AggregatorType::Average
     ): MetricsAssert {
-        return new MetricsAssert(Profiler::metrics($callback, $iterations, $warmup, $type));
+        return new MetricsAssert(Stack::metrics($callback, $iterations, $warmup, $type));
     }
 }

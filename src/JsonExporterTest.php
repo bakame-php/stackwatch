@@ -115,18 +115,18 @@ final class JsonExporterTest extends TestCase
         $timeline = Timeline::start('yo');
         usleep(100);
         $timeline->capture('mtv');
-        $profiler = new SpanAggregator(function () {
+        $profiler = new Profiler(function () {
             usleep(100);
         });
         $profiler->run();
 
-        $report = Profiler::report(function () {
+        $report = Stack::report(function () {
             usleep(100);
         }, 10);
 
         $exporter->exportMetrics(Metrics::none());
         $exporter->exportTimeline($timeline);
-        $exporter->exportSpanAggregator($profiler);
+        $exporter->exportProfiler($profiler);
         $exporter->exportReport($report);
 
         /** @var string $ndjson */

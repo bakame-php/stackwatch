@@ -11,7 +11,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - Added `ViewExporter` and `Renderer` to allow viewing the log in browser or in the CLI
 - Added `dump()` and `dd()` methods to `Profiler`, `Timeline`, `SpanAggregator`, `Snapshot`, `Metrics`, `Span`, `Report`
 - Added `Metrics::sum`, `Metrics::range`,`Metrics::minimum`,`Metrics::maximun`,`Metrics::median`, `Metrics::aggregate`
-- Adding the `AggregationType` Enum to improve `Profiler::metrics`, the `Profile` Attribute and the `Metrics` usage.
+- Adding the `AggregatorType` Enum to improve `Stack::metrics`, the `Profile` Attribute and the `Metrics` usage.
 - **BC BREAK:** `Summary` is renamed `Span`.
 - `CallLocation` class to allow recording where the package `Snapshot` was called from [#8](https://github.com/bakame-php/stackwatch/pull/8)
 - `CallRange` class to allow manipulating location range within the `Summary` class.
@@ -32,7 +32,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - Added `toHuman()` method to return a human-readable version of `toArray`
 - Added `human()` method to return the human-redable version of a single property.
 - Added Snapshot relation method `compareTo` and its aliases `isBefore*` `isAfter*` and `isAtSameTime` using the `Snapshot::hrtime` property
-- **BC BREAK:** `Profiler` class is split into two classes `Profiler` and `SpanAggregator`
+- **BC BREAK:** `Profiler` class is split into two classes `Stack` and `Profiler`
 
 ### Fixed
 
