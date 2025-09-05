@@ -251,17 +251,20 @@ These functions are environment-aware (console or browser) and are designed for 
 
 ### Basic Helpers
 
-- `stack_dump()` : Executes a callback, computes summary metrics (`Metrics`), dumps them, and returns the `Metrics` object. Execution continues.
-- `stack_dd()` : Executes a callback, computes summary metrics (`Metrics`), dumps them, and then **stops execution**.
+- `stack()` : Execute a callback **once**, returns a `Result` object containing the callback result and its associated profiling `Span`.
+- `stack_watch()` : Execute a callback **once**, dump the profiling `Span`, and return the callback result.
 
 ### Full Detailed Report Helpers
 
-- `stack_rdump()` : Executes a callback, computes the full detailed report (`Report`), dumps them, and returns the `Report` object. Execution continues.
-- `stack_rdd()` : Executes a callback, computes the full detailed report (`Report`), dumps them, and then **stops execution**.
+- `stack_report()`: Executes a callback, computes and returns the full detailed report (`Report`).
+- `stack_dump()` : Executes a callback, computes the full detailed report (`Report`), dumps them, and returns the `Report` object. Execution continues.
+- `stack_dd()` : Executes a callback, computes the full detailed report (`Report`), dumps them, and then **stops execution**.
 
-### Inline Profiling Helper
+### Metrics Helpers
 
-- `stack()`: Executes a callback once, dumps the resulting `Span`, and returns the callback’s value. Ideal for quick inline profiling.
+- `stack_metrics()`: Executes a callback, computes and returns the summary metrics (`Metrics`).
+- `stack_mdump()` : Executes a callback, computes summary metrics (`Metrics`), dumps them, and returns the `Metrics` object. Execution continues.
+- `stack_mdd()` : Executes a callback, computes summary metrics (`Metrics`), dumps them, and then **stops execution**.
 
 ### Arguments
 
@@ -269,12 +272,12 @@ All helpers accept:
 
 - **callback** – The function or method to profile.
 
-The `stack_` functions accept:
+The `stack_report`, `stack_dump` and `stack_dd` functions additionally accept:
 
 - **iterations** – Number of times to execute and record metrics (default: 1).
 - **warm-up runs** – Number of initial iterations to skip.
 
-The `stack_dump` and `stack_dd` functions accept:
+The `stack_metrics`, `stack_mdump` and `stack_mdd` functions also accept:
 
 - **aggregation type** – _Optional_ `AggregatorType` for summarizing metrics (Average, Median, etc.).
 
@@ -284,22 +287,26 @@ The `stack_dump` and `stack_dd` functions accept:
 ```php
 use Bakame\Stackwatch\AggregatorType;
 
-// Dump full detailed metrics after 5 iterations, skipping 2 warm-up runs
-$report = stack_rdump($service->calculateHeavyStuff(...), 5, 2);
-
-// Dump summary metrics using median aggregation (continues execution)
-$metrics = stack_dump($service->calculateHeavyStuff(...), 5, 2, AggregatorType::Median);
-
-// Dump summary metrics and stop execution
-stack_dd($service->calculateHeavyStuff(...), 5, 2, AggregatorType::Median);
+// Execute callback once, return Result object containing
+// callback value and profiling Span
+$result = stack($service->calculateHeavyStuff(...));
 
 // Execute callback once, dump Span, and get its return value
-$result = stack($service->calculateHeavyStuff(...), label: 'heavy_calc');
+$result = stack_watch($service->calculateHeavyStuff(...));
+
+// Dump full detailed metrics after 5 iterations, skipping 2 warm-up runs
+$report = stack_dump($service->calculateHeavyStuff(...), 5, 2);
 
 // Dump full detailed report and stop execution
-stack_rdd($service->calculateHeavyStuff(...), 5);
+stack_dd($service->calculateHeavyStuff(...), 5);
+
+// Dump summary metrics using median aggregation (continues execution)
+$metrics = stack_mdump($service->calculateHeavyStuff(...), 5, 2, AggregatorType::Median);
+
+// Dump summary metrics and stop execution
+$metrics = stack_mdd($service->calculateHeavyStuff(...), 5, 2, AggregatorType::Median);
 ```
 
-<p class="message-info">Use <code>stack_dump()</code> or <code>stack_rdump()</code> when you want to programmatically access the profiling result.</p>
-<p class="message-info">Use <code>stack_dd()</code> or <code>stack_rdd()</code> when you just want to inspect it and halt execution.</p>
-<p class="message-info">Use <code>stack()</code> for quick inline profiling while keeping the callback’s return value.</p>
+<p class="message-info">Use <code>stack()</code> or <code>stack_watch()</code> for <strong>inline profiling</strong> when you want the callback result.</p>
+<p class="message-info">Use <code>stack_dump()</code> or <code>stack_mdump()</code> when you want <strong>to programmatically access the profiling result</strong>.</p>
+<p class="message-info">Use <code>stack_dd()</code> or <code>stack_mdd()</code> when you just want <strong>to inspect it and halt execution.</strong></p>

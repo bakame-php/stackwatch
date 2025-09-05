@@ -6,6 +6,8 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Added
 
+- PHPUnit assertions helper trait `MetricsAssertions` to help profile testing using PHPUnit Framework
+- Added `stack`, `stack_watch`, `stack_report`, `stack_dump`, `stack_dd`, `stack_metrics`, `stack_mdump` and `stack_mdd` to profile, dump a human-readable result into the console or the web browser using global functions to ease DX.
 - Added `ViewExporter` and `Renderer` to allow viewing the log in browser or in the CLI
 - Added `dump()` and `dd()` methods to `Profiler`, `Timeline`, `SpanAggregator`, `Snapshot`, `Metrics`, `Span`, `Report`
 - Added `Metrics::sum`, `Metrics::range`,`Metrics::minimum`,`Metrics::maximun`,`Metrics::median`, `Metrics::aggregate`
@@ -26,8 +28,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - **BC BREAK:** `State` is renamed `Feature`
 - **BC BREAK:** `Input::TABLE_FORMAT` is renamed `Input::TEXT_FORMAT`
 - Added a `Translator` class to improve human-readable key translation.
-- Added `Profiler::dump` and its global function counterpart `pf_dump` to profile, and dump a human-readable result into the output stream.
-- Added `Profiler::dd` and its global function counterpart `pf_dd` to profile, dump a human-readable result into the output stream and die.
+- Added `Profiler::dump` and `Profiler::dd` to profile, dump a human-readable result into the console or the web browser
 - Added `toHuman()` method to return a human-readable version of `toArray`
 - Added `human()` method to return the human-redable version of a single property.
 - Added Snapshot relation method `compareTo` and its aliases `isBefore*` `isAfter*` and `isAtSameTime` using the `Snapshot::hrtime` property
