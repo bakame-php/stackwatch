@@ -6,7 +6,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Added
 
-- None
+- `MetricsAssertions::aggRange` Added missing metrics preset.
 
 ### Fixed
 

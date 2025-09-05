@@ -95,6 +95,11 @@ trait MetricsAssertions
         return $this->withAggregation(AggregationType::Sum);
     }
 
+    public function aggRange(): self
+    {
+        return $this->withAggregation(AggregationType::Range);
+    }
+
     /**
      * Profile a callback and return a fluent MetricsAssert object.
      */

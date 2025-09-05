@@ -225,7 +225,7 @@ abstract class PerformanceTestCase extends TestCase
         return [
             'iterations' => 5,
             'warmup'=> 1,
-            'aggregation' => AggregationType::Median,
+            'type' => AggregationType::Median,
         ];
     }
 }
@@ -260,6 +260,7 @@ $this->iter(5)
 - `->aggMin()`
 - `->aggMax()`
 - `->aggSum()`
+- `->aggRange()`
 
 Example:
 
@@ -310,16 +311,17 @@ $this->assertMetrics($service->calculateHeavyStuff(...))
 
 #### Fluent configuration API
 
-| Method                                    | Alias                         | Description                    |
-|-------------------------------------------|-------------------------------|--------------------------------|
-| `withIterations(int)`                     | `iter(int)`                   | Number of iterations           |
-| `withWarmup(int)`                         | `warmup(int)`                 | Number of warmup runs          | 
-| `withAggregation(?AggregationType = null)` | `agg(?AggregationType = null)` | Aggregation type               |
-| `aggAverage()`                            | —                             | AggregationType::Average preset |
-| `aggMedian()`                             | —                             | AggregationType::Median preset  | 
-| `aggMin()`                                | —                             | AggregationType::Min preset     | 
-| `aggMax()`                                | —                             | AggregationType::Max preset     | 
-| `aggSum()`                                | —                             | AggregationType::Sum preset     |
+| Method                                     | Alias                          | Description                     |
+|--------------------------------------------|--------------------------------|---------------------------------|
+| `withIterations(int)`                      | `iter(int)`                    | Number of iterations            |
+| `withWarmup(int)`                          | `warmup(int)`                  | Number of warmup runs           | 
+| `withAggregation(?AggregationType = null)` | `agg(?AggregationType = null)` | Aggregation type                |
+| `aggAverage()`                             | —                              | AggregationType::Average preset |
+| `aggMedian()`                              | —                              | AggregationType::Median preset  | 
+| `aggMin()`                                 | —                              | AggregationType::Min preset     | 
+| `aggMax()`                                 | —                              | AggregationType::Max preset     | 
+| `aggSum()`                                 | —                              | AggregationType::Sum preset     |
+| `aggRange()`                               | —                              | AggregationType::Range preset   |
 
 
 #### Of Note
