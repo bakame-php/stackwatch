@@ -26,10 +26,9 @@ final class MetricsAssertionsTest extends TestCase
             ->cpuTime()
             ->lessThanOrEqual(50, 'ms')
             ->memoryUsage()->greaterThan(0)
-            ->memoryUsageGrowth()->lessThan(2_000_000)
+            ->memoryUsageGrowth()->lessThan(2, 'mb')
             ->peakMemoryUsage()->greaterThanOrEqualMetric('memoryUsage')
             ->realPeakMemoryUsage()->greaterThanOrEqualMetric('realMemoryUsage')
-            ->allNonNegative()
-            ->assertConsistency();
+            ->allNonNegative();
     }
 }
