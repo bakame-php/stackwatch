@@ -112,6 +112,7 @@ final class ExampleTest extends TestCase
 {
     use MetricsAssertions;
 
+    #[Test]
     public function it_can_test_callback_performance(): void
     {
         $performance = $this
