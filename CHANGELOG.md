@@ -2,7 +2,7 @@
 
 All Notable changes to `bakame/stackwatch` will be documented in this file.
 
-## [0.14.0 - Nouakchott](https://github.com/bakame-php/stackwatch/compare/0.13.0...main) - TBD
+## [0.14.0 - Nouakchott](https://github.com/bakame-php/stackwatch/compare/0.13.0...0.14.0) - 2025-09-05
 
 ### Added
 
