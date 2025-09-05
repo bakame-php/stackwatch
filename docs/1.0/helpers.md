@@ -226,7 +226,7 @@ abstract class PerformanceTestCase extends TestCase
         return [
             'iterations' => 5,
             'warmup'=> 1,
-            'aggregation' => AggregatorType::Median,
+            'aggregation' => AggregationType::Median,
         ];
     }
 }
@@ -315,12 +315,12 @@ $this->assertMetrics($service->calculateHeavyStuff(...))
 |-------------------------------------------|-------------------------------|--------------------------------|
 | `withIterations(int)`                     | `iter(int)`                   | Number of iterations           |
 | `withWarmup(int)`                         | `warmup(int)`                 | Number of warmup runs          | 
-| `withAggregation(?AggregatorType = null)` | `agg(?AggregatorType = null)` | Aggregation type               |
-| `aggAverage()`                            | —                             | AggregatorType::Average preset |
-| `aggMedian()`                             | —                             | AggregatorType::Median preset  | 
-| `aggMin()`                                | —                             | AggregatorType::Min preset     | 
-| `aggMax()`                                | —                             | AggregatorType::Max preset     | 
-| `aggSum()`                                | —                             | AggregatorType::Sum preset     |
+| `withAggregation(?AggregationType = null)` | `agg(?AggregationType = null)` | Aggregation type               |
+| `aggAverage()`                            | —                             | AggregationType::Average preset |
+| `aggMedian()`                             | —                             | AggregationType::Median preset  | 
+| `aggMin()`                                | —                             | AggregationType::Min preset     | 
+| `aggMax()`                                | —                             | AggregationType::Max preset     | 
+| `aggSum()`                                | —                             | AggregationType::Sum preset     |
 
 
 #### Of Note

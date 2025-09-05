@@ -70,13 +70,13 @@ Here:
 Choose how results are aggregated:
 
 ```php
-use Bakame\Stackwatch\AggregatorType;
+use Bakame\Stackwatch\AggregationType;
 
 $metrics = stack_metrics(
     $service->calculateHeavyStuff(...),
     5,
     2,
-    AggregatorType::Median
+    AggregationType::Median
 );
 ```
 

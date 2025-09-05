@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch;
 
-enum AggregatorType: string
+enum AggregationType: string
 {
     case Average = 'average';
     case Median = 'median';

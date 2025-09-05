@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace Foobar\Baz;
 
-use Bakame\Stackwatch\AggregatorType;
+use Bakame\Stackwatch\AggregationType;
 use Bakame\Stackwatch\Profile;
 
 use function random_int;
@@ -33,7 +33,7 @@ use function usleep;
 require 'vendor/autoload.php';
 
 trait TimerTrait {
-    #[Profile(type: AggregatorType::Average, iterations: 10)]
+    #[Profile(type: AggregationType::Average, iterations: 10)]
     private function test() : int {
         usleep(100);
 
@@ -131,7 +131,7 @@ The attribute accept the same arguments as `Profiler::metrics()`:
 
 - the number of **iterations**,
 - the number of **warm-up** runs to skip,
-- and an optional aggregation type (`AggregatorType`).
+- and an optional aggregation type (`AggregationType`).
 
 If no aggregation type is specified, the output will include the full profiling details, similar to what `Profiler::report()` returns.
 
@@ -143,10 +143,10 @@ It optionally also accepts an array of **tags** to enable grouping and filtering
 **On a function**
 
 ```php
-use Bakame\Stackwatch\AggregatorType;
+use Bakame\Stackwatch\AggregationType;
 use Bakame\Stackwatch\Profile;
 
-#[Profile(iterations: 500, type: AggregatorType::Median)]
+#[Profile(iterations: 500, type: AggregationType::Median)]
 function calculateSomething(): void
 {
     // ...
@@ -171,10 +171,10 @@ class Example
 **On a class**
 
 ```php
-use Bakame\Stackwatch\AggregatorType;
+use Bakame\Stackwatch\AggregationType;
 use Bakame\Stackwatch\Profile;
 
-#[Profile(iterations: 100, type: AggregatorType::Median)]
+#[Profile(iterations: 100, type: AggregationType::Median)]
 class MyService 
 {
     public function methodOne() 

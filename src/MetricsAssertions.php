@@ -10,7 +10,7 @@ trait MetricsAssertions
     private int $metricsIterations = 1;
     /** @var int<0, max> */
     private int $metricsWarmup = 0;
-    private AggregatorType $metricsAggregation = AggregatorType::Average;
+    private AggregationType $metricsType = AggregationType::Average;
 
     /**
      * Set the number of iterations (fluent).
@@ -59,9 +59,9 @@ trait MetricsAssertions
     /**
      * Set the aggregation type (fluent).
      */
-    public function withAggregation(?AggregatorType $aggregation): self
+    public function withAggregation(?AggregationType $type): self
     {
-        $this->metricsAggregation = $aggregation ?? AggregatorType::Average;
+        $this->metricsType = $type ?? AggregationType::Average;
 
         return $this;
     }
@@ -72,27 +72,27 @@ trait MetricsAssertions
 
     public function aggAverage(): self
     {
-        return $this->withAggregation(AggregatorType::Average);
+        return $this->withAggregation(AggregationType::Average);
     }
 
     public function aggMedian(): self
     {
-        return $this->withAggregation(AggregatorType::Median);
+        return $this->withAggregation(AggregationType::Median);
     }
 
     public function aggMin(): self
     {
-        return $this->withAggregation(AggregatorType::Minimum);
+        return $this->withAggregation(AggregationType::Minimum);
     }
 
     public function aggMax(): self
     {
-        return $this->withAggregation(AggregatorType::Maximum);
+        return $this->withAggregation(AggregationType::Maximum);
     }
 
     public function aggSum(): self
     {
-        return $this->withAggregation(AggregatorType::Sum);
+        return $this->withAggregation(AggregationType::Sum);
     }
 
     /**
@@ -104,7 +104,7 @@ trait MetricsAssertions
             $callback,
             $this->metricsIterations,
             $this->metricsWarmup,
-            $this->metricsAggregation
+            $this->metricsType
         );
 
         // reset config so it doesn't leak into the next test
@@ -119,7 +119,7 @@ trait MetricsAssertions
      * @return array{
      *     iterations? : int<1, max>,
      *     warmup? : int<0, max>,
-     *     aggregation? : ?AggregatorType
+     *     type? : ?AggregationType
      * }
      */
     protected function defaultMetricsConfig(): array
@@ -127,7 +127,7 @@ trait MetricsAssertions
         return [
             'iterations' => 1,
             'warmup' => 0,
-            'aggregation' => AggregatorType::Average,
+            'type' => AggregationType::Average,
         ];
     }
 
@@ -137,7 +137,7 @@ trait MetricsAssertions
 
         $this->metricsIterations = $defaults['iterations'] ?? 1;
         $this->metricsWarmup = $defaults['warmup'] ?? 0;
-        $this->metricsAggregation = $defaults['aggregation'] ?? AggregatorType::Average;
+        $this->metricsType = $defaults['type'] ?? AggregationType::Average;
     }
 
     private function resetMetricsConfig(): void

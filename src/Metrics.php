@@ -158,15 +158,15 @@ final class Metrics implements JsonSerializable
         return $sum;
     }
 
-    public static function aggregate(AggregatorType $type, Timeline|Profiler|Result|Span|Metrics ...$metrics): self
+    public static function aggregate(AggregationType $type, Timeline|Profiler|Result|Span|Metrics ...$metrics): self
     {
         return match ($type) {
-            AggregatorType::Average => self::average(...$metrics),
-            AggregatorType::Median => self::median(...$metrics),
-            AggregatorType::Sum => self::sum(...$metrics),
-            AggregatorType::Maximum => self::max(...$metrics),
-            AggregatorType::Minimum => self::min(...$metrics),
-            AggregatorType::Range => self::range(...$metrics),
+            AggregationType::Average => self::average(...$metrics),
+            AggregationType::Median => self::median(...$metrics),
+            AggregationType::Sum => self::sum(...$metrics),
+            AggregationType::Maximum => self::max(...$metrics),
+            AggregationType::Minimum => self::min(...$metrics),
+            AggregationType::Range => self::range(...$metrics),
         };
     }
 

@@ -78,7 +78,7 @@ final class StackwatchTest extends TestCase
 <?php
 namespace Test;
 
-use Bakame\Stackwatch\AggregatorType;
+use Bakame\Stackwatch\AggregationType;
 use Bakame\Stackwatch\Profile;
 
 #[Profile(iterations: 5, warmup: 1)]
@@ -89,7 +89,7 @@ function testCommandLineFunction(): void
 
 class TestCommandLineClass
 {
-    #[Profile(iterations: 3, warmup: 1, type: AggregatorType::Average)]
+    #[Profile(iterations: 3, warmup: 1, type: AggregationType::Average)]
     public function testMethod(): void
     {
         usleep(500);

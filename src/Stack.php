@@ -49,16 +49,18 @@ final class Stack
     /**
      * Returns the value and the profiling data of the callback execution.
      *
+     * @param ?non-empty-string $label
+     *
      * @throws InvalidArgument|Throwable
      */
-    public static function execute(callable $callback): Result
+    public static function execute(callable $callback, ?string $label = null): Result
     {
         gc_collect_cycles();
         $start = Snapshot::now('start');
         $returnValue = ($callback)();
         $end = Snapshot::now('end');
 
-        return new Result($returnValue, new Span(self::generateLabel(), $start, $end));
+        return new Result($returnValue, new Span($label ?? self::generateLabel(), $start, $end));
     }
 
     /**
@@ -71,7 +73,7 @@ final class Stack
      *
      * @throws InvalidArgument|Throwable
      */
-    public static function metrics(callable $callback, int $iterations = 1, int $warmup = 0, AggregatorType $type = AggregatorType::Average): Metrics
+    public static function metrics(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
     {
         self::assertItCanBeRun($iterations, $warmup);
         self::warmup($warmup, $callback);
@@ -111,12 +113,11 @@ final class Stack
      *
      * @throws Throwable
      */
-    public static function dumpReport(callable $callback, int $iterations = 3, int $warmup = 0): Report
+    public static function dumpReport(callable $callback, int $iterations = 1, int $warmup = 0): Report
     {
         $stats = self::report($callback, $iterations, $warmup);
 
-        $renderer = new Renderer();
-        $renderer->renderReport($stats, new Profile(null, $iterations, $warmup), CallLocation::fromLastInternalCall(__NAMESPACE__, ['*Test.php']));
+        (new Renderer())->renderReport($stats, new Profile(null, $iterations, $warmup), CallLocation::fromLastInternalCall(__NAMESPACE__, ['*Test.php']));
 
         return $stats;
     }
@@ -129,12 +130,11 @@ final class Stack
      *
      * @throws Throwable
      */
-    public static function dumpMetrics(callable $callback, int $iterations = 3, int $warmup = 0, AggregatorType $type = AggregatorType::Average): Metrics
+    public static function dumpMetrics(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
     {
         $stats = self::metrics($callback, $iterations, $warmup, $type);
 
-        $renderer = new Renderer();
-        $renderer->render($stats, new Profile($type, $iterations, $warmup), CallLocation::fromLastInternalCall(__NAMESPACE__, ['*Test.php']));
+        (new Renderer())->render($stats, new Profile($type, $iterations, $warmup), CallLocation::fromLastInternalCall(__NAMESPACE__, ['*Test.php']));
 
         return $stats;
     }
@@ -147,7 +147,7 @@ final class Stack
      *
      * @throws Throwable
      */
-    public static function ddReport(callable $callback, int $iterations = 3, int $warmup = 0): never
+    public static function ddReport(callable $callback, int $iterations = 1, int $warmup = 0): never
     {
         ob_start();
         self::dumpReport($callback, $iterations, $warmup);
@@ -175,7 +175,7 @@ final class Stack
      *
      * @throws Throwable
      */
-    public static function ddMetrics(callable $callback, int $iterations = 3, int $warmup = 0, AggregatorType $type = AggregatorType::Average): never
+    public static function ddMetrics(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): never
     {
         ob_start();
         self::dumpMetrics($callback, $iterations, $warmup, $type);
