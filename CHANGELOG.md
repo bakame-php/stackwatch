@@ -10,7 +10,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Fixed
 
-- None
+- `Timeline::dump` and `Timeline::dd` can take an optional filter callable.
 
 ### Deprecated
 

@@ -226,6 +226,8 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     /**
      * Returns the average metrics associated with the callback.
+     *
+     * @param (callable(Span): bool)|non-empty-string|null $label
      */
     public function average(callable|string|null $label = null): Metrics
     {
@@ -238,6 +240,8 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     /**
      * Returns the average metrics associated with the callback.
+     *
+     * @param (callable(Span): bool)|non-empty-string|null $label
      */
     public function median(callable|string|null $label = null): Metrics
     {
@@ -250,6 +254,8 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     /**
      * Returns the average metrics associated with the callback.
+     *
+     * @param (callable(Span): bool)|non-empty-string|null $label
      */
     public function range(callable|string|null $label = null): Metrics
     {
@@ -262,6 +268,8 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     /**
      * Returns the average metrics associated with the callback.
+     *
+     * @param (callable(Span): bool)|non-empty-string|null $label
      */
     public function min(callable|string|null $label = null): Metrics
     {
@@ -274,6 +282,8 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     /**
      * Returns the average metrics associated with the callback.
+     *
+     * @param (callable(Span): bool)|non-empty-string|null $label
      */
     public function max(callable|string|null $label = null): Metrics
     {

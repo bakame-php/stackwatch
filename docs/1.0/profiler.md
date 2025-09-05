@@ -42,6 +42,10 @@ $profiler->first();        // returns the first Span ever generated
 $profiler->isEmpty();      // returns true when the profiler contains no span
 $profiler->hasSummaries(); // returns true when at least on Span is present
 $profiler->average();      // returns the average Metrics of all the calls
+$profiler->median();       // returns the median Metrics of all the calls
+$profiler->min();          // returns the min Metrics of all the calls
+$profiler->max();          // returns the max Metrics of all the calls
+$profiler->range();        // returns the range Metrics of all the calls
 ```
 
 You can access any `Span` by index using the `nth` method, or use the `first` and `latest` methods
@@ -82,6 +86,12 @@ of all entries recorded under that label, ordered from oldest to newest.
 If the label is invalid or has never been used, `Profiler::getAll()` returns an empty `array`
 while `Profiler::get()` returns `null`. To determine whether a label exists, use `Profiler::has()`,
 which returns `true` if the label has been recorded, or `false` otherwise.
+
+The metrics related methods (`average`, `median`, `min`, `max`, `range`) can take an optional `label` argument:
+
+- if it is a string, it will expect a `Span` label used to filter the `Span` to use for the metrics aggregation.
+- if it is a callable, it will expect a filtering **callable** which takes a `Span` as its unique argument and keep the instance which returns `true`.
+- if not present, the metrics uses all the found `Span` instance (default)
 
 ## Resetting the Profiler
 

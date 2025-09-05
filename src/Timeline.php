@@ -309,17 +309,23 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
         return array_values(array_filter($this->snapshots, $filter));
     }
 
-    public function dump(): self
+    /**
+     * @param ?callable(Snapshot): bool $filter
+     */
+    public function dump(?callable $filter = null): self
     {
-        (new Renderer())->renderTimeline($this);
+        (new Renderer())->renderTimeline($this, $filter);
 
         return $this;
     }
 
-    public function dd(): never
+    /**
+     * @param ?callable(Snapshot): bool $filter
+     */
+    public function dd(?callable $filter = null): never
     {
         ob_start();
-        self::dump();
+        self::dump($filter);
         $dumpOutput = ob_get_clean();
 
         if (Environment::current()->isCli()) {

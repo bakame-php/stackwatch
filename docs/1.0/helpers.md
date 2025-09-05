@@ -49,7 +49,7 @@ A `Snapshot` can be:
 
 - Converted to an `array` via `toArray` method, 
 - JSON-encoded via `json_encode` (implementing the `JsonSerializable` interface)
-- Returned in a **human-readable** format via `forHuman()`.
+- Returned in a **human-readable** format via `toHuman()`.
 
 #### Full human-readable export
 
@@ -57,7 +57,7 @@ The human-readable export automatically converts **nanoseconds** and **bytes** i
 formats depending on the recorded values.
 
 ```php
-$snapshot->forHuman(); 
+$snapshot->toHuman(); 
 // returns an array
 // [
 //   "label" => "database_query"
@@ -80,9 +80,8 @@ You can retrieve a single value by providing a friendly key.
 Keys are case-insensitive and may contain spaces, underscores, or dashes — all forms are accepted.
 
 ```php
-$snapshot->forHuman('CPU user time'); // returns "36.923 ms"
-$snapshot->forHuman('cpu-user-time'); // returns "36.923 ms"
-$snapshot->forHuman('cpu_user_time'); // returns "36.923 ms"
+$snapshot->human('cpuUserTime'); // returns "36.923 ms"
+$snapshot->human('cpu_user_time'); // returns "36.923 ms"
 ```
 
 ### Comparing Snapshots

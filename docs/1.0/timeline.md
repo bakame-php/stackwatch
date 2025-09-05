@@ -73,7 +73,7 @@ You can iterate over each successive pair of snapshots to return the consecutive
 
 ```php
 foreach ($timeline->deltas() as $span) {
-    echo $span->label . ': ' . $span->metrics->forHuman('execution_time') . PHP_EOL;
+    echo $span->label . ': ' . $span->metrics->human('execution_time') . PHP_EOL;
 }
 ```
 
@@ -147,7 +147,7 @@ $timeline->complete();
 
 // Printing full report
 foreach ($timeline->deltas() as $span) {
-    echo "{$span->label}: {$span->metrics->forHuman('execution_time')}";
+    echo "{$span->label}: {$span->metrics->human('execution_time')}";
 }
 ```
 
