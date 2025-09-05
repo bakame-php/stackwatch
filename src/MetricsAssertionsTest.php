@@ -4,31 +4,30 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch;
 
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class MetricsAssertionsTest extends TestCase
 {
     use MetricsAssertions;
 
-    public function testHeavyStuffMetrics(): void
+    #[Test]
+    public function it_can_test_some_callback_performance(): void
     {
-        $service = fn () => true;
+        $callback = fn () => true;
 
-        $this->assertMetrics(
-            $service,
-            iterations: 5,
-            warmup: 2,
-            type: AggregatorType::Median
-        )
-            ->executionTime()
-            ->greaterThan(0)
-            ->lessThanOrEqual(50, 'ms')
-            ->cpuTime()
-            ->lessThanOrEqual(50, 'ms')
-            ->memoryUsage()->greaterThan(0)
-            ->memoryUsageGrowth()->lessThan(2, 'mb')
-            ->peakMemoryUsage()->greaterThanOrEqualMetric('memoryUsage')
-            ->realPeakMemoryUsage()->greaterThanOrEqualMetric('realMemoryUsage')
-            ->allNonNegative();
+        $assertMetrics = $this
+            ->iter(5)
+            ->warmup(2)
+            ->aggMedian()
+            ->assertMetrics($callback);
+
+        $assertMetrics->executionTime()->greaterThan(0)->lessThanOrEqual(50, 'ms');
+        $assertMetrics->cpuTime()->lessThanOrEqual(50, 'ms');
+        $assertMetrics->memoryUsage()->greaterThan(0);
+        $assertMetrics->memoryUsageGrowth()->lessThan(2, 'mb');
+        $assertMetrics->peakMemoryUsage()->greaterThanOrEqualMetric('memoryUsage');
+        $assertMetrics->realPeakMemoryUsage()->greaterThanOrEqualMetric('realMemoryUsage');
+        $assertMetrics->allNonNegative();
     }
 }

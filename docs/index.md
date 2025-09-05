@@ -99,6 +99,33 @@ Target: Foobar\Baz\MyEnum::test; Path: /path/to/profiling/code.php; Iterations: 
 +-------------------------------+------------+------------+------------+------------+------------+------------+--------------+---------------+-----------+-----------+
 ```
 
+## PHPUnit helper traits
+
+A **fluent, unit-aware PHPUnit helper** for asserting profiler metrics.
+
+```php
+use Bakame\Stackwatch\MetricsAssertions;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\TestCase;
+
+final class ExampleTest extends TestCase
+{
+    use MetricsAssertions;
+
+    public function it_can_test_callback_performance(): void
+    {
+        $performance = $this
+             ->iter(5)
+             ->warmup(2)
+             ->aggMedian()
+             ->assertMetrics($service->calculateHeavyStuff(...));
+        
+        $performance->executionTime()->lessThan(200, 'milliseconds')
+        $performance->memoryUsage()->greaterThan(10, 'mb');
+    }
+}
+```
+
 # Motivation
 
 **Stackwatch** bridges the gap between basic timers and heavy profiling tools like [PHPBench](https://phpbench.readthedocs.io/en/latest/), [Xdebug](https://xdebug.org/) or [Blackfire](https://www.blackfire.io/).
