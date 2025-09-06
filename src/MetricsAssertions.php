@@ -105,7 +105,7 @@ trait MetricsAssertions
      */
     public function assertMetrics(callable $callback): MetricsAssert
     {
-        $metrics = Stack::metrics(
+        $metrics = Stack::measure(
             $callback,
             $this->metricsIterations,
             $this->metricsWarmup,

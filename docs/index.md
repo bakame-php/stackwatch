@@ -12,7 +12,7 @@ Once installed, it will allow you to
 ## Profile any block using closures
 
 ```php
-$duration = stack_metrics(function () {
+$duration = stack_measure(function () {
     // code that will be profiled
 })->executionTime;
 // $duration is the execution time in nanosecond using hrtime instead of microtime

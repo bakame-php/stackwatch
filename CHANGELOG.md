@@ -6,11 +6,17 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Added
 
-- `MetricsAssertions::aggRange` Added missing metrics preset.
+- **BC BREAK:** Rename `stack` to `stack_call`
+- **BC BREAK:** Rename `stack_dump` to `stack_cdump`
+- **BC BREAK:** Rename `stack_dd` to `stacj_cdd`
+- **BC BREAK:** Rename `stack_metrics` to `stacj_measure`
+- **BC BREAK:** Rename `Stack::execute` to `Stack::call`
+- **BC BREAK:** Rename `Stack::metrics` to `Stack::measure`
 
 ### Fixed
 
 - `Timeline::dump` and `Timeline::dd` can take an optional filter callable.
+- `MetricsAssertions::aggRange` Added missing metrics preset.
 
 ### Deprecated
 

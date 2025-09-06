@@ -282,7 +282,7 @@ final class UnitOfWork implements JsonSerializable
             $this->runAt = new DateTimeImmutable('now', new DateTimeZone('UTC'));
             $this->result = match ($this->profile->type) {
                 null => Stack::report($callback, $this->profile->iterations, $this->profile->warmup),
-                default => Stack::metrics($callback, $this->profile->iterations, $this->profile->warmup, $this->profile->type),
+                default => Stack::measure($callback, $this->profile->iterations, $this->profile->warmup, $this->profile->type),
             };
         }
     }

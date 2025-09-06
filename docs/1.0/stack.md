@@ -18,7 +18,7 @@ echo microtime(true) - $start; // the execution time of your code
 ## Quick Profiling
 
 ```php
-$result = stack($service->calculateHeavyStuff(...));
+$result = stack_call($service->calculateHeavyStuff(...));
 
 $result->returnValue; // the actual return value from the callback
 $result->span;        // profiling data (Span object)
@@ -26,12 +26,12 @@ $result->span;        // profiling data (Span object)
 
 ## Summary Metrics
 
-Use `stack_metrics()` to collect execution time, memory usage, and CPU time:
+Use `stack_measure()` to collect execution time, memory usage, and CPU time:
 
 ```php
 use Bakame\Stackwatch\DurationUnit;
 
-$metrics = stack_metrics($service->calculateHeavyStuff(...));
+$metrics = stack_measure($service->calculateHeavyStuff(...));
 echo DurationUnit::format($metrics->executionTime); // "1.271 ms"
 ```
 Each metric is available as a readonly property:
@@ -59,7 +59,7 @@ $metrics->human('memory_usage'); // only one metric
 Run multiple iterations and skip warm-ups:
 
 ```php
-$metrics = stack_metrics($service->calculateHeavyStuff(...), 5, 2);
+$metrics = stack_measure($service->calculateHeavyStuff(...), 5, 2);
 ```
 Here:
     - `5` iterations are recorded
@@ -72,7 +72,7 @@ Choose how results are aggregated:
 ```php
 use Bakame\Stackwatch\AggregationType;
 
-$metrics = stack_metrics(
+$metrics = stack_measure(
     $service->calculateHeavyStuff(...),
     5,
     2,
@@ -114,8 +114,8 @@ Each property is a `Statistics` object, exposing:
 
 For quick inspection:
 
- - `stack_dump()` → dumps span/metrics, continues execution
-- `stack_dd()` → dumps span/metrics, halts execution
+ - `stack_cdump()` → dumps span/metrics, continues execution
+- `stack_cdd()` → dumps span/metrics, halts execution
 - `stack_rdump()` → dumps detailed report, continues execution
 - `stack_rdd()` → dumps detailed report, halts execution
 - `stack_mdump()` → dumps summary metrics, continues execution
@@ -124,12 +124,12 @@ For quick inspection:
 
 | Function          | Returns   | Dumps? | Halts? |
 |-------------------|-----------|--------|--------|
-| `stack()`         | `Result`  | ❌      | ❌      |
-| `stack_dump()`    | `Result`  | ✅      | ❌      |
-| `stack_dd()`      | `never`   | ✅      | ✅      |
+| `stack_call()`    | `Result`  | ❌      | ❌      |
+| `stack_cdump()`   | `Result`  | ✅      | ❌      |
+| `stack_cdd()`     | `never`   | ✅      | ✅      |
 | `stack_report()`  | `Report`  | ❌      | ❌      |
 | `stack_rdump()`   | `Report`  | ✅      | ❌      |
 | `stack_rdd()`     | `never`   | ✅      | ✅      |
-| `stack_metrics()` | `Metrics` | ❌      | ❌      |
+| `stack_measure()` | `Metrics` | ❌      | ❌      |
 | `stack_mdump()`   | `Metrics` | ✅      | ❌      |
 | `stack_mdd()`     | `never`   | ✅      | ✅      |

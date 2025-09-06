@@ -8,7 +8,7 @@ use Bakame\Stackwatch\Report;
 use Bakame\Stackwatch\Result;
 use Bakame\Stackwatch\Stack;
 
-if (!function_exists('stack')) {
+if (!function_exists('stack_call')) {
     /**
      * Profile a callable, returns a @see Result object.
      *
@@ -16,13 +16,13 @@ if (!function_exists('stack')) {
      *
      * @param ?non-empty-string $label
      */
-    function stack(callable $callback, ?string $label = null): Result
+    function stack_call(callable $callback, ?string $label = null): Result
     {
-        return Stack::execute($callback, $label);
+        return Stack::call($callback, $label);
     }
 }
 
-if (!function_exists('stack_dump')) {
+if (!function_exists('stack_cdump')) {
     /**
      * Profile a callable, dump the generated Span and return the callback returned value.
      *
@@ -30,16 +30,16 @@ if (!function_exists('stack_dump')) {
      *
      * @param ?non-empty-string $label
      */
-    function stack_dump(callable $callback, ?string $label = null): Result
+    function stack_cdump(callable $callback, ?string $label = null): Result
     {
-        $result = Stack::execute($callback, $label);
+        $result = Stack::call($callback, $label);
         $result->span->dump();
 
         return $result;
     }
 }
 
-if (!function_exists('stack_dd')) {
+if (!function_exists('stack_cdd')) {
     /**
      * Profile a callable, dump the generated Span and return the callback returned value.
      *
@@ -47,9 +47,9 @@ if (!function_exists('stack_dd')) {
      *
      * @param ?non-empty-string $label
      */
-    function stack_dd(callable $callback, ?string $label = null): never
+    function stack_cdd(callable $callback, ?string $label = null): never
     {
-        Stack::execute($callback, $label)->span->dd();
+        Stack::call($callback, $label)->span->dd();
     }
 }
 
@@ -100,7 +100,7 @@ if (!function_exists('stack_rdd')) {
     }
 }
 
-if (!function_exists('stack_metrics')) {
+if (!function_exists('stack_measure')) {
     /**
      * Profile a callable and returns the generated Metrics object.
      *
@@ -109,9 +109,9 @@ if (!function_exists('stack_metrics')) {
      *
      * @throws Throwable
      */
-    function stack_metrics(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
+    function stack_measure(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
     {
-        return Stack::metrics($callback, $iterations, $warmup, $type);
+        return Stack::measure($callback, $iterations, $warmup, $type);
     }
 }
 

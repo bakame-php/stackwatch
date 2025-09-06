@@ -53,7 +53,7 @@ final class Stack
      *
      * @throws InvalidArgument|Throwable
      */
-    public static function execute(callable $callback, ?string $label = null): Result
+    public static function call(callable $callback, ?string $label = null): Result
     {
         gc_collect_cycles();
         $start = Snapshot::now('start');
@@ -73,13 +73,13 @@ final class Stack
      *
      * @throws InvalidArgument|Throwable
      */
-    public static function metrics(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
+    public static function measure(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
     {
         self::assertItCanBeRun($iterations, $warmup);
         self::warmup($warmup, $callback);
         $metrics = [];
         for ($i = 0; $i < $iterations; ++$i) {
-            $metrics[] = self::execute($callback)->span->metrics;
+            $metrics[] = self::call($callback)->span->metrics;
         }
 
         return Metrics::aggregate($type, ...$metrics);
@@ -99,7 +99,7 @@ final class Stack
         self::warmup($warmup, $callback);
         $metrics = [];
         for ($i = 0; $i < $iterations; ++$i) {
-            $metrics[] = self::execute($callback)->span->metrics;
+            $metrics[] = self::call($callback)->span->metrics;
         }
 
         return Report::fromMetrics(...$metrics);
@@ -132,7 +132,7 @@ final class Stack
      */
     public static function dumpMetrics(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
     {
-        $stats = self::metrics($callback, $iterations, $warmup, $type);
+        $stats = self::measure($callback, $iterations, $warmup, $type);
 
         (new Renderer())->render($stats, new Profile($type, $iterations, $warmup), CallLocation::fromLastInternalCall(__NAMESPACE__, ['*Test.php']));
 
