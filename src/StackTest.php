@@ -28,7 +28,7 @@ final class StackTest extends TestCase
             return 'end';
         };
 
-        $metrics = Stack::measure($callback, iterations: 2, warmup: 3);
+        $metrics = Stack::benchmark($callback, iterations: 2, warmup: 3);
 
         self::assertGreaterThanOrEqual(0, $metrics->executionTime);
         self::assertGreaterThanOrEqual(0, $metrics->cpuTime);
@@ -43,6 +43,6 @@ final class StackTest extends TestCase
     {
         $this->expectException(InvalidArgument::class);
 
-        Stack::measure(fn () => null, 0); /* @phpstan-ignore-line  */
+        Stack::benchmark(fn () => null, 0); /* @phpstan-ignore-line  */
     }
 }

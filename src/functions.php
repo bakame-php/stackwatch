@@ -32,10 +32,7 @@ if (!function_exists('stack_cdump')) {
      */
     function stack_cdump(callable $callback, ?string $label = null): Result
     {
-        $result = Stack::call($callback, $label);
-        $result->span->dump();
-
-        return $result;
+        return Stack::dumpCall($callback, $label);
     }
 }
 
@@ -49,7 +46,7 @@ if (!function_exists('stack_cdd')) {
      */
     function stack_cdd(callable $callback, ?string $label = null): never
     {
-        Stack::call($callback, $label)->span->dd();
+        Stack::ddCall($callback, $label);
     }
 }
 
@@ -100,7 +97,7 @@ if (!function_exists('stack_rdd')) {
     }
 }
 
-if (!function_exists('stack_measure')) {
+if (!function_exists('stack_bench')) {
     /**
      * Profile a callable and returns the generated Metrics object.
      *
@@ -109,13 +106,13 @@ if (!function_exists('stack_measure')) {
      *
      * @throws Throwable
      */
-    function stack_measure(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
+    function stack_bench(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
     {
-        return Stack::measure($callback, $iterations, $warmup, $type);
+        return Stack::benchmark($callback, $iterations, $warmup, $type);
     }
 }
 
-if (!function_exists('stack_mdump')) {
+if (!function_exists('stack_bdump')) {
     /**
      * Profile a callable, dump and return the generated @see Metrics.
      *
@@ -126,13 +123,13 @@ if (!function_exists('stack_mdump')) {
      *
      * @throws Throwable
      */
-    function stack_mdump(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
+    function stack_bdump(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
     {
-        return Stack::dumpMetrics($callback, $iterations, $warmup, $type);
+        return Stack::dumpBenchmark($callback, $iterations, $warmup, $type);
     }
 }
 
-if (!function_exists('stack_mdd')) {
+if (!function_exists('stack_bdd')) {
     /**
      * Profile a callable, dump the generated @see Metrics and halt script execution.
      *
@@ -141,8 +138,8 @@ if (!function_exists('stack_mdd')) {
      *
      * @throws Throwable
      */
-    function stack_mdd(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): never
+    function stack_bdd(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): never
     {
-        Stack::ddMetrics($callback, $iterations, $warmup, $type);
+        Stack::ddBenchmark($callback, $iterations, $warmup, $type);
     }
 }

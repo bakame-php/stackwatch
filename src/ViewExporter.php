@@ -119,9 +119,9 @@ final class ViewExporter implements Exporter
         $this->exportLeaderPrinter($environment->toHuman());
     }
 
-    public function exportStatistics(Statistics $statistics): void
+    public function exportStatistics(Statistics $statistics, string $name): void
     {
-        $this->exportLeaderPrinter($statistics->toHuman());
+        $this->exportLeaderPrinter([...['label' => $name], ...$statistics->toHuman()]);
     }
 
     public function exportReport(Report $report): void

@@ -10,7 +10,10 @@ interface Exporter
     public function exportSnapshot(Snapshot $snapshot): void;
     public function exportMetrics(Metrics $metrics): void;
     public function exportSpan(Span $span): void;
-    public function exportStatistics(Statistics $statistics): void;
+    /**
+     * @param non-empty-string $name
+     */
+    public function exportStatistics(Statistics $statistics, string $name): void;
     public function exportReport(Report $report): void;
     /**
      * @param (callable(Span): bool)|string|null $label

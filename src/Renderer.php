@@ -78,10 +78,13 @@ CSS;
         echo '</div>', PHP_EOL;
     }
 
-    public function renderStatistics(Statistics $statistics): void
+    /**
+     * @param non-empty-string $name
+     */
+    public function renderStatistics(Statistics $statistics, string $name): void
     {
         if ($this->exporter->environment->isCli()) {
-            $this->exporter->exportStatistics($statistics);
+            $this->exporter->exportStatistics($statistics, $name);
 
             return;
         }
@@ -89,7 +92,7 @@ CSS;
         self::loadCss();
 
         echo '<div class="bkm-sw-container" id="bkm-sw-span-'.random_int(0, 100_000).'">';
-        $this->exporter->exportStatistics($statistics);
+        $this->exporter->exportStatistics($statistics, $name);
         echo '</div>', PHP_EOL;
     }
 

@@ -9,9 +9,11 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - **BC BREAK:** Rename `stack` to `stack_call`
 - **BC BREAK:** Rename `stack_dump` to `stack_cdump`
 - **BC BREAK:** Rename `stack_dd` to `stacj_cdd`
-- **BC BREAK:** Rename `stack_metrics` to `stacj_measure`
+- **BC BREAK:** Rename `stack_metrics` to `stack_bench`
 - **BC BREAK:** Rename `Stack::execute` to `Stack::call`
-- **BC BREAK:** Rename `Stack::metrics` to `Stack::measure`
+- **BC BREAK:** Rename `Stack::metrics` to `Stack::benchmark`
+- **BC BREAK:** Rename `Stack::dumpMetrics` to `Stack::dumpBenchmark`
+- **BC BREAK:** Rename `Stack::ddMetrics` to `Stack::ddBenchmark`
 
 ### Fixed
 

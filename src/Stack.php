@@ -63,6 +63,36 @@ final class Stack
         return new Result($returnValue, new Span($label ?? self::generateLabel(), $start, $end));
     }
 
+
+    /**
+     * Returns the value and the profiling data of the callback execution.
+     * And dump the Span object.
+     *
+     * @param ?non-empty-string $label
+     *
+     * @throws InvalidArgument|Throwable
+     */
+    public static function dumpCall(callable $callback, ?string $label = null): Result
+    {
+        $result = self::call($callback, $label);
+        $result->span->dump();
+
+        return $result;
+    }
+
+    /**
+     * Dump and Die the Span generated during the callbakc execution.
+     *
+     * @param ?non-empty-string $label
+     *
+     * @throws InvalidArgument|Throwable
+     */
+    public static function ddCall(callable $callback, ?string $label = null): never
+    {
+        $result = self::call($callback, $label);
+        $result->span->dd();
+    }
+
     /**
      * Returns aggregated metrics associated with the callback.
      *
@@ -73,7 +103,7 @@ final class Stack
      *
      * @throws InvalidArgument|Throwable
      */
-    public static function measure(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
+    public static function benchmark(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
     {
         self::assertItCanBeRun($iterations, $warmup);
         self::warmup($warmup, $callback);
@@ -130,9 +160,9 @@ final class Stack
      *
      * @throws Throwable
      */
-    public static function dumpMetrics(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
+    public static function dumpBenchmark(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
     {
-        $stats = self::measure($callback, $iterations, $warmup, $type);
+        $stats = self::benchmark($callback, $iterations, $warmup, $type);
 
         (new Renderer())->render($stats, new Profile($type, $iterations, $warmup), CallLocation::fromLastInternalCall(__NAMESPACE__, ['*Test.php']));
 
@@ -175,10 +205,10 @@ final class Stack
      *
      * @throws Throwable
      */
-    public static function ddMetrics(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): never
+    public static function ddBenchmark(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): never
     {
         ob_start();
-        self::dumpMetrics($callback, $iterations, $warmup, $type);
+        self::dumpBenchmark($callback, $iterations, $warmup, $type);
         $dumpOutput = ob_get_clean();
 
         if (Environment::current()->isCli()) {

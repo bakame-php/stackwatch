@@ -198,7 +198,7 @@ By default, the method takes <code>UnitSpacing::Space</code>.
 
 ## PHPUnit Metrics Assertions Helper
 
-A **fluent, unit-aware PHPUnit helper** for asserting profiler metrics from `stack_measure()`.
+A **fluent, unit-aware PHPUnit helper** for asserting profiler metrics from `stack_bench()`.
 
 This helper provides:
 

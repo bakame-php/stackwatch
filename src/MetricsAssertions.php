@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch;
 
+use Throwable;
+
 trait MetricsAssertions
 {
     /** @var int<1, max> */
@@ -102,10 +104,12 @@ trait MetricsAssertions
 
     /**
      * Profile a callback and return a fluent MetricsAssert object.
+     *
+     * @throws Throwable
      */
     public function assertMetrics(callable $callback): MetricsAssert
     {
-        $metrics = Stack::measure(
+        $metrics = Stack::benchmark(
             $callback,
             $this->metricsIterations,
             $this->metricsWarmup,

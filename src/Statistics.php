@@ -271,17 +271,23 @@ final class Statistics implements JsonSerializable
         return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown statistics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
     }
 
-    public function dump(): self
+    /**
+     * @param non-empty-string $name
+     */
+    public function dump(string $name): self
     {
-        (new Renderer())->renderStatistics($this);
+        (new Renderer())->renderStatistics($this, $name);
 
         return $this;
     }
 
-    public function dd(): never
+    /**
+     * @param non-empty-string $name
+     */
+    public function dd(string $name): never
     {
         ob_start();
-        self::dump();
+        self::dump($name);
         $dumpOutput = ob_get_clean();
 
         if (Environment::current()->isCli()) {

@@ -90,21 +90,21 @@ final class MetricsAssert
     public function greaterThan(float|int $min, MemoryUnit|DurationUnit|string|null $unit = null, string $message = ''): self
     {
         $value = $this->getValue();
-        Assert::assertGreaterThan($this->convertUnit($min, $unit), $value, '' !== $message ? $message : "Expected {$this->current} > $min, got $value");
+        Assert::assertGreaterThan($this->convertUnit($min, $unit), $value, '' !== $message ? $message : "Expected $this->current > $min, got $value");
         return $this;
     }
 
     public function greaterThanOrEqual(float|int $min, MemoryUnit|DurationUnit|string|null $unit = null, string $message = ''): self
     {
         $value = $this->getValue();
-        Assert::assertGreaterThanOrEqual($this->convertUnit($min, $unit), $value, '' !== $message ? $message : "Expected {$this->current} >= $min, got $value");
+        Assert::assertGreaterThanOrEqual($this->convertUnit($min, $unit), $value, '' !== $message ? $message : "Expected $this->current >= $min, got $value");
         return $this;
     }
 
     public function lessThan(float|int $max, MemoryUnit|DurationUnit|string|null $unit = null, string $message = ''): self
     {
         $value = $this->getValue();
-        Assert::assertLessThan($this->convertUnit($max, $unit), $value, '' !== $message ? $message : "Expected {$this->current} < $max, got $value");
+        Assert::assertLessThan($this->convertUnit($max, $unit), $value, '' !== $message ? $message : "Expected $this->current < $max, got $value");
 
         return $this;
     }
@@ -112,7 +112,7 @@ final class MetricsAssert
     public function lessThanOrEqual(float|int $max, MemoryUnit|DurationUnit|string|null $unit = null, string $message = ''): self
     {
         $value = $this->getValue();
-        Assert::assertLessThanOrEqual($this->convertUnit($max, $unit), $value, '' !== $message ? $message : "Expected {$this->current} <= $max, got $value");
+        Assert::assertLessThanOrEqual($this->convertUnit($max, $unit), $value, '' !== $message ? $message : "Expected $this->current <= $max, got $value");
 
         return $this;
     }
@@ -123,8 +123,8 @@ final class MetricsAssert
         $minBase = $this->convertUnit($min, $unit);
         $maxBase = $this->convertUnit($max, $unit);
 
-        Assert::assertGreaterThanOrEqual($minBase, $value, '' !== $message ? $message : "Expected {$this->current} >= $min, got $value");
-        Assert::assertLessThanOrEqual($maxBase, $value, '' !== $message ? $message : "Expected {$this->current} <= $max, got $value");
+        Assert::assertGreaterThanOrEqual($minBase, $value, '' !== $message ? $message : "Expected $this->current >= $min, got $value");
+        Assert::assertLessThanOrEqual($maxBase, $value, '' !== $message ? $message : "Expected $this->current <= $max, got $value");
 
         return $this;
     }
@@ -141,7 +141,7 @@ final class MetricsAssert
         Assert::assertGreaterThan(
             $otherValue,
             $value,
-            '' !== $message ? $message : "Expected {$this->current} > $other ($otherValue), got $value"
+            '' !== $message ? $message : "Expected $this->current > $other ($otherValue), got $value"
         );
 
         return $this;
@@ -155,7 +155,7 @@ final class MetricsAssert
         Assert::assertGreaterThanOrEqual(
             $otherValue,
             $value,
-            '' !== $message ? $message : "Expected {$this->current} >= $other ($otherValue), got $value"
+            '' !== $message ? $message : "Expected $this->current >= $other ($otherValue), got $value"
         );
 
         return $this;
@@ -169,7 +169,7 @@ final class MetricsAssert
         Assert::assertLessThan(
             $otherValue,
             $value,
-            '' !== $message ? $message : "Expected {$this->current} < $other ($otherValue), got $value"
+            '' !== $message ? $message : "Expected $this->current < $other ($otherValue), got $value"
         );
 
         return $this;
@@ -183,7 +183,7 @@ final class MetricsAssert
         Assert::assertLessThanOrEqual(
             $otherValue,
             $value,
-            '' !== $message ? $message : "Expected {$this->current} <= $other ($otherValue), got $value"
+            '' !== $message ? $message : "Expected $this->current <= $other ($otherValue), got $value"
         );
 
         return $this;

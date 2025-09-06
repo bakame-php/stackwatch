@@ -26,12 +26,12 @@ $result->span;        // profiling data (Span object)
 
 ## Summary Metrics
 
-Use `stack_measure()` to collect execution time, memory usage, and CPU time:
+Use `stack_bench()` to collect execution time, memory usage, and CPU time:
 
 ```php
 use Bakame\Stackwatch\DurationUnit;
 
-$metrics = stack_measure($service->calculateHeavyStuff(...));
+$metrics = stack_bench($service->calculateHeavyStuff(...));
 echo DurationUnit::format($metrics->executionTime); // "1.271 ms"
 ```
 Each metric is available as a readonly property:
@@ -59,7 +59,7 @@ $metrics->human('memory_usage'); // only one metric
 Run multiple iterations and skip warm-ups:
 
 ```php
-$metrics = stack_measure($service->calculateHeavyStuff(...), 5, 2);
+$metrics = stack_bench($service->calculateHeavyStuff(...), 5, 2);
 ```
 Here:
     - `5` iterations are recorded
@@ -72,7 +72,7 @@ Choose how results are aggregated:
 ```php
 use Bakame\Stackwatch\AggregationType;
 
-$metrics = stack_measure(
+$metrics = stack_bench(
     $service->calculateHeavyStuff(...),
     5,
     2,
@@ -130,6 +130,6 @@ For quick inspection:
 | `stack_report()`  | `Report`  | ❌      | ❌      |
 | `stack_rdump()`   | `Report`  | ✅      | ❌      |
 | `stack_rdd()`     | `never`   | ✅      | ✅      |
-| `stack_measure()` | `Metrics` | ❌      | ❌      |
+| `stack_bench()` | `Metrics` | ❌      | ❌      |
 | `stack_mdump()`   | `Metrics` | ✅      | ❌      |
 | `stack_mdd()`     | `never`   | ✅      | ✅      |

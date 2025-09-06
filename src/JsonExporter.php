@@ -157,8 +157,8 @@ final class JsonExporter implements Exporter
         $this->write($environment);
     }
 
-    public function exportStatistics(Statistics $statistics): void
+    public function exportStatistics(Statistics $statistics, string $name): void
     {
-        $this->write($statistics);
+        $this->write([...['label' => $name], ...$statistics->toArray()]);
     }
 }
