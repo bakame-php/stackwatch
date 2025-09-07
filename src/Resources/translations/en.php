@@ -45,4 +45,5 @@ return [
     'coef_var' => 'Coef Var',
     'metrics' => 'Metrics',
     'label' => 'Label',
+    'type' => 'Type',
 ];

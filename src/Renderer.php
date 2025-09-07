@@ -78,13 +78,10 @@ CSS;
         echo '</div>', PHP_EOL;
     }
 
-    /**
-     * @param non-empty-string $name
-     */
-    public function renderStatistics(Statistics $statistics, string $name): void
+    public function renderStatistics(Statistics $statistics, ?MetricType $type = null): void
     {
         if ($this->exporter->environment->isCli()) {
-            $this->exporter->exportStatistics($statistics, $name);
+            $this->exporter->exportStatistics($statistics, $type);
 
             return;
         }
@@ -92,7 +89,7 @@ CSS;
         self::loadCss();
 
         echo '<div class="bkm-sw-container" id="bkm-sw-span-'.random_int(0, 100_000).'">';
-        $this->exporter->exportStatistics($statistics, $name);
+        $this->exporter->exportStatistics($statistics, $type);
         echo '</div>', PHP_EOL;
     }
 
@@ -129,10 +126,10 @@ CSS;
         echo '</div>', PHP_EOL;
     }
 
-    public function renderSpanAggregator(Profiler $spanAggregator, callable|string|null $label = null): void
+    public function renderProfiler(Profiler $profiler, callable|string|null $label = null): void
     {
         if ($this->exporter->environment->isCli()) {
-            $this->exporter->exportProfiler($spanAggregator, $label);
+            $this->exporter->exportProfiler($profiler, $label);
 
             return;
         }
@@ -140,7 +137,7 @@ CSS;
         self::loadCss();
 
         echo '<div class="bkm-sw-container" id="bkm-sw-span-aggregator-'.random_int(0, 100_000).'">';
-        $this->exporter->exportProfiler($spanAggregator, $label);
+        $this->exporter->exportProfiler($profiler, $label);
         echo '</div>', PHP_EOL;
     }
 
@@ -175,6 +172,20 @@ CSS;
         echo '<div class="bkm-sw-container" id="bkm-sw-metrics-'.random_int(0, 100_000).'">';
         echo $header;
         $this->exporter->exportMetrics($stats);
+        echo '</div>', PHP_EOL;
+    }
+
+    public function renderAggregatedMetrics(Metrics $metrics, ?AggregationType $type = null): void
+    {
+        if ($this->exporter->environment->isCli()) {
+            $this->exporter->exportMetrics($metrics, $type);
+
+            return;
+        }
+
+        self::loadCss();
+        echo '<div class="bkm-sw-container" id="bkm-sw-metrics-'.random_int(0, 100_000).'">';
+        $this->exporter->exportMetrics($metrics, $type);
         echo '</div>', PHP_EOL;
     }
 

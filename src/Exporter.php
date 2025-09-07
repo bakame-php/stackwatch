@@ -8,12 +8,9 @@ interface Exporter
 {
     public function exportEnvironment(Environment $environment): void;
     public function exportSnapshot(Snapshot $snapshot): void;
-    public function exportMetrics(Metrics $metrics): void;
+    public function exportMetrics(Metrics $metrics, ?AggregationType $type = null): void;
     public function exportSpan(Span $span): void;
-    /**
-     * @param non-empty-string $name
-     */
-    public function exportStatistics(Statistics $statistics, string $name): void;
+    public function exportStatistics(Statistics $statistics, ?MetricType $type = null): void;
     public function exportReport(Report $report): void;
     /**
      * @param (callable(Span): bool)|string|null $label

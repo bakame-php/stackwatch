@@ -87,7 +87,7 @@ final class ViewExporter implements Exporter
         $this->exportLeaderPrinter($data);
     }
 
-    public function exportMetrics(Result|Span|Metrics $metrics): void
+    public function exportMetrics(Result|Span|Metrics $metrics, ?AggregationType $type = null): void
     {
         $source = match ($metrics::class) {
             Result::class => $metrics->span->metrics,
@@ -95,7 +95,10 @@ final class ViewExporter implements Exporter
             Metrics::class => $metrics,
         };
 
-        $this->exportLeaderPrinter($source->toHuman());
+        $this->exportLeaderPrinter(match ($type) {
+            null => $source->toHuman(),
+            default => [...['type' => $type->value], ...$source->toHuman()],
+        });
     }
 
     public function exportSpan(Result|Span $span): void
@@ -119,9 +122,12 @@ final class ViewExporter implements Exporter
         $this->exportLeaderPrinter($environment->toHuman());
     }
 
-    public function exportStatistics(Statistics $statistics, string $name): void
+    public function exportStatistics(Statistics $statistics, ?MetricType $type = null): void
     {
-        $this->exportLeaderPrinter([...['label' => $name], ...$statistics->toHuman()]);
+        $this->exportLeaderPrinter(match ($type) {
+            null => $statistics->toHuman(),
+            default => [...['type' => $type->value], ...$statistics->toHuman()],
+        });
     }
 
     public function exportReport(Report $report): void

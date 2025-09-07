@@ -102,6 +102,21 @@ trait MetricsAssertions
         return $this->withAggregation(AggregationType::Range);
     }
 
+    public function aggVariance(): self
+    {
+        return $this->withAggregation(AggregationType::Variance);
+    }
+
+    public function aggStdDev(): self
+    {
+        return $this->withAggregation(AggregationType::StdDev);
+    }
+
+    public function aggCoefVar(): self
+    {
+        return $this->withAggregation(AggregationType::CoefVar);
+    }
+
     /**
      * Profile a callback and return a fluent MetricsAssert object.
      *

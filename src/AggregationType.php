@@ -12,4 +12,7 @@ enum AggregationType: string
     case Maximum  = 'maximum';
     case Sum  = 'sum';
     case Range = 'range';
+    case Variance = 'variance';
+    case StdDev = 'stdDev';
+    case CoefVar = 'coef_var';
 }

@@ -163,9 +163,9 @@ final class OtlExporter implements Exporter
         ]);
     }
 
-    public function exportMetrics(Metrics $metrics): void
+    public function exportMetrics(Metrics $metrics, ?AggregationType $type = null): void
     {
-        $labels = [];
+        $labels = ['type' => $type?->value];
         $this->cpuUser->add($metrics->cpuTime, $labels);
         $this->execTime->record($metrics->executionTime, $labels);
         $this->memoryUsage->record($metrics->memoryUsage, $labels);
@@ -178,6 +178,7 @@ final class OtlExporter implements Exporter
         }
 
         $activeSpan->addEvent('metric', [
+            'type' => $type?->value,
             'cpu.time' => $metrics->cpuTime,
             'execution.time' => $metrics->executionTime,
             'memory.usage' => $metrics->memoryUsage,
@@ -191,7 +192,7 @@ final class OtlExporter implements Exporter
         ]);
     }
 
-    public function exportStatistics(Statistics $statistics, string $name = 'statistics'): void
+    public function exportStatistics(Statistics $statistics, ?MetricType $type = null): void
     {
         $activeSpan = OtlSpan::fromContext(Context::getCurrent());
         if (!$activeSpan->isRecording()) {
@@ -199,7 +200,7 @@ final class OtlExporter implements Exporter
         }
 
         $activeSpan->addEvent('statistics', [
-            'type' => $name,
+            'type' => $type?->value,
             'unit' => $statistics->unit->name,
             'iterations' => $statistics->iterations,
             'min' => $statistics->minimum,
@@ -213,8 +214,8 @@ final class OtlExporter implements Exporter
             'coefVar' => $statistics->coefVar,
         ]);
 
-        $labels = ['type' => $name];
-        if (!str_ends_with(strtolower($name), 'growth')) {
+        if (null !== $type && !$type->isGrowth()) {
+            $labels = ['type' => $type->value];
             $this->execTime->record($statistics->average, $labels);
             $this->memoryUsage->record($statistics->sum, $labels);
         }
@@ -228,20 +229,20 @@ final class OtlExporter implements Exporter
 
         try {
             $statsMap = [
-                'cpuTime' => $report->cpuTime,
-                'executionTime' => $report->executionTime,
-                'memoryUsage' => $report->memoryUsage,
-                'memoryUsageGrowth' => $report->memoryUsageGrowth,
-                'peakMemoryUsage' => $report->peakMemoryUsage,
-                'peakMemoryUsageGrowth' => $report->peakMemoryUsageGrowth,
-                'realMemoryUsage' => $report->realMemoryUsage,
-                'realMemoryUsageGrowth' => $report->realMemoryUsageGrowth,
-                'realPeakMemoryUsage' => $report->realPeakMemoryUsage,
-                'realPeakMemoryUsageGrowth' => $report->realPeakMemoryUsageGrowth,
+                'cpu_time' => $report->cpuTime,
+                'execution_time' => $report->executionTime,
+                'memory_usage' => $report->memoryUsage,
+                'memory_usage_growth' => $report->memoryUsageGrowth,
+                'peak_memory_usage' => $report->peakMemoryUsage,
+                'peak_memory_usage_growth' => $report->peakMemoryUsageGrowth,
+                'real_memory_usage' => $report->realMemoryUsage,
+                'real_memory_usage_growth' => $report->realMemoryUsageGrowth,
+                'real_peak_memory_usage' => $report->realPeakMemoryUsage,
+                'real_peak_memory_usage_growth' => $report->realPeakMemoryUsageGrowth,
             ];
 
             foreach ($statsMap as $name => $stats) {
-                $this->exportStatistics($stats, $name);
+                $this->exportStatistics($stats, MetricType::from($name));
             }
         } finally {
             $scope->detach();

@@ -61,7 +61,7 @@ final class JsonExporterTest extends TestCase
         $handle = fopen($this->tmpFile, 'wb');
         $exporter = new JsonExporter($handle, 0);
         $data = Statistics::fromOne(Unit::Nanoseconds, 3);
-        $exporter->exportStatistics($data, 'test');
+        $exporter->exportStatistics($data);
         fclose($handle);
 
         /** @var string $json */
@@ -69,7 +69,7 @@ final class JsonExporterTest extends TestCase
         self::assertJson($json);
 
         /** @var non-empty-string $jsonData */
-        $jsonData = json_encode([...['label' => 'test'], ...$data->toHuman()]);
+        $jsonData = json_encode($data);
         self::assertSame($jsonData, $json);
     }
 

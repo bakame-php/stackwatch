@@ -320,7 +320,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
     public function dump(callable|string|null $label = null): self
     {
-        (new Renderer())->renderSpanAggregator($this, $label);
+        (new Renderer())->renderProfiler($this, $label);
 
         return $this;
     }

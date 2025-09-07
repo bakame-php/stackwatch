@@ -101,9 +101,12 @@ final class JsonExporter implements Exporter
         $this->write($snapshot);
     }
 
-    public function exportMetrics(Metrics $metrics): void
+    public function exportMetrics(Metrics $metrics, ?AggregationType $type = null): void
     {
-        $this->write($metrics);
+        $this->write(match ($type) {
+            null => $metrics->toArray(),
+            default => [...['type' => $type->value], ...$metrics->toArray()]
+        });
     }
 
     public function exportSpan(Result|Span $span): void
@@ -157,8 +160,11 @@ final class JsonExporter implements Exporter
         $this->write($environment);
     }
 
-    public function exportStatistics(Statistics $statistics, string $name): void
+    public function exportStatistics(Statistics $statistics, ?MetricType $type = null): void
     {
-        $this->write([...['label' => $name], ...$statistics->toArray()]);
+        $this->write(match ($type) {
+            null => $statistics->toArray(),
+            default => [...['type' => $type->value], ...$statistics->toArray()]
+        });
     }
 }

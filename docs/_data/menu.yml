@@ -7,6 +7,6 @@ version:
             Profiler: '/1.0/profiler/'
             Timeline: '/1.0/timeline/'
             CLI command: '/1.0/command/'
+            PHPUnit Helper: '/1.0/phpunit/'
             Exporters: '/1.0/exporters/'
             Helpers: '/1.0/helpers/'
-            PHPUnit Helper: '/1.0/phpunit/'

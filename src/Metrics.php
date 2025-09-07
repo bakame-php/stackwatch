@@ -167,6 +167,9 @@ final class Metrics implements JsonSerializable
             AggregationType::Maximum => self::max(...$metrics),
             AggregationType::Minimum => self::min(...$metrics),
             AggregationType::Range => self::range(...$metrics),
+            AggregationType::CoefVar => self::coefVar(...$metrics),
+            AggregationType::StdDev => self::stdDev(...$metrics),
+            AggregationType::Variance => self::variance(...$metrics),
         };
     }
 
@@ -182,8 +185,6 @@ final class Metrics implements JsonSerializable
         if (1 === $count) {
             return $all[0];
         }
-
-        $mid = intdiv($count, 2);
 
         /**
          * @param array<int|float> $values
@@ -378,6 +379,159 @@ final class Metrics implements JsonSerializable
         );
     }
 
+    public static function variance(Timeline|Profiler|Result|Span|Metrics ...$metrics): self
+    {
+        $values = self::collectValues(...$metrics);
+        if ([] === $values['cpuTime']) {
+            return self::none();
+        }
+
+        $variance = function (array $arr): float {
+            $n = count($arr);
+            if ($n < 2) {
+                return 0.0;
+            }
+            $mean = array_sum($arr) / $n;
+            $sumSq = 0.0;
+            foreach ($arr as $v) {
+                $sumSq += ($v - $mean) ** 2; /* @phpstan-ignore-line */
+            }
+            return $sumSq / ($n - 1); // sample variance
+        };
+
+        return new self(
+            cpuTime: $variance($values['cpuTime']),
+            executionTime: $variance($values['executionTime']),
+            memoryUsage: $variance($values['memoryUsage']),
+            memoryUsageGrowth: $variance($values['memoryUsageGrowth']),
+            peakMemoryUsage: $variance($values['peakMemoryUsage']),
+            peakMemoryUsageGrowth: $variance($values['peakMemoryUsageGrowth']),
+            realMemoryUsage: $variance($values['realMemoryUsage']),
+            realMemoryUsageGrowth: $variance($values['realMemoryUsageGrowth']),
+            realPeakMemoryUsage: $variance($values['realPeakMemoryUsage']),
+            realPeakMemoryUsageGrowth: $variance($values['realPeakMemoryUsageGrowth']),
+        );
+    }
+
+    public static function stdDev(Timeline|Profiler|Result|Span|Metrics ...$metrics): self
+    {
+        $values = self::collectValues(...$metrics);
+        if ([] === $values['cpuTime']) {
+            return self::none();
+        }
+
+        $std = function (array $arr): float {
+            $n = count($arr);
+            if ($n < 2) {
+                return 0.0;
+            }
+            $mean = array_sum($arr) / $n;
+            $variance = 0.0;
+            foreach ($arr as $v) {
+                $variance += ($v - $mean) ** 2; /* @phpstan-ignore-line */
+            }
+            return sqrt($variance / ($n - 1)); // sample stddev
+        };
+
+        return new self(
+            cpuTime: $std($values['cpuTime']),
+            executionTime: $std($values['executionTime']),
+            memoryUsage: $std($values['memoryUsage']),
+            memoryUsageGrowth: $std($values['memoryUsageGrowth']),
+            peakMemoryUsage: $std($values['peakMemoryUsage']),
+            peakMemoryUsageGrowth: $std($values['peakMemoryUsageGrowth']),
+            realMemoryUsage: $std($values['realMemoryUsage']),
+            realMemoryUsageGrowth: $std($values['realMemoryUsageGrowth']),
+            realPeakMemoryUsage: $std($values['realPeakMemoryUsage']),
+            realPeakMemoryUsageGrowth: $std($values['realPeakMemoryUsageGrowth']),
+        );
+    }
+
+    public static function coefVar(Timeline|Profiler|Result|Span|Metrics ...$metrics): self
+    {
+        $values = self::collectValues(...$metrics);
+        if ([] === $values['cpuTime']) {
+            return self::none();
+        }
+
+        $cv = function (array $arr): float {
+            $n = count($arr);
+            if ($n < 2) {
+                return 0.0;
+            }
+            $mean = array_sum($arr) / $n;
+            if (0.0 === $mean) {
+                return 0.0; // avoid division by zero
+            }
+            $sumSq = 0.0;
+            foreach ($arr as $v) {
+                $sumSq += ($v - $mean) ** 2; /* @phpstan-ignore-line */
+            }
+            $stddev = sqrt($sumSq / ($n - 1));
+            return $stddev / $mean;
+        };
+
+        return new self(
+            cpuTime: $cv($values['cpuTime']),
+            executionTime: $cv($values['executionTime']),
+            memoryUsage: $cv($values['memoryUsage']),
+            memoryUsageGrowth: $cv($values['memoryUsageGrowth']),
+            peakMemoryUsage: $cv($values['peakMemoryUsage']),
+            peakMemoryUsageGrowth: $cv($values['peakMemoryUsageGrowth']),
+            realMemoryUsage: $cv($values['realMemoryUsage']),
+            realMemoryUsageGrowth: $cv($values['realMemoryUsageGrowth']),
+            realPeakMemoryUsage: $cv($values['realPeakMemoryUsage']),
+            realPeakMemoryUsageGrowth: $cv($values['realPeakMemoryUsageGrowth']),
+        );
+    }
+
+    /**
+     * Small helper to avoid repeating collection logic.
+     *
+     * @return array{
+     *     cpuTime: list<int|float>,
+     *     executionTime: list<int|float>,
+     *     memoryUsage: list<int|float>,
+     *     memoryUsageGrowth: list<int|float>,
+     *     peakMemoryUsage: list<int|float>,
+     *     peakMemoryUsageGrowth: list<int|float>,
+     *     realMemoryUsage: list<int|float>,
+     *     realMemoryUsageGrowth: list<int|float>,
+     *     realPeakMemoryUsage: list<int|float>,
+     *     realPeakMemoryUsageGrowth: list<int|float>,
+     * }
+     */
+    private static function collectValues(Timeline|Profiler|Result|Span|Metrics ...$metrics): array
+    {
+        $values = [
+            'cpuTime' => [],
+            'executionTime' => [],
+            'memoryUsage' => [],
+            'memoryUsageGrowth' => [],
+            'peakMemoryUsage' => [],
+            'peakMemoryUsageGrowth' => [],
+            'realMemoryUsage' => [],
+            'realMemoryUsageGrowth' => [],
+            'realPeakMemoryUsage' => [],
+            'realPeakMemoryUsageGrowth' => [],
+        ];
+
+        foreach (self::yieldFrom(...$metrics) as $metric) {
+            $values['cpuTime'][] = $metric->cpuTime;
+            $values['executionTime'][] = $metric->executionTime;
+            $values['memoryUsage'][] = $metric->memoryUsage;
+            $values['memoryUsageGrowth'][] = $metric->memoryUsageGrowth;
+            $values['peakMemoryUsage'][] = $metric->peakMemoryUsage;
+            $values['peakMemoryUsageGrowth'][] = $metric->peakMemoryUsageGrowth;
+            $values['realMemoryUsage'][] = $metric->realMemoryUsage;
+            $values['realMemoryUsageGrowth'][] = $metric->realMemoryUsageGrowth;
+            $values['realPeakMemoryUsage'][] = $metric->realPeakMemoryUsage;
+            $values['realPeakMemoryUsageGrowth'][] = $metric->realPeakMemoryUsageGrowth;
+        }
+
+        return $values;
+    }
+
     /**
      * Lazily yields Metrics instances from one or more input objects.
      *
@@ -483,17 +637,17 @@ final class Metrics implements JsonSerializable
         return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown metrics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
     }
 
-    public function dump(): self
+    public function dump(?AggregationType $type = null): self
     {
-        (new Renderer())->renderMetrics($this);
+        (new Renderer())->renderAggregatedMetrics($this, $type);
 
         return $this;
     }
 
-    public function dd(): never
+    public function dd(?AggregationType $type = null): never
     {
         ob_start();
-        self::dump();
+        self::dump($type);
         $dumpOutput = ob_get_clean();
 
         if (Environment::current()->isCli()) {
