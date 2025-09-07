@@ -9,3 +9,4 @@ version:
             CLI command: '/1.0/command/'
             Exporters: '/1.0/exporters/'
             Helpers: '/1.0/helpers/'
+            PHPUnit Helper: '/1.0/phpunit/'
