@@ -56,6 +56,43 @@ If you try to store multiple export in the same file (specified by a string) The
 and only the last export will be stored. To get the data appended provide an already open <code>resource</code> or <code>SplFileObject</code>.
 </div>
 
+## Open Telemetry
+
+The `Profiler`, `Timeline` or `stac_*` results can be exported to an Open telemetry compatible
+server using the `open-telemetry/exporter-otlp` package.
+
+To do so, first install the package if it is not yet the case, then do the following:
+
+```php
+use Bakame\Stackwatch\OtlExporter;
+use Bakame\Stackwatch\Profiler;
+use OpenTelemetry\SDK\Trace\SpanExporter\InMemoryExporter;
+use OpenTelemetry\SDK\Trace\SpanProcessor\SimpleSpanProcessor;
+use OpenTelemetry\SDK\Trace\TracerProvider;
+
+$tracerProvider = new TracerProvider(/* depends of your setuo */);
+$meterProvider = new MeterProvider(/* depends of your setuo */);
+$exporter = new OtlExporter($tracerProvider, $metricExporter);
+
+$callback = function (int ...$args): int|float => {
+    usleep(100)
+    
+    return array_sum($args);
+}; 
+
+$profiler = new Profiler($callback);
+$profiler->profile('first_run', 1, 2);
+$profiler->profile('last_run', 1, 2);
+$profiler->run(1, 2);
+
+$exporter->exportProfilter($profiler); 
+// the Profiler content is exported to the Open Telemetry Server.
+```
+
+Remember to configure the setup for the `$tracerProvider` and `$meterProvider` argument
+to connect to your own environment and server. Usually this will be done once in your
+application bootstrap.
+
 ## Dumping Results
 
 All the classes are `dumpable` using the `dump` and the `dd` methods. Those methods are context aware.
@@ -166,7 +203,6 @@ and the following in a browser
 <tr><td style=";;text-align:right" colspan="1">render</td><td style=";;text-align:right" colspan="1"><a class="bkm-sw-ansi-bold bkm-sw-ansi-bright-cyan hover:bkm-sw-ansi-bright-white" href="phpstorm://open?file=%2Fpath%2Fto%2Fmy%2Fscript.php&line=17">/path/to/my/script.php:17</a></td><td style=";text-align:right" colspan="1">1757085970.479553</td><td style=";;text-align:right" colspan="1">4.875 s</td><td style=";;text-align:right" colspan="1">1.761 MB</td><td style=";;text-align:right" colspan="1">4.000 MB</td><td style=";;text-align:right" colspan="1">2.110 MB</td><td style=";;text-align:right" colspan="1">4.000 MB</td></tr>
 </tbody>
 </table></div>
-
 
 The `dd` method will dump the result and halt the execution of the script.
 
