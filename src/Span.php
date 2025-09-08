@@ -9,11 +9,7 @@ use Throwable;
 
 use function array_diff_key;
 use function array_keys;
-use function header;
-use function headers_sent;
 use function implode;
-use function ob_get_clean;
-use function ob_start;
 
 /**
  * @phpstan-import-type CallRangeMap from CallRange
@@ -108,28 +104,13 @@ final class Span implements JsonSerializable
 
     public function dump(): self
     {
-        (new Renderer())->renderSpan($this);
+        (new ViewExporter())->exportSpan($this);
 
         return $this;
     }
 
     public function dd(): never
     {
-        ob_start();
-        self::dump();
-        $dumpOutput = ob_get_clean();
-
-        if (Environment::current()->isCli()) {
-            echo $dumpOutput;
-            exit(1);
-        }
-
-        if (!headers_sent()) {
-            header('HTTP/1.1 500 Internal Server Error');
-            header('Content-Type: text/html; charset=utf-8');
-        }
-
-        echo $dumpOutput;
-        exit(1);
+        CallbackDumper::dd($this->dump(...));
     }
 }

@@ -13,14 +13,10 @@ use function array_flip;
 use function array_intersect_key;
 use function array_keys;
 use function getrusage;
-use function header;
-use function headers_sent;
 use function hrtime;
 use function implode;
 use function memory_get_peak_usage;
 use function memory_get_usage;
-use function ob_get_clean;
-use function ob_start;
 use function preg_replace;
 use function strtolower;
 
@@ -299,28 +295,13 @@ final class Snapshot implements JsonSerializable
 
     public function dump(): self
     {
-        (new Renderer())->renderSnapshot($this);
+        (new ViewExporter())->exportSnapshot($this);
 
         return $this;
     }
 
     public function dd(): never
     {
-        ob_start();
-        self::dump();
-        $dumpOutput = ob_get_clean();
-
-        if (Environment::current()->isCli()) {
-            echo $dumpOutput;
-            exit(1);
-        }
-
-        if (!headers_sent()) {
-            header('HTTP/1.1 500 Internal Server Error');
-            header('Content-Type: text/html; charset=utf-8');
-        }
-
-        echo $dumpOutput;
-        exit(1);
+        CallbackDumper::dd($this->dump(...));
     }
 }

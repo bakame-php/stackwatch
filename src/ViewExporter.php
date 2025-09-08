@@ -14,6 +14,9 @@ use function array_merge;
 use function array_values;
 use function is_callable;
 use function iterator_to_array;
+use function random_int;
+
+use const PHP_EOL;
 
 /**
  * @phpstan-import-type MetricsHumanReadable from Metrics
@@ -23,6 +26,26 @@ use function iterator_to_array;
 final class ViewExporter implements Exporter
 {
     public readonly Environment $environment;
+
+    private static bool $styleRendered = false;
+
+    public static function stylesheet(): string
+    {
+        return <<<CSS
+.bkm-sw-container {border: 1px #c5cdd5 solid;background-color: #18171B;padding: .5em .5em;margin: 1em auto;font-family: "IBM Plex Mono", mono, source-code-pro, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;font-size:12px;}
+.bkm-sw-container .bkm-sw-header {padding: .3em .7em; font-size: 12px;}
+CSS;
+    }
+
+    public static function style(): string
+    {
+        return '<style>'.PHP_EOL.
+            ViewExporter::stylesheet().PHP_EOL.
+            Table::stylesheet().PHP_EOL.
+            LeaderPrinter::stylesheet().PHP_EOL.
+            AnsiStyle::stylesheet().PHP_EOL.
+            '</style>'.PHP_EOL;
+    }
 
     public function __construct(
         public readonly StreamWriter|OutputInterface $output = new StreamWriter(),
@@ -42,18 +65,56 @@ final class ViewExporter implements Exporter
         $this->write($content."\n");
     }
 
-    private function export(Table|LeaderPrinter $tableRenderer): void
+    private function export(Renderer $renderer, ?string $type = null): void
     {
         if ($this->environment->isCli()) {
-            $this->writeln($tableRenderer->render());
+            $this->writeln($renderer->renderCli());
 
             return;
         }
 
-        echo $tableRenderer->renderHtml();
+        if (null === $type) {
+            echo $renderer->renderHtml();
+
+            return;
+        }
+
+        $this->containerStart($type);
+        echo $renderer->renderHtml();
+        $this->containerEnd();
     }
 
-    public function formatPath(CallLocation $location, AnsiStyle ...$styles): string
+    public function renderStyle(): void
+    {
+        if ($this->environment->isCli()) {
+            return;
+        }
+
+        if (!self::$styleRendered) {
+            echo self::style();
+            self::$styleRendered = true;
+        }
+    }
+
+    private function containerStart(string $type): void
+    {
+        if ($this->environment->isCli()) {
+            return;
+        }
+
+        echo '<div class="bkm-sw-container" id="bkm-sw-'.$type.'-'.random_int(0, 100_000).'">'.PHP_EOL;
+    }
+
+    private function containerEnd(): void
+    {
+        if ($this->environment->isCli()) {
+            return;
+        }
+
+        echo '</div>'.PHP_EOL;
+    }
+
+    private function formatPath(CallLocation $location, AnsiStyle ...$styles): string
     {
         $ide = Ide::fromEnv();
         $path = $ide->path($location);
@@ -67,27 +128,45 @@ final class ViewExporter implements Exporter
     /**
      * @param array<string, string> $data
      */
-    private function exportLeaderPrinter(array $data): void
+    private function exportLeaderPrinter(array $data, ?string $type = null): void
     {
         $this->export(
             (new LeaderPrinter())
                 ->setStylesKey(AnsiStyle::BrightGreen, AnsiStyle::Bold)
                 ->setStylesValue(AnsiStyle::BrightCyan, AnsiStyle::Bold)
-                ->setPairs($this->translator->translateArrayKeys($data))
+                ->setPairs($this->translator->translateArrayKeys($data)),
+            $type
         );
     }
 
-    public function exportSnapshot(Snapshot $snapshot): void
+    public function exportSpan(Result|Span $span): void
     {
-        $data = $snapshot->toHuman();
-        $location = new CallLocation($snapshot->originPath, $snapshot->originLine);
-        unset($data['origin_path'], $data['origin_line']);
-        $data['call_location'] = $this->formatPath($location, AnsiStyle::BrightCyan, AnsiStyle::Bold);
+        $this->renderStyle();
+        $this->containerStart('span');
+        $source = match ($span::class) {
+            Result::class => $span->span,
+            Span::class => $span,
+        };
 
-        $this->exportLeaderPrinter($data);
+        $this->exportLeaderPrinter([
+            'label' => $source->label,
+            'call_location_start' => $this->formatPath($source->range->start, AnsiStyle::BrightCyan, AnsiStyle::Bold),
+            'call_location_end' => $this->formatPath($source->range->end, AnsiStyle::BrightCyan, AnsiStyle::Bold),
+        ]);
+        $this->buildMetrics($source->metrics);
+        $this->containerEnd();
     }
 
-    public function exportMetrics(Result|Span|Metrics $metrics, ?AggregationType $type = null): void
+    public function exportStatistics(Statistics $statistics, ?MetricType $type = null): void
+    {
+        $this->renderStyle();
+        $this->exportLeaderPrinter(match ($type) {
+            null => $statistics->toHuman(),
+            default => [...['type' => $type->value], ...$statistics->toHuman()],
+        }, 'statistics');
+    }
+
+    private function buildMetrics(Result|Span|Metrics $metrics, ?AggregationType $type = null): void
     {
         $source = match ($metrics::class) {
             Result::class => $metrics->span->metrics,
@@ -101,36 +180,7 @@ final class ViewExporter implements Exporter
         });
     }
 
-    public function exportSpan(Result|Span $span): void
-    {
-        $source = match ($span::class) {
-            Result::class => $span->span,
-            Span::class => $span,
-        };
-
-        $ide = Ide::fromEnv();
-        $this->exportLeaderPrinter([
-            'label' => $source->label,
-            'call_location_start' => $this->formatPath($source->range->start, AnsiStyle::BrightCyan, AnsiStyle::Bold),
-            'call_location_end' => $this->formatPath($source->range->end, AnsiStyle::BrightCyan, AnsiStyle::Bold),
-        ]);
-        $this->exportMetrics($source->metrics);
-    }
-
-    public function exportEnvironment(Environment $environment): void
-    {
-        $this->exportLeaderPrinter($environment->toHuman());
-    }
-
-    public function exportStatistics(Statistics $statistics, ?MetricType $type = null): void
-    {
-        $this->exportLeaderPrinter(match ($type) {
-            null => $statistics->toHuman(),
-            default => [...['type' => $type->value], ...$statistics->toHuman()],
-        });
-    }
-
-    public function exportReport(Report $report): void
+    private function buildReport(Report $report): void
     {
         $data = $report->toHuman();
         $headers = array_map($this->translator->translate(...), array_merge(['metrics'], array_keys($data['cpu_time'])));
@@ -153,6 +203,7 @@ final class ViewExporter implements Exporter
      */
     public function exportProfiler(Profiler $profiler, callable|string|null $label = null): void
     {
+        $this->renderStyle();
         $input = match (true) {
             null === $label => iterator_to_array($profiler),
             is_callable($label) => $profiler->filter($label),
@@ -189,7 +240,7 @@ final class ViewExporter implements Exporter
             $tableRenderer->addRow($data);
         }
 
-        $this->export($tableRenderer);
+        $this->export($tableRenderer, 'profile');
     }
 
     /**
@@ -197,6 +248,7 @@ final class ViewExporter implements Exporter
      */
     public function exportTimeline(Timeline $timeline, ?callable $filter = null): void
     {
+        $this->renderStyle();
         $tableRenderer = Table::dashed()
             ->setHeader([
                 $this->translator->translate('label'),
@@ -229,7 +281,7 @@ final class ViewExporter implements Exporter
                     'colspan' => 8,
                 ],
             ]);
-            $this->export($tableRenderer);
+            $this->export($tableRenderer, 'timeline');
             return;
         }
 
@@ -272,5 +324,60 @@ final class ViewExporter implements Exporter
         ]);
 
         $this->export($tableRenderer);
+    }
+
+    private function renderStackMetadata(?Profile $profile, ?CallLocation $callLocation): void
+    {
+        if (null === $callLocation && null !== $profile) {
+            return;
+        }
+
+        $this->export(
+            (new StackMetadata())
+                ->setCollLocation($callLocation)
+                ->setProfile($profile)
+        );
+    }
+
+    public function exportEnvironment(Environment $environment): void
+    {
+        $this->renderStyle();
+        $this->exportLeaderPrinter($environment->toHuman(), 'environment');
+    }
+
+    public function exportSnapshot(Snapshot $snapshot): void
+    {
+        $this->renderStyle();
+        $data = $snapshot->toHuman();
+        $location = new CallLocation($snapshot->originPath, $snapshot->originLine);
+        unset($data['origin_path'], $data['origin_line']);
+        $data['call_location'] = $this->formatPath($location, AnsiStyle::BrightCyan, AnsiStyle::Bold);
+
+        $this->exportLeaderPrinter($data, 'snapshot');
+    }
+
+    public function exportReport(Report $report): void
+    {
+        $this->renderStyle();
+        $this->containerStart('report');
+        $this->buildReport($report);
+        $this->containerEnd();
+    }
+
+    public function exportMetrics(Metrics $metrics, ?AggregationType $type = null): void
+    {
+        $this->renderStyle();
+        $this->containerStart('metrics');
+        $this->buildMetrics($metrics, $type);
+        $this->containerEnd();
+    }
+
+    public function exportStack(Report|Metrics $stats, ?Profile $profile = null, ?CallLocation $callLocation = null): void
+    {
+        $this->renderStyle();
+        $this->containerStart($stats instanceof Report ? 'report' : 'metrics');
+        $this->renderStackMetadata($profile, $callLocation);
+        $stats instanceof Report ? $this->buildReport($stats) : $this->buildMetrics($stats);
+        $this->containerEnd();
     }
 }

@@ -135,6 +135,24 @@ final class CallLocation implements JsonSerializable
         ];
     }
 
+    public function toConsoleString(Ide|string|null $default = null): string
+    {
+        if ($default instanceof Ide) {
+            return $default->path($this);
+        }
+
+        return Ide::fromEnv($default)->path($this);
+    }
+
+    public function toBrowserString(Ide|string|null $default = null): string
+    {
+        if ($default instanceof Ide) {
+            return $default->uri($this);
+        }
+
+        return Ide::fromEnv()->uri($this);
+    }
+
     /**
      * @return CallLocationMap
      */

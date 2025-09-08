@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch;
 
+use Generator;
 use JsonSerializable;
 use Throwable;
 
 use function array_diff_key;
 use function array_keys;
-use function header;
-use function headers_sent;
+use function array_map;
 use function implode;
-use function ob_get_clean;
-use function ob_start;
+use function iterator_to_array;
 
 /**
  * @phpstan-import-type StatsMap from Statistics
@@ -134,7 +133,7 @@ final class Report implements JsonSerializable
             'realPeakMemoryUsageGrowth' => [],
         ];
 
-        foreach (Metrics::yieldFrom(...$metrics) as $metric) {
+        foreach (self::yieldFrom(...$metrics) as $metric) {
             $statistics['cpuTime'][] = $metric->cpuTime;
             $statistics['executionTime'][] = $metric->executionTime;
             $statistics['memoryUsage'][] = $metric->memoryUsage;
@@ -158,6 +157,50 @@ final class Report implements JsonSerializable
             realMemoryUsageGrowth: Statistics::fromValues(Unit::Bytes, $statistics['realMemoryUsageGrowth']),
             realPeakMemoryUsage: Statistics::fromValues(Unit::Bytes, $statistics['realPeakMemoryUsage']),
             realPeakMemoryUsageGrowth: Statistics::fromValues(Unit::Bytes, $statistics['realPeakMemoryUsageGrowth']),
+        );
+    }
+
+    /**
+     * Lazily yields Metrics instances from one or more input objects.
+     *
+     * This method accepts any combination of the following types:
+     * - `Metrics` — yields the object itself.
+     * - `Span` — yields the `metrics` property.
+     * - `Result` — yields the `metrics` of its `span`.
+     * - `SpanAggregator` — yields the `metrics` of each contained `Span`.
+     * - `Timeline` — yields the `metrics` of each `Span` returned by `deltas()`.
+     *
+     * The returned generator is **lazy**, meaning no arrays are built internally,
+     * and metrics are yielded as they are iterated.
+     *
+     * @return Generator<Metrics>
+     */
+    public static function yieldFrom(Timeline|Profiler|Result|Span|Metrics ...$metrics): Generator
+    {
+        foreach ($metrics as $metric) {
+            yield from match ($metric::class) {
+                Metrics::class  => [$metric],
+                Span::class => [$metric->metrics],
+                Result::class => [$metric->span->metrics],
+                Profiler::class => array_map(fn (Span $span) => $span->metrics, iterator_to_array($metric, false)),
+                Timeline::class => array_map(fn (Span $span) => $span->metrics, iterator_to_array($metric->deltas(), false)),
+            };
+        }
+    }
+
+    public function metrics(AggregationType $type): Metrics
+    {
+        return new Metrics(
+            cpuTime: $this->cpuTime->toArray()[$type->value],
+            executionTime: $this->executionTime->toArray()[$type->value],
+            memoryUsage: $this->memoryUsage->toArray()[$type->value],
+            memoryUsageGrowth: $this->memoryUsageGrowth->toArray()[$type->value],
+            peakMemoryUsage: $this->realPeakMemoryUsage->toArray()[$type->value],
+            peakMemoryUsageGrowth: $this->realPeakMemoryUsageGrowth->toArray()[$type->value],
+            realMemoryUsage: $this->realMemoryUsage->toArray()[$type->value],
+            realMemoryUsageGrowth: $this->realMemoryUsageGrowth->toArray()[$type->value],
+            realPeakMemoryUsage: $this->realPeakMemoryUsage->toArray()[$type->value],
+            realPeakMemoryUsageGrowth: $this->realPeakMemoryUsageGrowth->toArray()[$type->value],
         );
     }
 
@@ -262,28 +305,13 @@ final class Report implements JsonSerializable
 
     public function dump(): self
     {
-        (new Renderer())->renderReport($this);
+        (new ViewExporter())->exportReport($this);
 
         return $this;
     }
 
     public function dd(): never
     {
-        ob_start();
-        self::dump();
-        $dumpOutput = ob_get_clean();
-
-        if (Environment::current()->isCli()) {
-            echo $dumpOutput;
-            exit(1);
-        }
-
-        if (!headers_sent()) {
-            header('HTTP/1.1 500 Internal Server Error');
-            header('Content-Type: text/html; charset=utf-8');
-        }
-
-        echo $dumpOutput;
-        exit(1);
+        CallbackDumper::dd($this->dump(...));
     }
 }

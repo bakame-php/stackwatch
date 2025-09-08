@@ -5,63 +5,89 @@ title: Profile Exporters
 
 # Exporters
 
+The `Exporter` interface defines how profiling and monitoring data is exported from the system.
+It provides a common contract for multiple implementations, allowing you to switch between
+different export mechanisms (e.g., JSON output or OpenTelemetry integration) without changing
+your application logic.
+
+## Interface
+
+```php
+interface Exporter
+{
+    public function exportEnvironment(Environment $environment): void;
+    public function exportSnapshot(Snapshot $snapshot): void;
+    public function exportMetrics(Metrics $metrics, ?AggregationType $type = null): void;
+    public function exportSpan(Span $span): void;
+    public function exportStatistics(Statistics $statistics, ?MetricType $type = null): void;
+    public function exportReport(Report $report): void;
+
+    /**
+     * @param (callable(Span): bool)|string|null $label
+     */
+    public function exportProfiler(Profiler $profiler, callable|string|null $label = null): void;
+
+    /**
+     * @param ?callable(Snapshot): bool $filter
+     */
+    public function exportTimeline(Timeline $timeline, ?callable $filter = null): void;
+}
+```
+
+### Features
+
+Each method is designed to export a specific type of profiling data:
+
+- `exportEnvironment(Environment $environment)`: Exports runtime and system environment information.
+- `exportSnapshot(Snapshot $snapshot)`: Exports a captured point-in-time view of measurements.
+- `exportMetrics(Metrics $metrics, ?AggregationType $type = null)`: Exports aggregated metrics (optionally specifying the aggregation type).
+- `exportSpan(Span $span)`: Exports a single execution span.
+- `exportStatistics(Statistics $statistics, ?MetricType $type = null)`: Exports computed statistical values.
+- `exportReport(Report $report)`: Exports a full profiling report.
+- `exportProfiler(Profiler $profiler, callable|string|null $label = null)`: Exports all spans from a profiler, filtered by a label or callable if provided.
+- `exportTimeline(Timeline $timeline, ?callable $filter = null)`: Exports a timeline of snapshots, with optional filtering.
+
 The package can help with exporting its metrics using different mechanisms.
 
-## JSON
+### JSON Exporter
 
-Both the `Profiler` and `Timeline` classes support JSON export via PHP's `json_encode` function.
-This allows you to serialize profiling data for inspection, storage, or transmission.
+The `JsonExporter` provides a human-readable or machine-consumable JSON representation of profiling data.
+It is particularly useful for:
 
-Calling `json_encode($profiler)` will produce a JSON object containing:
+- Debugging locally
+- Storing profiling results in files
+- Integrating with custom tools or dashboards
 
-- `identifier`: the profiler's unique identifier
-- `spans`: an array of summary entries, **ordered from oldest to latest**
+The `JsonExporter` can write the generated JSON data to different types of destinations:
 
-Each summary entry includes:
-
-- `label`: the associated label or name of the profiling block
-- `snapshots`: an array of two snapshots (start and end), ordered chronologically
-- `metrics`: computed performance metrics between the two snapshots
-
-```php
-echo json_encode($profiler), PHP_EOL;
-```
-
-See a [sample span aggregator JSON output](./examples/profiler-sample.json) for a complete structure.
-
-Calling `json_encode($timeline)` will produce a JSON object containing:
-
-- `identifier`: the timeline's unique identifier
-- `snapshots`: an array of snapshot entries, **ordered from oldest to latest**
-
-```php
-echo json_encode($timeline), PHP_EOL;
-```
-See a [sample timeline JSON output](./examples/timeline-sample.json) for a complete structure.
-
-In order to facilitate JSON export, the package has a dedicated `JsonExporter` class
-which will be able to store the generated json in the specified location. It supports
-streams, string path and `SplFileInfo` objects.
+- File paths as strings
+- PHP streams
+ - `SplFileInfo` objects
 
 ```php
 use Bakame\Stackwatch\JsonExporter;
 
-$exporter = new JsonExporter('path/to/store/the/profile.json', JSON_PRETTY_PRINT|JSON_BIGINT_AS_STRING);
+$exporter = new JsonExporter(
+    'path/to/store/the/profile.json', 
+    JSON_PRETTY_PRINT|JSON_BIGINT_AS_STRING
+);
 $exporter->exportReport(stack_report($service->calculateHeavyStuff(...), 500));
 ```
 The report will be stored in the designated location.
 
 <div class="message-warning">
-If you try to store multiple export in the same file (specified by a string) They will get overwritten
-and only the last export will be stored. To get the data appended provide an already open <code>resource</code> or <code>SplFileObject</code>.
+<strong>Warning:</strong> If you export multiple reports to the same file, the file will be written in
+<a href="https://jsonlines.org/" target="_blank">NDJSON</a> (newline-delimited JSON) format..
 </div>
 
-## Open Telemetry
+### Open Telemetry Exporter
 
-The `Profiler`, `Timeline` or `stac_*` results can be exported to an Open telemetry compatible
-server using the `open-telemetry/exporter-otlp` package.
+The `OtlExporter` sends profiling data to an OpenTelemetry collector or compatible backend.
+It allows you to integrate your profiling results into observability tools like
+**Jaeger, Prometheus, Grafana, Tempo**, and others.
 
-To do so, first install the package if it is not yet the case, then do the following:
+Before using it, make sure the **OpenTelemetry PHP SDK** is installed and configured to create and
+send trace spans, metrics, and events.
 
 ```php
 use Bakame\Stackwatch\OtlExporter;
@@ -81,21 +107,71 @@ $callback = function (int ...$args): int|float => {
 }; 
 
 $profiler = new Profiler($callback);
+
+// run the profiler
 $profiler->profile('first_run', 1, 2);
 $profiler->profile('last_run', 1, 2);
 $profiler->run(1, 2);
 
+//expoter the results
 $exporter->exportProfilter($profiler); 
-// the Profiler content is exported to the Open Telemetry Server.
 ```
 
-Remember to configure the setup for the `$tracerProvider` and `$meterProvider` argument
-to connect to your own environment and server. Usually this will be done once in your
-application bootstrap.
+The profiler content will be exported to your configured OpenTelemetry backend.
+
+<div class="message-info"> 
+<strong>Note:</strong> The <code>$tracerProvider</code> and <code>$meterProvider</code> 
+should usually be configured once in your application bootstrap to connect to your 
+own environment and collector endpoint.
+</div>
+
+<div class="message-warning"> <strong>Warning:</strong> If you call <code>exportProfiler()</code> or 
+other export methods multiple times, each call will generate new spans and metrics in your 
+OpenTelemetry backend. This may result in duplicated data unless you design your export 
+flow carefully.
+</div>
+
+### Usage Recommendations
+
+- Use `JsonExporter` when:
+    - You want simple file-based or console-based exports
+    - You’re developing locally and want quick feedback
+- Use `OtlExporter` when:
+    - You have an observability stack already in place
+    - You want to analyze profiling data in dashboards and distributed tracing tools
+
+Because both exporters implement the same interface, you can swap them easily:
+
+```php
+function runProfiling(Exporter $exporter, Profiler $profiler): void {
+    $exporter->exportProfiler($profiler);
+}
+
+$profiler = new Profiler();
+
+// Local debugging with JSON
+runProfiling(new JsonExporter(), $profiler);
+
+// Production monitoring with OpenTelemetry
+runProfiling(new OpenTelemetryExporter($otelSpanExporter), $profiler);
+```
+
+<p class="message-notice">This way, you can keep your profiling logic decoupled from the export mechanism.</p>
 
 ## Dumping Results
 
-All the classes are `dumpable` using the `dump` and the `dd` methods. Those methods are context aware.
+A third implementation, the `ViewExporter`, is used internally to make all profiling classes dumpable
+using the `dump()` and `dd()` methods attached to most of the classes.
+
+The `ViewExporter` is context-aware: the data representation adapts depending on the execution environment.
+For example:
+
+- **CLI**: outputs text suitable for the terminal
+- **HTTP / Browser**: outputs HTML for web debugging
+
+This exporter is primarily intended for **developer convenience and debugging**, rather than
+long-term storage or production telemetry.
+
 For instance, you can dump  the `Timeline` recorded data.
 
 ```php
@@ -112,7 +188,6 @@ $profiler = new Profiler($callback);
 $profiler->profile('first_run', 1, 2);
 $profiler->profile('last_run', 1, 2);
 $profiler->run(1, 2);
-
 $profiler->dump();
 ```
 the following table will be outputted in your terminal.
@@ -208,12 +283,14 @@ The `dd` method will dump the result and halt the execution of the script.
 
 ### URL in the browser view
 
-The browser view detects the IDE automatically to allow opening the file locally.
-This method returns the IDE currently in use by checking environment variables and URL parameters.
+The `ViewExporter` provides special handling for URLs when rendering in a browser.
+It attempts to detect your IDE automatically, so you can **open files locally directly from the browser view**.
 
-It resolves the IDE in this order:
+The IDE is resolved in the following order:
 
-- Checks the URL for a query parameter `?ide=` (e.g., `?ide=vscode`).
-- Checks the environment variable `IDE`.
-- Uses the optional default you provide.
-- Falls back to PhpStorm if none of the above are set or valid.
+- **URL parameter**: Checks for `?ide=` in the query string (e.g., `?ide=vscode`).
+- **Environment variable**: Checks the `IDE` environment variable.
+- **Fallback**: Defaults to `PhpStorm` if no valid IDE is found.
+
+This detection ensures that links in the browser view will open files in your preferred editor,
+improving the debugging experience.

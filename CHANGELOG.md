@@ -8,17 +8,28 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 - **BC BREAK:** Rename `stack` to `stack_call`
 - **BC BREAK:** Rename `stack_dump` to `stack_cdump`
-- **BC BREAK:** Rename `stack_dd` to `stacj_cdd`
+- **BC BREAK:** Rename `stack_dd` to `stack_cdd`
 - **BC BREAK:** Rename `stack_metrics` to `stack_bench`
+- **BC BREAK:** Rename `stack_mdump` to `stack_bdump`
+- **BC BREAK:** Rename `stack_mdd` to `stack_bdd`
 - **BC BREAK:** Rename `Stack::execute` to `Stack::call`
 - **BC BREAK:** Rename `Stack::metrics` to `Stack::benchmark`
 - **BC BREAK:** Rename `Stack::dumpMetrics` to `Stack::dumpBenchmark`
 - **BC BREAK:** Rename `Stack::ddMetrics` to `Stack::ddBenchmark`
+- Added `Report::metrics` to have a single source of truth for statistics generation
+- Added `OtlExporter` to export data to an Open Telemetry server
+- Added `MetricType` Enum to list possible metrics supported by the package
+- Added `Profiler` missing aggregated related methods.
+- Added missing `MetricsAssertions` aggregation methods preset
+- Added `CallbackDumper` to simplify `dd` implementation
+- Added the `Renderer` interface
+- Added the `StackMetadata` renderer to enable rendering the `stack_*` metadata
 
 ### Fixed
 
 - `Timeline::dump` and `Timeline::dd` can take an optional filter callable.
-- `MetricsAssertions::aggRange` Added missing metrics preset.
+- `ViewExporter` no longer needs or requires the `Renderer` which is removed
+- Bumped console version
 
 ### Deprecated
 
@@ -26,7 +37,8 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Remove
 
-- None
+- Removed all `Metrics` static method related to aggregated data. use `Report::metrics()` instead.
+- Removed the `Renderer` class
 
 ## [0.14.0 - Nouakchott](https://github.com/bakame-php/stackwatch/compare/0.13.0...0.14.0) - 2025-09-05
 

@@ -7,10 +7,6 @@ namespace Bakame\Stackwatch;
 use Throwable;
 
 use function gc_collect_cycles;
-use function header;
-use function headers_sent;
-use function ob_get_clean;
-use function ob_start;
 
 final class Stack
 {
@@ -55,7 +51,6 @@ final class Stack
      */
     public static function call(callable $callback, ?string $label = null): Result
     {
-        gc_collect_cycles();
         $start = Snapshot::now('start');
         $returnValue = ($callback)();
         $end = Snapshot::now('end');
@@ -89,8 +84,7 @@ final class Stack
      */
     public static function ddCall(callable $callback, ?string $label = null): never
     {
-        $result = self::call($callback, $label);
-        $result->span->dd();
+        self::call($callback, $label)->span->dd();
     }
 
     /**
@@ -105,14 +99,7 @@ final class Stack
      */
     public static function benchmark(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
     {
-        self::assertItCanBeRun($iterations, $warmup);
-        self::warmup($warmup, $callback);
-        $metrics = [];
-        for ($i = 0; $i < $iterations; ++$i) {
-            $metrics[] = self::call($callback)->span->metrics;
-        }
-
-        return Metrics::aggregate($type, ...$metrics);
+        return self::report($callback, $iterations, $warmup)->metrics($type);
     }
 
     /**
@@ -127,6 +114,7 @@ final class Stack
     {
         self::assertItCanBeRun($iterations, $warmup);
         self::warmup($warmup, $callback);
+        gc_collect_cycles();
         $metrics = [];
         for ($i = 0; $i < $iterations; ++$i) {
             $metrics[] = self::call($callback)->span->metrics;
@@ -147,7 +135,11 @@ final class Stack
     {
         $stats = self::report($callback, $iterations, $warmup);
 
-        (new Renderer())->renderReport($stats, new Profile(null, $iterations, $warmup), CallLocation::fromLastInternalCall(__NAMESPACE__, ['*Test.php']));
+        (new ViewExporter())->exportStack(
+            $stats,
+            new Profile(null, $iterations, $warmup),
+            CallLocation::fromLastInternalCall(__NAMESPACE__, ['*Test.php'])
+        );
 
         return $stats;
     }
@@ -164,7 +156,11 @@ final class Stack
     {
         $stats = self::benchmark($callback, $iterations, $warmup, $type);
 
-        (new Renderer())->render($stats, new Profile($type, $iterations, $warmup), CallLocation::fromLastInternalCall(__NAMESPACE__, ['*Test.php']));
+        (new ViewExporter())->exportStack(
+            $stats,
+            new Profile($type, $iterations, $warmup),
+            CallLocation::fromLastInternalCall(__NAMESPACE__, ['*Test.php'])
+        );
 
         return $stats;
     }
@@ -174,27 +170,10 @@ final class Stack
      *
      * @param int<1, max> $iterations
      * @param int<0, max> $warmup
-     *
-     * @throws Throwable
      */
     public static function ddReport(callable $callback, int $iterations = 1, int $warmup = 0): never
     {
-        ob_start();
-        self::dumpReport($callback, $iterations, $warmup);
-        $dumpOutput = ob_get_clean();
-
-        if (Environment::current()->isCli()) {
-            echo $dumpOutput;
-            exit(1);
-        }
-
-        if (!headers_sent()) {
-            header('HTTP/1.1 500 Internal Server Error');
-            header('Content-Type: text/html; charset=utf-8');
-        }
-
-        echo $dumpOutput;
-        exit(1);
+        CallbackDumper::dd(fn (): Report => self::dumpReport($callback, $iterations, $warmup));
     }
 
     /**
@@ -202,26 +181,9 @@ final class Stack
      *
      * @param int<1, max> $iterations
      * @param int<0, max> $warmup
-     *
-     * @throws Throwable
      */
     public static function ddBenchmark(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): never
     {
-        ob_start();
-        self::dumpBenchmark($callback, $iterations, $warmup, $type);
-        $dumpOutput = ob_get_clean();
-
-        if (Environment::current()->isCli()) {
-            echo $dumpOutput;
-            exit(1);
-        }
-
-        if (!headers_sent()) {
-            header('HTTP/1.1 500 Internal Server Error');
-            header('Content-Type: text/html; charset=utf-8');
-        }
-
-        echo $dumpOutput;
-        exit(1);
+        CallbackDumper::dd(fn (): Metrics => self::dumpBenchmark($callback, $iterations, $warmup, $type));
     }
 }

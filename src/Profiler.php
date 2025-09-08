@@ -19,12 +19,7 @@ use function array_map;
 use function array_unique;
 use function array_values;
 use function count;
-use function gc_collect_cycles;
-use function header;
-use function headers_sent;
 use function is_callable;
-use function ob_get_clean;
-use function ob_start;
 use function trim;
 
 /**
@@ -94,7 +89,6 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function profile(string $label, mixed ...$args): mixed
     {
-        gc_collect_cycles();
         try {
             $this->logger?->info('Profiler ['.$this->identifier.'] starting profiling for label: '.$label.'.', ['identifier' => $this->identifier, 'label' => $label]);
             $start = Snapshot::now('start');
@@ -231,67 +225,123 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function average(callable|string|null $label = null): Metrics
     {
-        return Metrics::average(...match (true) {
+        return Report::fromMetrics(...match (true) {
             null === $label => $this->spans,
             is_callable($label) => $this->filter($label),
             default => $this->getAll($label),
-        });
+        })->metrics(AggregationType::Average);
     }
 
     /**
-     * Returns the average metrics associated with the callback.
+     * Returns the median metrics associated with the callback.
      *
      * @param (callable(Span): bool)|non-empty-string|null $label
      */
     public function median(callable|string|null $label = null): Metrics
     {
-        return Metrics::median(...match (true) {
+        return Report::fromMetrics(...match (true) {
             null === $label => $this->spans,
             is_callable($label) => $this->filter($label),
             default => $this->getAll($label),
-        });
+        })->metrics(AggregationType::Median);
     }
 
     /**
-     * Returns the average metrics associated with the callback.
+     * Returns the range metrics associated with the callback.
      *
      * @param (callable(Span): bool)|non-empty-string|null $label
      */
     public function range(callable|string|null $label = null): Metrics
     {
-        return Metrics::range(...match (true) {
+        return Report::fromMetrics(...match (true) {
             null === $label => $this->spans,
             is_callable($label) => $this->filter($label),
             default => $this->getAll($label),
-        });
+        })->metrics(AggregationType::Range);
     }
 
     /**
-     * Returns the average metrics associated with the callback.
+     * Returns the minimum metrics associated with the callback.
      *
      * @param (callable(Span): bool)|non-empty-string|null $label
      */
     public function min(callable|string|null $label = null): Metrics
     {
-        return Metrics::min(...match (true) {
+        return Report::fromMetrics(...match (true) {
             null === $label => $this->spans,
             is_callable($label) => $this->filter($label),
             default => $this->getAll($label),
-        });
+        })->metrics(AggregationType::Minimum);
     }
 
     /**
-     * Returns the average metrics associated with the callback.
+     * Returns the maximum metrics associated with the callback.
      *
      * @param (callable(Span): bool)|non-empty-string|null $label
      */
     public function max(callable|string|null $label = null): Metrics
     {
-        return Metrics::max(...match (true) {
+        return Report::fromMetrics(...match (true) {
             null === $label => $this->spans,
             is_callable($label) => $this->filter($label),
             default => $this->getAll($label),
-        });
+        })->metrics(AggregationType::Maximum);
+    }
+
+    /**
+     * Returns the Sum metrics associated with the callback.
+     *
+     * @param (callable(Span): bool)|non-empty-string|null $label
+     */
+    public function sum(callable|string|null $label = null): Metrics
+    {
+        return Report::fromMetrics(...match (true) {
+            null === $label => $this->spans,
+            is_callable($label) => $this->filter($label),
+            default => $this->getAll($label),
+        })->metrics(AggregationType::Sum);
+    }
+
+    /**
+     * Returns the Coeff Var metrics associated with the callback.
+     *
+     * @param (callable(Span): bool)|non-empty-string|null $label
+     */
+    public function coefVar(callable|string|null $label = null): Metrics
+    {
+        return Report::fromMetrics(...match (true) {
+            null === $label => $this->spans,
+            is_callable($label) => $this->filter($label),
+            default => $this->getAll($label),
+        })->metrics(AggregationType::CoefVar);
+    }
+
+    /**
+     * Returns the stdDev metrics associated with the callback.
+     *
+     * @param (callable(Span): bool)|non-empty-string|null $label
+     */
+    public function stdDev(callable|string|null $label = null): Metrics
+    {
+        return Report::fromMetrics(...match (true) {
+            null === $label => $this->spans,
+            is_callable($label) => $this->filter($label),
+            default => $this->getAll($label),
+        })->metrics(AggregationType::StdDev);
+    }
+
+    /**
+     * Returns the variance metrics associated with the callback.
+     *
+     * @param (callable(Span): bool)|non-empty-string|null $label
+     */
+    public function variance(callable|string|null $label = null): Metrics
+    {
+        return Report::fromMetrics(...match (true) {
+            null === $label => $this->spans,
+            is_callable($label) => $this->filter($label),
+            default => $this->getAll($label),
+        })->metrics(AggregationType::Variance);
     }
 
     /**
@@ -311,37 +361,24 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      */
     public function labels(): array
     {
-        return array_values(
-            array_unique(
-                array_column($this->spans, 'label')
-            )
-        );
+        return array_values(array_unique(array_column($this->spans, 'label')));
     }
 
+    /**
+     * @param (callable(Span): bool)|string|null $label
+     */
     public function dump(callable|string|null $label = null): self
     {
-        (new Renderer())->renderProfiler($this, $label);
+        (new ViewExporter())->exportProfiler($this, $label);
 
         return $this;
     }
 
+    /**
+     * @param (callable(Span): bool)|string|null $label
+     */
     public function dd(callable|string|null $label = null): never
     {
-        ob_start();
-        self::dump($label);
-        $dumpOutput = ob_get_clean();
-
-        if (Environment::current()->isCli()) {
-            echo $dumpOutput;
-            exit(1);
-        }
-
-        if (!headers_sent()) {
-            header('HTTP/1.1 500 Internal Server Error');
-            header('Content-Type: text/html; charset=utf-8');
-        }
-
-        echo $dumpOutput;
-        exit(1);
+        CallbackDumper::dd(fn () => $this->dump($label));
     }
 }

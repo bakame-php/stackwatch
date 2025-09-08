@@ -51,7 +51,7 @@ final class ConsoleHandler implements Handler
                     ->setPairs($data)
                     ->setStylesKey(AnsiStyle::BrightGreen)
                     ->setStylesValue(AnsiStyle::BrightCyan)
-                    ->render()
+                    ->renderCli()
                 );
                 $formatter->exporter->output->writeln('');
             }

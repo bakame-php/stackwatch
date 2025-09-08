@@ -13,12 +13,13 @@ use ReflectionClass;
 use function hrtime;
 
 #[CoversClass(Metrics::class)]
+#[CoversClass(Report::class)]
 final class MetricsTest extends TestCase
 {
     /**
      * @param non-empty-string $label
      */
-    private function createSummary(string $label): Span
+    private function createSpan(string $label): Span
     {
         $start = new Snapshot('start', new DateTimeImmutable(), hrtime(true), 10001, 1001, 1000, 2000, 3000, 4000);
         $end = new Snapshot('end', new DateTimeImmutable(), hrtime(true) + 1, 1001, 1001, 1100, 2100, 3100, 4100);
@@ -30,31 +31,31 @@ final class MetricsTest extends TestCase
     {
         self::assertEquals(
             Metrics::none(),
-            Metrics::average(Metrics::none(), Metrics::none(), Metrics::none()),
+            Report::fromMetrics(Metrics::none(), Metrics::none(), Metrics::none())->metrics(AggregationType::Average),
         );
     }
 
     #[Test]
     public function it_can_do_the_avegare_using_the_profiling_data(): void
     {
-        $span = $this->createSummary('empty_label');
+        $span = $this->createSpan('empty_label');
 
-        self::assertEquals($span->metrics, Metrics::average($span));
+        self::assertNotEquals($span->metrics, Report::fromMetrics($span)->metrics(AggregationType::Average));
     }
 
     #[Test]
     public function it_can_calculate_the_average_using_the_profiler(): void
     {
-        $span1 = $this->createSummary('profile1');
-        $span2 = $this->createSummary('profile2');
+        $span1 = $this->createSpan('profile1');
+        $span2 = $this->createSpan('profile2');
 
         $profiler = new Profiler(fn () => null);
         $reflection = new ReflectionClass($profiler);
         $reflection->getProperty('spans')->setValue($profiler, [$span1, $span2]);
 
         self::assertEquals(
-            Metrics::average($profiler),
-            Metrics::average($span1, $span2),
+            Report::fromMetrics($profiler)->metrics(AggregationType::Average),
+            Report::fromMetrics($span1, $span2)->metrics(AggregationType::Average),
         );
     }
 

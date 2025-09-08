@@ -88,8 +88,6 @@ if (!function_exists('stack_rdd')) {
      *
      * @param int<1, max> $iterations
      * @param int<0, max> $warmup
-     *
-     * @throws Throwable
      */
     function stack_rdd(callable $callback, int $iterations = 1, int $warmup = 0): never
     {
@@ -135,8 +133,6 @@ if (!function_exists('stack_bdd')) {
      *
      * @param int<1, max> $iterations
      * @param int<0, max> $warmup
-     *
-     * @throws Throwable
      */
     function stack_bdd(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): never
     {
