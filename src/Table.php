@@ -41,7 +41,7 @@ use const STR_PAD_RIGHT;
  * @phpstan-type cellStyle array{column:int, style?:list<AnsiStyle>, below?:int, above?:int, equal?:int, align?: 'left'|'right'|'center'}
  * @phpstan-type rowStyle List<cellStyle>
  */
-final class Table
+final class Table implements Renderer
 {
     private ?string $title = null;
     /** @var list<AnsiStyle> ANSI code for the table title */
@@ -264,7 +264,7 @@ STYLE;
         return implode('', $html);
     }
 
-    public function render(): string
+    public function renderCli(): string
     {
         $cellStyleFn = self::createCellStyleFn($this->rowStyle);
         $lines = [];

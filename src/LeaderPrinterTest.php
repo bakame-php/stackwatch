@@ -17,7 +17,7 @@ final class LeaderPrinterTest extends TestCase
         $printer = new LeaderPrinter();
         $printer->addPair('Name', 'Alice')->addPair('Age', 30);
 
-        $output = $printer->render();
+        $output = $printer->renderCli();
         $lines = explode("\n", $output);
 
         self::assertCount(2, $lines);
@@ -31,7 +31,7 @@ final class LeaderPrinterTest extends TestCase
     {
         $printer = new LeaderPrinter();
         $printer->setPairs(['A' => '1', 'B' => '2']);
-        $output = $printer->render();
+        $output = $printer->renderCli();
 
         self::assertStringContainsString('A', $output);
         self::assertStringContainsString('1', $output);
@@ -47,7 +47,7 @@ final class LeaderPrinterTest extends TestCase
             ->setStylesValue(AnsiStyle::Underline)
             ->addPair('Key', 'Value');
 
-        $output = $printer->render();
+        $output = $printer->renderCli();
         self::assertStringContainsString('Key', $output);
         self::assertStringContainsString('Value', $output);
         if (Ansi::enabled()) {

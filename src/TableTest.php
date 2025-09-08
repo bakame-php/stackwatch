@@ -25,7 +25,7 @@ final class TableTest extends TestCase
             ->addRow(['Alice', 30])
             ->addRow(['Bob', 25]);
 
-        $lines = explode("\n", $table->render());
+        $lines = explode("\n", $table->renderCli());
 
         self::assertIsArray($lines);
         self::assertNotEmpty($lines);
@@ -45,7 +45,7 @@ final class TableTest extends TestCase
             ->setHeader(['Item', 'Price'])
             ->addRow(['Book', 12]);
 
-        $lines = explode("\n", $table->render());
+        $lines = explode("\n", $table->renderCli());
 
         self::assertStringStartsWith('╔', $lines[0]);
         self::assertStringStartsWith('╚', (string) end($lines));
@@ -57,7 +57,7 @@ final class TableTest extends TestCase
             ->setHeader(['Col1', 'Col2'])
             ->addRow(['A', 'B']);
 
-        $lines = explode("\n", $table->render());
+        $lines = explode("\n", $table->renderCli());
 
         self::assertStringStartsWith('+', $lines[0]);
         self::assertStringStartsWith('+', (string) end($lines));
@@ -71,7 +71,7 @@ final class TableTest extends TestCase
             ->addRow(['x', 'y'])
             ->setTitle('My Table');
 
-        $lines = explode("\n", $table->render());
+        $lines = explode("\n", $table->renderCli());
 
         self::assertStringContainsString('My Table', $lines[0]);
     }
@@ -83,7 +83,7 @@ final class TableTest extends TestCase
             ->addRow(['Alice', 100])
             ->addRow(['Bob', 5]);
 
-        $lines = explode("\n", $table->render());
+        $lines = explode("\n", $table->renderCli());
 
         // Row lines should have numbers aligned to the right
         $row = $lines[3]; // after top, header, header_sep
@@ -111,7 +111,7 @@ final class TableTest extends TestCase
             ])
             ->addRow(['Dave', 50]);
 
-        $lines = explode("\n", $table->render());
+        $lines = explode("\n", $table->renderCli());
 
         self::assertStringContainsString(AnsiStyle::Red->value, $lines[3]);
         self::assertStringContainsString(AnsiStyle::Green->value, $lines[4]);

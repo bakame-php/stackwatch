@@ -15,7 +15,7 @@ use function preg_match;
 use function str_repeat;
 use function trim;
 
-final class LeaderPrinter
+final class LeaderPrinter implements Renderer
 {
     /** @var list<array{0:string, 1:string}> */
     private array $pairs = [];
@@ -80,7 +80,7 @@ CSS;
     /**
      * Format a leader list for console output.
      */
-    public function render(): string
+    public function renderCli(): string
     {
         $lines = [];
         $terminalWitdh = self::detectTerminalWidth();
