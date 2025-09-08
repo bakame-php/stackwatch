@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Exporter;
 
+use Bakame\Stackwatch\Result;
+use Bakame\Stackwatch\Snapshot;
+use Bakame\Stackwatch\Span;
 use DateTimeImmutable;
 use OpenTelemetry\API\Metrics\Noop\NoopMeterProvider;
 use OpenTelemetry\SDK\Trace\ImmutableSpan;

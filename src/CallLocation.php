@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch;
 
+use Bakame\Stackwatch\Exporter\Ide;
 use JsonSerializable;
 use Throwable;
 

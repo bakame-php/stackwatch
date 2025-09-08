@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
-use Bakame\Stackwatch\JsonExporter;
+use Bakame\Stackwatch\Exporter\JsonExporter;
 use Throwable;
 
 final class JsonFormatter implements Formatter

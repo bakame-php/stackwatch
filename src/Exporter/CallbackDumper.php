@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Exporter;
+
+use Bakame\Stackwatch\Environment;
 
 final class CallbackDumper
 {

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch;
 
+use Bakame\Stackwatch\Exporter\CallbackDumper;
+use Bakame\Stackwatch\Exporter\ViewExporter;
 use DateTimeImmutable;
 use JsonSerializable;
 use Throwable;

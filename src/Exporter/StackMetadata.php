@@ -2,7 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Exporter;
+
+use Bakame\Stackwatch\CallLocation;
+use Bakame\Stackwatch\Environment;
+use Bakame\Stackwatch\Profile;
 
 use function implode;
 use function ucfirst;

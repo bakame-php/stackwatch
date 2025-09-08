@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Exporter;
 
+use Bakame\Stackwatch\InvalidArgument;
 use Stringable;
 
 use function array_keys;

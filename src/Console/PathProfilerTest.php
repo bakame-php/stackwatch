@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
+use Bakame\Stackwatch\Exporter\ViewExporter;
 use Bakame\Stackwatch\Profile;
-use Bakame\Stackwatch\ViewExporter;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;

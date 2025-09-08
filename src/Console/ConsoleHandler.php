@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
-use Bakame\Stackwatch\AnsiStyle;
 use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\LeaderPrinter;
-use Bakame\Stackwatch\Translator;
+use Bakame\Stackwatch\Exporter\AnsiStyle;
+use Bakame\Stackwatch\Exporter\LeaderPrinter;
+use Bakame\Stackwatch\Exporter\Translator;
 use Bakame\Stackwatch\Version;
 use Bakame\Stackwatch\Warning;
 use Psr\Log\LoggerInterface;

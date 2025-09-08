@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Exporter;
+
+use Bakame\Stackwatch\InvalidArgument;
 
 use function file_exists;
 use function is_dir;
@@ -24,7 +26,7 @@ final class Translator
         $this->fallbackLocale = trim($fallback);
         $rootDirectory = trim($rootDirectory);
         if ('' === $rootDirectory) {
-            $rootDirectory = __DIR__.'/Resources/translations';
+            $rootDirectory = dirname(__DIR__).'/Resources/translations';
         }
 
         (is_dir($rootDirectory) && is_readable($rootDirectory)) || throw new InvalidArgument('The root directory "'.$rootDirectory.'" does not exist or is not readable.');

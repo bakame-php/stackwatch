@@ -68,6 +68,9 @@ $this->iter(5)
 - `->aggMax()`
 - `->aggSum()`
 - `->aggRange()`
+- `->aggStdDev()`
+- `->aggVariance()`
+- `->aggCoefVar()`
 
 Example:
 
@@ -118,17 +121,20 @@ $this->assertMetrics($service->calculateHeavyStuff(...))
 
 ### Fluent configuration API
 
-| Method                                     | Alias                          | Description                     |
-|--------------------------------------------|--------------------------------|---------------------------------|
-| `withIterations(int)`                      | `iter(int)`                    | Number of iterations            |
-| `withWarmup(int)`                          | `warmup(int)`                  | Number of warmup runs           | 
-| `withAggregation(?AggregationType = null)` | `agg(?AggregationType = null)` | Aggregation type                |
-| `aggAverage()`                             | —                              | AggregationType::Average preset |
-| `aggMedian()`                              | —                              | AggregationType::Median preset  | 
-| `aggMin()`                                 | —                              | AggregationType::Min preset     | 
-| `aggMax()`                                 | —                              | AggregationType::Max preset     | 
-| `aggSum()`                                 | —                              | AggregationType::Sum preset     |
-| `aggRange()`                               | —                              | AggregationType::Range preset   |
+| Method                                     | Alias                          | Description                      |
+|--------------------------------------------|--------------------------------|----------------------------------|
+| `withIterations(int)`                      | `iter(int)`                    | Number of iterations             |
+| `withWarmup(int)`                          | `warmup(int)`                  | Number of warmup runs            | 
+| `withAggregation(?AggregationType = null)` | `agg(?AggregationType = null)` | Aggregation type                 |
+| `aggAverage()`                             | —                              | AggregationType::Average preset  |
+| `aggMedian()`                              | —                              | AggregationType::Median preset   | 
+| `aggMin()`                                 | —                              | AggregationType::Min preset      | 
+| `aggMax()`                                 | —                              | AggregationType::Max preset      | 
+| `aggSum()`                                 | —                              | AggregationType::Sum preset      |
+| `aggRange()`                               | —                              | AggregationType::Range preset    |
+| `aggVariance()`                            | —                              | AggregationType::Variance preset |
+| `aggStdDev()`                              | —                              | AggregationType::StdDev preset   |
+| `aggCoefVar()`                             | —                              | AggregationType::CoefVar preset  |
 
 
 ### Of Note

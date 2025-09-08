@@ -13,6 +13,8 @@ your application logic.
 ## Interface
 
 ```php
+<?php
+
 interface Exporter
 {
     public function exportEnvironment(Environment $environment): void;
@@ -65,7 +67,7 @@ The `JsonExporter` can write the generated JSON data to different types of desti
  - `SplFileInfo` objects
 
 ```php
-use Bakame\Stackwatch\JsonExporter;
+use Bakame\Stackwatch\Exporter\JsonExporter;
 
 $exporter = new JsonExporter(
     'path/to/store/the/profile.json', 
@@ -90,7 +92,7 @@ Before using it, make sure the **OpenTelemetry PHP SDK** is installed and config
 send trace spans, metrics, and events.
 
 ```php
-use Bakame\Stackwatch\OtlExporter;
+use Bakame\Stackwatch\Exporter\OtlExporter;
 use Bakame\Stackwatch\Profiler;
 use OpenTelemetry\SDK\Trace\SpanExporter\InMemoryExporter;
 use OpenTelemetry\SDK\Trace\SpanProcessor\SimpleSpanProcessor;
@@ -175,8 +177,8 @@ long-term storage or production telemetry.
 For instance, you can dump  the `Timeline` recorded data.
 
 ```php
+use Bakame\Stackwatch\Exporter\ViewExporter;
 use Bakame\Stackwatch\Profiler;
-use Bakame\Stackwatch\ViewExporter;
 
 $callback = function (int ...$args): int {
     usleep(100);

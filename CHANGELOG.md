@@ -2,7 +2,7 @@
 
 All Notable changes to `bakame/stackwatch` will be documented in this file.
 
-## [Next - African City]https://github.com/bakame-php/stackwatch/compare/0.14.0...main) - TBD
+## [Next - Ouagadougou](https://github.com/bakame-php/stackwatch/compare/0.14.0...main) - TBD
 
 ### Added
 
@@ -20,7 +20,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - Added `OtlExporter` to export data to an Open Telemetry server
 - Added `MetricType` Enum to list possible metrics supported by the package
 - Added `Profiler` missing aggregated related methods.
-- Added missing `MetricsAssertions` aggregation methods preset
+- Added `MetricsAssertions` missing aggregation methods preset
 - Added `CallbackDumper` to simplify `dd` implementation
 - Added the `Renderer` interface
 - Added the `StackMetadata` renderer to enable rendering the `stack_*` metadata
@@ -30,6 +30,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - `Timeline::dump` and `Timeline::dd` can take an optional filter callable.
 - `ViewExporter` no longer needs or requires the `Renderer` which is removed
 - Bumped console version
+- **BC BREAK:** Move all the classes related to export in their own namespace `Bakame\Stackwatch\Exporter`
 
 ### Deprecated
 
@@ -38,7 +39,8 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 ### Remove
 
 - Removed all `Metrics` static method related to aggregated data. use `Report::metrics()` instead.
-- Removed the `Renderer` class
+- Removed `Metrics::add` method
+- Removed the internal `Renderer` class
 
 ## [0.14.0 - Nouakchott](https://github.com/bakame-php/stackwatch/compare/0.13.0...0.14.0) - 2025-09-05
 

@@ -2,8 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Bakame\Stackwatch;
+namespace Bakame\Stackwatch\Exporter;
 
+use Bakame\Stackwatch\AggregationType;
+use Bakame\Stackwatch\CallLocation;
+use Bakame\Stackwatch\DurationUnit;
+use Bakame\Stackwatch\Environment;
+use Bakame\Stackwatch\Metrics;
+use Bakame\Stackwatch\MetricType;
+use Bakame\Stackwatch\Profile;
+use Bakame\Stackwatch\Profiler;
+use Bakame\Stackwatch\Report;
+use Bakame\Stackwatch\Result;
+use Bakame\Stackwatch\Snapshot;
+use Bakame\Stackwatch\Span;
+use Bakame\Stackwatch\Statistics;
+use Bakame\Stackwatch\Timeline;
 use Symfony\Component\Console\Output\OutputInterface;
 
 use function array_key_first;

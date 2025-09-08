@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch\Console;
 
 use ArrayIterator;
-use Bakame\Stackwatch\JsonExporter;
+use Bakame\Stackwatch\Exporter\JsonExporter;
+use Bakame\Stackwatch\Exporter\Translator;
+use Bakame\Stackwatch\Exporter\ViewExporter;
 use Bakame\Stackwatch\Profile;
-use Bakame\Stackwatch\Translator;
 use Bakame\Stackwatch\UnableToProfile;
-use Bakame\Stackwatch\ViewExporter;
 use CallbackFilterIterator;
 use FilesystemIterator;
 use Psr\Log\LoggerInterface;

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
+use Bakame\Stackwatch\Exporter\Translator;
+use Bakame\Stackwatch\Exporter\ViewExporter;
 use Bakame\Stackwatch\Report;
-use Bakame\Stackwatch\Translator;
-use Bakame\Stackwatch\ViewExporter;
 use Throwable;
 
 final class ConsoleFormatter implements Formatter
