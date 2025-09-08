@@ -107,32 +107,32 @@ final class Metrics implements JsonSerializable
     public static function fromArray(array $data): self
     {
         $missingKeys = array_diff_key([
-            'cpu_time' => 1,
-            'execution_time' => 1,
-            'memory_usage' => 1,
-            'memory_usage_growth' => 1,
-            'real_memory_usage' => 1,
-            'real_memory_usage_growth' => 1,
-            'peak_memory_usage' => 1,
-            'peak_memory_usage_growth' => 1,
-            'real_peak_memory_usage' => 1,
-            'real_peak_memory_usage_growth' => 1,
+            MetricType::CpuTime->value => 1,
+            MetricType::ExecutionTime->value => 1,
+            MetricType::MemoryUsage->value => 1,
+            MetricType::MemoryUsageGrowth->value => 1,
+            MetricType::RealMemoryUsage->value => 1,
+            MetricType::RealMemoryUsageGrowth->value => 1,
+            MetricType::PeakMemoryUsage->value => 1,
+            MetricType::PeakMemoryUsageGrowth->value => 1,
+            MetricType::RealPeakMemoryUsage->value => 1,
+            MetricType::RealPeakMemoryUsageGrowth->value => 1,
         ], $data);
 
         [] === $missingKeys || throw new InvalidArgument('The payload is missing the following keys: '.implode(', ', array_keys($missingKeys)));
 
         try {
             return new self(
-                $data['cpu_time'],
-                $data['execution_time'],
-                $data['memory_usage'],
-                $data['memory_usage_growth'],
-                $data['real_memory_usage'],
-                $data['real_memory_usage_growth'],
-                $data['peak_memory_usage'],
-                $data['peak_memory_usage_growth'],
-                $data['real_peak_memory_usage'],
-                $data['real_peak_memory_usage_growth'],
+                cpuTime: $data[MetricType::CpuTime->value],
+                executionTime: $data[MetricType::ExecutionTime->value],
+                memoryUsage: $data[MetricType::MemoryUsage->value],
+                memoryUsageGrowth: $data[MetricType::MemoryUsageGrowth->value],
+                peakMemoryUsage: $data[MetricType::PeakMemoryUsage->value],
+                peakMemoryUsageGrowth: $data[MetricType::PeakMemoryUsageGrowth->value],
+                realMemoryUsage: $data[MetricType::RealMemoryUsage->value],
+                realMemoryUsageGrowth: $data[MetricType::RealMemoryUsageGrowth->value],
+                realPeakMemoryUsage: $data[MetricType::RealPeakMemoryUsage->value],
+                realPeakMemoryUsageGrowth: $data[MetricType::RealPeakMemoryUsageGrowth->value],
             );
         } catch (Throwable $exception) {
             throw new InvalidArgument('Unable to create a metrics from the payload', previous: $exception);
@@ -153,16 +153,16 @@ final class Metrics implements JsonSerializable
     public function toArray(): array
     {
         return [
-            'cpu_time' => $this->cpuTime,
-            'execution_time' => $this->executionTime,
-            'memory_usage' => $this->memoryUsage,
-            'memory_usage_growth' => $this->memoryUsageGrowth,
-            'real_memory_usage' => $this->realMemoryUsage,
-            'real_memory_usage_growth' => $this->realMemoryUsageGrowth,
-            'peak_memory_usage' => $this->peakMemoryUsage,
-            'peak_memory_usage_growth' => $this->peakMemoryUsageGrowth,
-            'real_peak_memory_usage' => $this->realPeakMemoryUsage,
-            'real_peak_memory_usage_growth' => $this->realPeakMemoryUsageGrowth,
+            MetricType::CpuTime->value => $this->cpuTime,
+            MetricType::ExecutionTime->value => $this->executionTime,
+            MetricType::MemoryUsage->value => $this->memoryUsage,
+            MetricType::MemoryUsageGrowth->value => $this->memoryUsageGrowth,
+            MetricType::RealMemoryUsage->value => $this->realMemoryUsage,
+            MetricType::RealMemoryUsageGrowth->value => $this->realMemoryUsageGrowth,
+            MetricType::PeakMemoryUsage->value => $this->peakMemoryUsage,
+            MetricType::PeakMemoryUsageGrowth->value => $this->peakMemoryUsageGrowth,
+            MetricType::RealPeakMemoryUsage->value => $this->realPeakMemoryUsage,
+            MetricType::RealPeakMemoryUsageGrowth->value => $this->realPeakMemoryUsageGrowth,
         ];
     }
 
@@ -172,16 +172,16 @@ final class Metrics implements JsonSerializable
     public function toHuman(): array
     {
         return [
-            'cpu_time' => DurationUnit::format($this->cpuTime, 3),
-            'execution_time' => DurationUnit::format($this->executionTime, 3),
-            'memory_usage' => MemoryUnit::format($this->memoryUsage, 1),
-            'memory_usage_growth' =>  MemoryUnit::format($this->memoryUsageGrowth, 1),
-            'real_memory_usage' => MemoryUnit::format($this->realMemoryUsage, 1),
-            'real_memory_usage_growth' => MemoryUnit::format($this->realMemoryUsageGrowth, 1),
-            'peak_memory_usage' => MemoryUnit::format($this->peakMemoryUsage, 1),
-            'peak_memory_usage_growth' => MemoryUnit::format($this->peakMemoryUsageGrowth, 1),
-            'real_peak_memory_usage' => MemoryUnit::format($this->realPeakMemoryUsage, 1),
-            'real_peak_memory_usage_growth' => MemoryUnit::format($this->realPeakMemoryUsageGrowth, 1),
+            MetricType::CpuTime->value => DurationUnit::format($this->cpuTime, 3),
+            MetricType::ExecutionTime->value => DurationUnit::format($this->executionTime, 3),
+            MetricType::MemoryUsage->value => MemoryUnit::format($this->memoryUsage, 1),
+            MetricType::MemoryUsageGrowth->value =>  MemoryUnit::format($this->memoryUsageGrowth, 1),
+            MetricType::RealMemoryUsage->value => MemoryUnit::format($this->realMemoryUsage, 1),
+            MetricType::RealMemoryUsageGrowth->value => MemoryUnit::format($this->realMemoryUsageGrowth, 1),
+            MetricType::PeakMemoryUsage->value => MemoryUnit::format($this->peakMemoryUsage, 1),
+            MetricType::PeakMemoryUsageGrowth->value => MemoryUnit::format($this->peakMemoryUsageGrowth, 1),
+            MetricType::RealPeakMemoryUsage->value => MemoryUnit::format($this->realPeakMemoryUsage, 1),
+            MetricType::RealPeakMemoryUsageGrowth->value => MemoryUnit::format($this->realPeakMemoryUsageGrowth, 1),
         ];
     }
 

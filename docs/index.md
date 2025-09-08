@@ -75,7 +75,7 @@ php vendor/bin/stackwatch --path=/path/to/profiling/code.php
 It will output the following with no complex setup.
 
 ```bash
-stackwatch v0.14.0 (Nouakchott) by Ignace Nyamagana Butera and contributors.
+stackwatch v0.15.0 (Ouagadougou) by Ignace Nyamagana Butera and contributors.
 
 Runtime: PHP 8.3.25 OS: Linux Memory Limit: 64M
 
@@ -104,7 +104,7 @@ Target: Foobar\Baz\MyEnum::test; Path: /path/to/profiling/code.php; Iterations: 
 A **fluent, unit-aware PHPUnit helper** for asserting profiler metrics.
 
 ```php
-use Bakame\Stackwatch\MetricsAssertions;
+use Bakame\Stackwatch\Test\MetricsAssertions;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

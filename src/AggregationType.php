@@ -13,6 +13,6 @@ enum AggregationType: string
     case Sum  = 'sum';
     case Range = 'range';
     case Variance = 'variance';
-    case StdDev = 'stdDev';
+    case StdDev = 'std_dev';
     case CoefVar = 'coef_var';
 }

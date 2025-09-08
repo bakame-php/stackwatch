@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
-use Bakame\Stackwatch\Exporter\Translator;
 use Bakame\Stackwatch\Exporter\ViewExporter;
 use Bakame\Stackwatch\Report;
 use Throwable;
@@ -14,7 +13,6 @@ final class ConsoleFormatter implements Formatter
     public function __construct(
         public readonly ViewExporter $exporter,
         public readonly Feature $dryRun = Feature::Disabled,
-        public readonly Translator $translator = new Translator(),
     ) {
     }
 

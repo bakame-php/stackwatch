@@ -14,8 +14,8 @@ enum MetricType: string
     case PeakMemoryUsageGrowth = 'peak_memory_usage_growth';
     case RealMemoryUsage = 'real_memory_usage';
     case RealMemoryUsageGrowth = 'real_memory_usage_growth';
-    case RealPeaKMemoryUsage = 'real_peak_memory_usage';
-    case RealPeakMemoryUsageGrowth = 'real_peak_memory_usage_glow';
+    case RealPeakMemoryUsage = 'real_peak_memory_usage';
+    case RealPeakMemoryUsageGrowth = 'real_peak_memory_usage_growth';
 
     public function isGrowth(): bool
     {

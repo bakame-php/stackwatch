@@ -5,8 +5,6 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch\Console;
 
 use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\Exporter\LeaderPrinter;
-use Bakame\Stackwatch\Exporter\Translator;
 use Bakame\Stackwatch\Version;
 use Bakame\Stackwatch\Warning;
 use Psr\Log\LoggerInterface;
@@ -72,8 +70,6 @@ final class Stackwatch
         private readonly OutputInterface $stderr,
         private readonly LoggerInterface $logger,
         private readonly Environment $environment,
-        private readonly LeaderPrinter $leaderPrinter = new LeaderPrinter(),
-        private readonly Translator $translator = new Translator(),
     ) {
     }
 
@@ -120,7 +116,7 @@ final class Stackwatch
 
         try {
             (match ($input->format) {
-                Input::TEXT_FORMAT => new ConsoleHandler($this->stdout, $this->logger, $this->environment, $this->leaderPrinter, $this->translator),
+                Input::TEXT_FORMAT => new ConsoleHandler($this->stdout, $this->logger, $this->environment),
                 Input::JSON_FORMAT => new JsonHandler($this->logger, $this->environment),
                 default => throw new RuntimeException('Unknown output format: '.$input->format),
             })->handle($input);

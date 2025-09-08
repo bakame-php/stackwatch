@@ -153,15 +153,15 @@ final class Statistics implements JsonSerializable
         $missingKeys = array_diff_key([
             'unit' => 1,
             'iterations' => 1,
-            'minimum' => 1,
-            'maximum' => 1,
-            'range' => 1,
-            'sum' => 1,
-            'average' => 1,
-            'median' => 1,
-            'variance' => 1,
-            'std_dev' => 1,
-            'coef_var' => 1,
+            AggregationType::Minimum->value => 1,
+            AggregationType::Maximum->value => 1,
+            AggregationType::Range->value => 1,
+            AggregationType::Sum->value => 1,
+            AggregationType::Average->value => 1,
+            AggregationType::Median->value => 1,
+            AggregationType::Variance->value => 1,
+            AggregationType::StdDev->value => 1,
+            AggregationType::CoefVar->value => 1,
         ], $data);
 
         [] === $missingKeys || throw new InvalidArgument('The payload is missing the following keys: '.implode(', ', array_keys($missingKeys)));
@@ -216,15 +216,15 @@ final class Statistics implements JsonSerializable
         return [
             'unit' => $this->unit->value,
             'iterations' => $this->iterations,
-            'minimum' => $this->minimum,
-            'maximum' => $this->maximum,
-            'range' => $this->range,
-            'sum' => $this->sum,
-            'average' => $this->average,
-            'median' => $this->median,
-            'variance' => $this->variance,
-            'std_dev' => $this->stdDev,
-            'coef_var' => $this->coefVar,
+            AggregationType::Minimum->value => $this->minimum,
+            AggregationType::Maximum->value => $this->maximum,
+            AggregationType::Range->value => $this->range,
+            AggregationType::Sum->value => $this->sum,
+            AggregationType::Average->value => $this->average,
+            AggregationType::Median->value => $this->median,
+            AggregationType::Variance->value => $this->variance,
+            AggregationType::StdDev->value => $this->stdDev,
+            AggregationType::CoefVar->value => $this->coefVar,
         ];
     }
 
@@ -244,16 +244,17 @@ final class Statistics implements JsonSerializable
     public function toHuman(): array
     {
         return [
+            'unit' => $this->unit->value,
             'iterations' => (string) $this->iterations,
-            'minimum' => $this->unit->format($this->minimum, 3),
-            'maximum' => $this->unit->format($this->maximum, 3),
-            'range' => $this->unit->format($this->range, 3),
-            'sum' => $this->unit->format($this->sum, 3),
-            'average' => $this->unit->format($this->average, 3),
-            'median' => $this->unit->format($this->median, 3),
-            'variance' => $this->unit->formatSquared($this->variance, 3),
-            'std_dev' => $this->unit->format($this->stdDev, 3),
-            'coef_var' => number_format($this->coefVar * 100, 4).' %',
+            AggregationType::Minimum->value => $this->unit->format($this->minimum, 3),
+            AggregationType::Maximum->value => $this->unit->format($this->maximum, 3),
+            AggregationType::Range->value => $this->unit->format($this->range, 3),
+            AggregationType::Sum->value => $this->unit->format($this->sum, 3),
+            AggregationType::Average->value => $this->unit->format($this->average, 3),
+            AggregationType::Median->value => $this->unit->format($this->median, 3),
+            AggregationType::Variance->value => $this->unit->formatSquared($this->variance, 3),
+            AggregationType::StdDev->value => $this->unit->format($this->stdDev, 3),
+            AggregationType::CoefVar->value => number_format($this->coefVar * 100, 4).' %',
         ];
     }
 

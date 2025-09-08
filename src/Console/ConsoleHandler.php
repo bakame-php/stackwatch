@@ -5,9 +5,6 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch\Console;
 
 use Bakame\Stackwatch\Environment;
-use Bakame\Stackwatch\Exporter\AnsiStyle;
-use Bakame\Stackwatch\Exporter\LeaderPrinter;
-use Bakame\Stackwatch\Exporter\Translator;
 use Bakame\Stackwatch\Version;
 use Bakame\Stackwatch\Warning;
 use Psr\Log\LoggerInterface;
@@ -23,8 +20,6 @@ final class ConsoleHandler implements Handler
         private readonly OutputInterface $stdout,
         private readonly LoggerInterface $logger,
         private readonly Environment $environment,
-        private readonly LeaderPrinter $leaderPrinter = new LeaderPrinter(),
-        private readonly Translator $translator = new Translator(),
     ) {
     }
 
@@ -38,28 +33,18 @@ final class ConsoleHandler implements Handler
             $output = new StreamOutput($handler);
         }
 
-        $profiler = PathProfiler::forConsole($input, $output, $this->logger, $this->translator);
+        $pathProfiler = PathProfiler::forConsole($input, $output, $this->logger);
         $output->writeln(Version::toConsoleString());
-
         if ($input->infoSection->isVisible()) {
-            $formatter = $profiler->formatter;
+            $formatter = $pathProfiler->formatter;
             if ($formatter instanceof ConsoleFormatter) {
-                $data = $this->translator->translateArrayKeys($this->environment->toHuman());
-                $formatter->exporter->output->writeln(
-                    $this
-                    ->leaderPrinter
-                    ->setPairs($data)
-                    ->setStylesKey(AnsiStyle::BrightGreen)
-                    ->setStylesValue(AnsiStyle::BrightCyan)
-                    ->renderCli()
-                );
+                $formatter->exporter->exportEnvironment($this->environment);
                 $formatter->exporter->output->writeln('');
             }
         } else {
             $output->writeln('<fg=green>Runtime:</> PHP '.$this->environment->phpVersion.' <fg=green>OS:</> '.$this->environment->os.' <fg=green>Memory Limit:</> '.$this->environment->rawMemoryLimit);
         }
-
         $output->writeln('');
-        $profiler->handle($input->path);
+        $pathProfiler->handle($input->path);
     }
 }

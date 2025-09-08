@@ -21,7 +21,7 @@ This helper provides:
 Include the `MetricsAssertions` trait in your base test class:
 
 ```php
-use Bakame\Stackwatch\MetricsAssertions;
+use Bakame\Stackwatch\Test\MetricsAssertions;
 
 abstract class PerformanceTestCase extends TestCase
 {

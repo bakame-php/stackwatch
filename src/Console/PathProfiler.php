@@ -6,7 +6,6 @@ namespace Bakame\Stackwatch\Console;
 
 use ArrayIterator;
 use Bakame\Stackwatch\Exporter\JsonExporter;
-use Bakame\Stackwatch\Exporter\Translator;
 use Bakame\Stackwatch\Exporter\ViewExporter;
 use Bakame\Stackwatch\Profile;
 use Bakame\Stackwatch\UnableToProfile;
@@ -50,11 +49,10 @@ final class PathProfiler
         Input $input,
         OutputInterface $output = new ConsoleOutput(),
         LoggerInterface $logger = new NullLogger(),
-        Translator $translator = new Translator(),
     ): self {
         return new self(
             new UnitOfWorkGenerator(new PathInspector(Profile::class), $logger),
-            new ConsoleFormatter(new ViewExporter($output), $input->dryRun, $translator),
+            new ConsoleFormatter(new ViewExporter($output), $input->dryRun),
             $input,
             $logger,
         );
