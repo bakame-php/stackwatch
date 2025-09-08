@@ -121,10 +121,18 @@ final class OtlExporter implements Exporter
         $start = $span->start;
         $end = $span->end;
 
+        $seconds = (int) $start->timestamp->format('U');
+        $micros = (int) $start->timestamp->format('u');
+        $startNano = $seconds * 1_000_000_000 + $micros * 1000;
+
+        $seconds = (int) $end->timestamp->format('U');
+        $micros = (int) $end->timestamp->format('u');
+        $endNano = $seconds * 1_000_000_000 + $micros * 1000;
+
         $otlSpan = $this->tracer
             ->spanBuilder($span->label)
             ->setSpanKind(SpanKind::KIND_INTERNAL)
-            ->setStartTimestamp(DurationUnit::Millisecond->convertToNano((int) $start->timestamp->format('Uu')))
+            ->setStartTimestamp($startNano)
             ->startSpan();
 
         $scope = $otlSpan->activate();
@@ -134,7 +142,7 @@ final class OtlExporter implements Exporter
             $this->exportSnapshot($end);
         } finally {
             $scope->detach();
-            $otlSpan->end(DurationUnit::Millisecond->convertToNano((int) $end->timestamp->format('Uu')));
+            $otlSpan->end($endNano);
         }
     }
 
