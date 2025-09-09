@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Console;
 
+use Bakame\Stackwatch\AggregatedMetrics;
 use Bakame\Stackwatch\InvalidArgument;
-use Bakame\Stackwatch\Metrics;
 use Bakame\Stackwatch\Profile;
 use Bakame\Stackwatch\Report;
 use Bakame\Stackwatch\Stack;
@@ -33,7 +33,7 @@ use function ucfirst;
 use const JSON_THROW_ON_ERROR;
 
 /**
- * @phpstan-import-type MetricsMap from Metrics
+ * @phpstan-import-type AggregatedMetricsMap from AggregatedMetrics
  * @phpstan-import-type ReportMap from Report
  * @phpstan-type UnitOfWorkMap array{
  *      type: ?string,
@@ -45,7 +45,7 @@ use const JSON_THROW_ON_ERROR;
  *      method?: non-empty-string|null,
  *      function?: non-empty-string|null,
  *      run_at: ?string,
- *      attributes: MetricsMap|ReportMap|array{}
+ *      attributes: AggregatedMetricsMap|ReportMap|array{}
  *  }
  */
 final class UnitOfWork implements JsonSerializable
@@ -62,7 +62,7 @@ final class UnitOfWork implements JsonSerializable
     private ?string $function;
     private ?string $name = null;
     private ?string $template = null;
-    private Report|Metrics|null $result = null;
+    private Report|AggregatedMetrics|null $result = null;
     private ?DateTimeImmutable $runAt = null;
     private ?Closure $callback = null;
 
@@ -139,7 +139,7 @@ final class UnitOfWork implements JsonSerializable
                 $unitOfWork->runAt = $runAt;
                 $unitOfWork->result = match ($profile->type) {
                     null => Report::fromArray($data['attributes']), /* @phpstan-ignore-line */
-                    default => Metrics::fromArray($data['attributes']), /* @phpstan-ignore-line */
+                    default => AggregatedMetrics::fromArray($data['attributes']), /* @phpstan-ignore-line */
                 };
 
                 $unitOfWork->path = $data['path'];
@@ -293,7 +293,7 @@ final class UnitOfWork implements JsonSerializable
             && null !== $this->runAt;
     }
 
-    public function result(): Report|Metrics
+    public function result(): Report|AggregatedMetrics
     {
         null !== $this->result || throw new UnableToProfile('The Unit of Work '.$this->toPlainString().' has not run yet.');
 

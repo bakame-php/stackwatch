@@ -24,6 +24,9 @@ $result->returnValue; // the actual return value from the callback
 $result->span;        // profiling data (Span object)
 ```
 
+You can learn more about this `Span` object in the [building block page](/stackwatch/1.0/building-blocks)
+
+
 ## Summary Metrics
 
 Use `stack_bench()` to collect execution time, memory usage, and CPU time:
@@ -34,25 +37,10 @@ use Bakame\Stackwatch\DurationUnit;
 $metrics = stack_bench($service->calculateHeavyStuff(...));
 echo DurationUnit::format($metrics->executionTime); // "1.271 ms"
 ```
-Each metric is available as a readonly property:
+The `$metrics` variable is an `AggregatedMetrics` object. In addition, to exposing aggregated metrics, the object
+exposes the `AggregationType` and the number of iterations used via the `type` and `iterations` properties.
 
-- `executionTime`
-- `cpuTime`
-- `memoryUsage`
-- `memoryUsageGrowth`
-- `peakMemoryUsage`
-- `peakMemoryUsageGrowth`
-- `realMemoryUsage`
-- `realMemoryUsageGrowth`
-- `realPeakMemoryUsage`
-- `realPeakMemoryUsageGrowth`
-
-Convert them to human-readable strings with:
-
-```php
-$metrics->toHuman();             // array of all formatted values
-$metrics->human('memory_usage'); // only one metric
-```
+You can learn more about this `AggregatedMetrics` in the [building block page](/stackwatch/1.0/building-blocks)
 
 ## Iterations & Warm-up
 
@@ -73,10 +61,10 @@ Choose how results are aggregated:
 use Bakame\Stackwatch\AggregationType;
 
 $metrics = stack_bench(
-    $service->calculateHeavyStuff(...),
-    5,
-    2,
-    AggregationType::Median
+    callback: $service->calculateHeavyStuff(...),
+    iterations: 5,
+    warmup: 2,
+    type: AggregationType::Median
 );
 ```
 
@@ -88,27 +76,30 @@ Supported aggregation strategies:
 - `Maximum`
 - `Sum`
 - `Range`
+- `StdDev`
+- `CoefVar`
+- `Variance`
 
 ## Full Report
 
 For detailed statistics instead of a single number:
 
 ```php
+use Bakame\Stackwatch\AggregationType;
+use Bakame\Stackwatch\MetricType;
+
 $report = stack_report($service->calculateHeavyStuff(...), 100);
+$report->row(MetricType::CpuTime)->minimum;
+$report->column(AggregationType::Sum)->memoryUsage;
 
-$report->executionTime->minimum;
-$report->executionTime->average;
-$report->executionTime->stdDev;
-
-$report->executionTime->human('minimum'); // "42.318 μs"
+$executionTime = $report->row(MetricType::ExecutionTime);
+$executionTime->human('minimum'); // "42.318 μs"
 ```
 
-Each property is a `Statistics` object, exposing:
+Each property is either a `Statistics` object or an `AggregatedMetrics` which
+expose profiling data.
 
-- `minimum`, `maximum`, `sum`,`average`, `median`, `variance`, `stdDev`, `coeffVar`
-- `toArray()` for raw data
-- `toHuman()` / `human()` for formatted data
-- JSON export (implements `JsonSerializable`)
+You can learn more about this `Statistics` and `AggregatedMetrics` in the [building block page](/stackwatch/1.0/building-blocks)
 
 ## Dumping
 
@@ -122,14 +113,14 @@ For quick inspection:
 - `stack_mdd()` → dumps summary metrics, halts execution
 
 
-| Function          | Returns   | Dumps? | Halts? |
-|-------------------|-----------|--------|--------|
-| `stack_call()`    | `Result`  | ❌      | ❌      |
-| `stack_cdump()`   | `Result`  | ✅      | ❌      |
-| `stack_cdd()`     | `never`   | ✅      | ✅      |
-| `stack_report()`  | `Report`  | ❌      | ❌      |
-| `stack_rdump()`   | `Report`  | ✅      | ❌      |
-| `stack_rdd()`     | `never`   | ✅      | ✅      |
-| `stack_bench()` | `Metrics` | ❌      | ❌      |
-| `stack_mdump()`   | `Metrics` | ✅      | ❌      |
-| `stack_mdd()`     | `never`   | ✅      | ✅      |
+| Function         | Returns   | Dumps? | Halts? |
+|------------------|-----------|--------|--------|
+| `stack_call()`   | `Result`  | ❌      | ❌      |
+| `stack_cdump()`  | `Result`  | ✅      | ❌      |
+| `stack_cdd()`    | `never`   | ✅      | ✅      |
+| `stack_report()` | `Report`  | ❌      | ❌      |
+| `stack_rdump()`  | `Report`  | ✅      | ❌      |
+| `stack_rdd()`    | `never`   | ✅      | ✅      |
+| `stack_bench()`  | `Metrics` | ❌      | ❌      |
+| `stack_mdump()`  | `Metrics` | ✅      | ❌      |
+| `stack_mdd()`    | `never`   | ✅      | ✅      |

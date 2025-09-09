@@ -84,10 +84,11 @@ CSS;
     {
         $lines = [];
         $terminalWitdh = self::detectTerminalWidth();
+
         foreach ($this->pairs as [$key, $value]) {
             $dotsCount = $terminalWitdh - mb_strlen($value) - mb_strlen($key) - (2 * $this->padExtra);
             $lines[] = Ansi::write($key, ...$this->stylesKey).' '
-                .str_repeat($this->filler, max(1, $dotsCount)).' '
+                .str_repeat($this->filler, max(3, $dotsCount)).' '
                 .Ansi::write($value, ...$this->stylesValue);
         }
 

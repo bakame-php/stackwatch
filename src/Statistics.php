@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Bakame\Stackwatch;
 
 use Bakame\Stackwatch\Exporter\CallbackDumper;
+use Bakame\Stackwatch\Exporter\Translator;
 use Bakame\Stackwatch\Exporter\ViewExporter;
 use JsonSerializable;
 use Throwable;
@@ -28,7 +29,7 @@ use function strtolower;
  * Use `Statistics::none()`to generate an empty/default profile.
  *
  * @phpstan-type StatsMap array{
- *     unit: string,
+ *     type: string,
  *     iterations:int,
  *     minimum:float|int,
  *     maximum:float|int,
@@ -42,6 +43,7 @@ use function strtolower;
  * }
  *
  * @phpstan-type StatsHumanReadable array{
+ *      type: string,
  *      iterations:string,
  *      minimum:string,
  *      maximum:string,
@@ -58,7 +60,7 @@ use function strtolower;
 final class Statistics implements JsonSerializable
 {
     public function __construct(
-        public readonly Unit $unit,
+        public readonly MetricType $type,
         public readonly int $iterations,
         public readonly float|int $minimum,
         public readonly float|int $maximum,
@@ -77,11 +79,11 @@ final class Statistics implements JsonSerializable
      *
      * @throws ValueError if the list of values is empty
      */
-    public static function fromValues(Unit $unit, array $values): self
+    public static function fromValues(MetricType $type, array $values): self
     {
         $iterations = count($values);
         if (0 === $iterations) {
-            return self::none($unit);
+            return self::none($type);
         }
 
         $sum = array_sum($values);
@@ -94,7 +96,7 @@ final class Statistics implements JsonSerializable
         $max = $values[$iterations - 1];
 
         return new self(
-            unit: $unit,
+            type: $type,
             iterations: $iterations,
             minimum: $min,
             maximum: $max,
@@ -108,10 +110,10 @@ final class Statistics implements JsonSerializable
         );
     }
 
-    public static function fromOne(Unit $unit, float $value): self
+    public static function fromOne(MetricType $type, float $value): self
     {
         return new self(
-            unit: $unit,
+            type: $type,
             iterations: 1,
             minimum: $value,
             maximum: $value,
@@ -125,10 +127,10 @@ final class Statistics implements JsonSerializable
         );
     }
 
-    public static function none(Unit $unit): self
+    public static function none(MetricType $type): self
     {
         return new self(
-            unit: $unit,
+            type: $type,
             iterations: 0,
             minimum: 0,
             maximum: 0,
@@ -151,7 +153,7 @@ final class Statistics implements JsonSerializable
     public static function fromArray(array $data): self
     {
         $missingKeys = array_diff_key([
-            'unit' => 1,
+            'type' => 1,
             'iterations' => 1,
             AggregationType::Minimum->value => 1,
             AggregationType::Maximum->value => 1,
@@ -166,19 +168,21 @@ final class Statistics implements JsonSerializable
 
         [] === $missingKeys || throw new InvalidArgument('The payload is missing the following keys: '.implode(', ', array_keys($missingKeys)));
 
+        $type = MetricType::from($data['type']);
+
         try {
             return new self(
-                Unit::from($data['unit']),
-                $data['iterations'],
-                $data['minimum'],
-                $data['maximum'],
-                $data['range'],
-                $data['sum'],
-                $data['average'],
-                $data['median'],
-                $data['variance'],
-                $data['std_dev'],
-                $data['coef_var'],
+                type: $type,
+                iterations: $data['iterations'],
+                minimum: $data['minimum'],
+                maximum:  $data['maximum'],
+                range:  $data['range'],
+                sum:  $data['sum'],
+                average:  $data['average'],
+                median:  $data['median'],
+                variance:  $data['variance'],
+                stdDev:  $data['std_dev'],
+                coefVar:  $data['coef_var'],
             );
         } catch (Throwable $exception) {
             throw new InvalidArgument('Unable to create a '.self::class.' instance from the payload', previous: $exception);
@@ -214,7 +218,7 @@ final class Statistics implements JsonSerializable
     public function toArray(): array
     {
         return [
-            'unit' => $this->unit->value,
+            'type' => $this->type->value,
             'iterations' => $this->iterations,
             AggregationType::Minimum->value => $this->minimum,
             AggregationType::Maximum->value => $this->maximum,
@@ -243,17 +247,20 @@ final class Statistics implements JsonSerializable
      */
     public function toHuman(): array
     {
+        $unit = $this->type->unit();
+        $humanType = (new Translator())->translate($this->type->value);
+
         return [
-            'unit' => $this->unit->value,
+            'type' => $humanType,
             'iterations' => (string) $this->iterations,
-            AggregationType::Minimum->value => $this->unit->format($this->minimum, 3),
-            AggregationType::Maximum->value => $this->unit->format($this->maximum, 3),
-            AggregationType::Range->value => $this->unit->format($this->range, 3),
-            AggregationType::Sum->value => $this->unit->format($this->sum, 3),
-            AggregationType::Average->value => $this->unit->format($this->average, 3),
-            AggregationType::Median->value => $this->unit->format($this->median, 3),
-            AggregationType::Variance->value => $this->unit->formatSquared($this->variance, 3),
-            AggregationType::StdDev->value => $this->unit->format($this->stdDev, 3),
+            AggregationType::Minimum->value => $unit->format($this->minimum, 3),
+            AggregationType::Maximum->value => $unit->format($this->maximum, 3),
+            AggregationType::Range->value => $unit->format($this->range, 3),
+            AggregationType::Sum->value => $unit->format($this->sum, 3),
+            AggregationType::Average->value => $unit->format($this->average, 3),
+            AggregationType::Median->value => $unit->format($this->median, 3),
+            AggregationType::Variance->value => $unit->formatSquared($this->variance, 3),
+            AggregationType::StdDev->value => $unit->format($this->stdDev, 3),
             AggregationType::CoefVar->value => number_format($this->coefVar * 100, 4).' %',
         ];
     }
@@ -270,15 +277,15 @@ final class Statistics implements JsonSerializable
         return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown statistics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
     }
 
-    public function dump(?MetricType $type = null): self
+    public function dump(): self
     {
-        (new ViewExporter())->exportStatistics($this, $type);
+        (new ViewExporter())->exportStatistics($this);
 
         return $this;
     }
 
-    public function dd(?MetricType $type = null): never
+    public function dd(): never
     {
-        CallbackDumper::dd(fn () => $this->dump($type));
+        CallbackDumper::dd(fn () => $this->dump());
     }
 }

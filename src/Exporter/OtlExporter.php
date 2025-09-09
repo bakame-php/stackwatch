@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Exporter;
 
-use Bakame\Stackwatch\AggregationType;
+use Bakame\Stackwatch\AggregatedMetrics;
 use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\Metrics;
-use Bakame\Stackwatch\MetricType;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Report;
 use Bakame\Stackwatch\Result;
@@ -182,9 +181,9 @@ final class OtlExporter implements Exporter
         ]);
     }
 
-    public function exportMetrics(Metrics $metrics, ?AggregationType $type = null): void
+    public function exportMetrics(AggregatedMetrics|Metrics $metrics): void
     {
-        $labels = ['type' => $type?->value];
+        $labels = ['type' => $metrics instanceof AggregatedMetrics ? $metrics->type->value : null];
         $this->cpuUser->add($metrics->cpuTime, $labels);
         $this->execTime->record($metrics->executionTime, $labels);
         $this->memoryUsage->record($metrics->memoryUsage, $labels);
@@ -197,7 +196,7 @@ final class OtlExporter implements Exporter
         }
 
         $activeSpan->addEvent('metric', [
-            'type' => $type?->value,
+            'type' => $metrics instanceof AggregatedMetrics ? $metrics->type->value : null,
             'cpu.time' => $metrics->cpuTime,
             'execution.time' => $metrics->executionTime,
             'memory.usage' => $metrics->memoryUsage,
@@ -211,30 +210,17 @@ final class OtlExporter implements Exporter
         ]);
     }
 
-    public function exportStatistics(Statistics $statistics, ?MetricType $type = null): void
+    public function exportStatistics(Statistics $statistics): void
     {
         $activeSpan = OtlSpan::fromContext(Context::getCurrent());
         if (!$activeSpan->isRecording()) {
             return;
         }
 
-        $activeSpan->addEvent('statistics', [
-            'type' => $type?->value,
-            'unit' => $statistics->unit->name,
-            'iterations' => $statistics->iterations,
-            'min' => $statistics->minimum,
-            'max' => $statistics->maximum,
-            'range' => $statistics->range,
-            'sum' => $statistics->sum,
-            'average' => $statistics->average,
-            'median' => $statistics->median,
-            'variance' => $statistics->variance,
-            'stdDev' => $statistics->stdDev,
-            'coefVar' => $statistics->coefVar,
-        ]);
+        $activeSpan->addEvent('statistics', $statistics->toArray());
 
-        if (null !== $type && !$type->isGrowth()) {
-            $labels = ['type' => $type->value];
+        if (! $statistics->type->isGrowth()) {
+            $labels = ['type' => $statistics->type->value];
             $this->execTime->record($statistics->average, $labels);
             $this->memoryUsage->record($statistics->sum, $labels);
         }
@@ -247,21 +233,8 @@ final class OtlExporter implements Exporter
         $scope = $parent->activate();
 
         try {
-            $statsMap = [
-                'cpu_time' => $report->cpuTime,
-                'execution_time' => $report->executionTime,
-                'memory_usage' => $report->memoryUsage,
-                'memory_usage_growth' => $report->memoryUsageGrowth,
-                'peak_memory_usage' => $report->peakMemoryUsage,
-                'peak_memory_usage_growth' => $report->peakMemoryUsageGrowth,
-                'real_memory_usage' => $report->realMemoryUsage,
-                'real_memory_usage_growth' => $report->realMemoryUsageGrowth,
-                'real_peak_memory_usage' => $report->realPeakMemoryUsage,
-                'real_peak_memory_usage_growth' => $report->realPeakMemoryUsageGrowth,
-            ];
-
-            foreach ($statsMap as $name => $stats) {
-                $this->exportStatistics($stats, MetricType::from($name));
+            foreach ($report->jsonSerialize() as $stats) {
+                $this->exportStatistics($stats);
             }
         } finally {
             $scope->detach();

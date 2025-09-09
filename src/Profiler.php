@@ -225,13 +225,13 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @param (callable(Span): bool)|non-empty-string|null $label
      */
-    public function average(callable|string|null $label = null): Metrics
+    public function average(callable|string|null $label = null): AggregatedMetrics
     {
         return Report::fromMetrics(...match (true) {
             null === $label => $this->spans,
             is_callable($label) => $this->filter($label),
             default => $this->getAll($label),
-        })->metrics(AggregationType::Average);
+        })->column(AggregationType::Average);
     }
 
     /**
@@ -239,13 +239,13 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @param (callable(Span): bool)|non-empty-string|null $label
      */
-    public function median(callable|string|null $label = null): Metrics
+    public function median(callable|string|null $label = null): AggregatedMetrics
     {
         return Report::fromMetrics(...match (true) {
             null === $label => $this->spans,
             is_callable($label) => $this->filter($label),
             default => $this->getAll($label),
-        })->metrics(AggregationType::Median);
+        })->column(AggregationType::Median);
     }
 
     /**
@@ -253,13 +253,13 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @param (callable(Span): bool)|non-empty-string|null $label
      */
-    public function range(callable|string|null $label = null): Metrics
+    public function range(callable|string|null $label = null): AggregatedMetrics
     {
         return Report::fromMetrics(...match (true) {
             null === $label => $this->spans,
             is_callable($label) => $this->filter($label),
             default => $this->getAll($label),
-        })->metrics(AggregationType::Range);
+        })->column(AggregationType::Range);
     }
 
     /**
@@ -267,13 +267,13 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @param (callable(Span): bool)|non-empty-string|null $label
      */
-    public function min(callable|string|null $label = null): Metrics
+    public function min(callable|string|null $label = null): AggregatedMetrics
     {
         return Report::fromMetrics(...match (true) {
             null === $label => $this->spans,
             is_callable($label) => $this->filter($label),
             default => $this->getAll($label),
-        })->metrics(AggregationType::Minimum);
+        })->column(AggregationType::Minimum);
     }
 
     /**
@@ -281,13 +281,13 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @param (callable(Span): bool)|non-empty-string|null $label
      */
-    public function max(callable|string|null $label = null): Metrics
+    public function max(callable|string|null $label = null): AggregatedMetrics
     {
         return Report::fromMetrics(...match (true) {
             null === $label => $this->spans,
             is_callable($label) => $this->filter($label),
             default => $this->getAll($label),
-        })->metrics(AggregationType::Maximum);
+        })->column(AggregationType::Maximum);
     }
 
     /**
@@ -295,13 +295,13 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @param (callable(Span): bool)|non-empty-string|null $label
      */
-    public function sum(callable|string|null $label = null): Metrics
+    public function sum(callable|string|null $label = null): AggregatedMetrics
     {
         return Report::fromMetrics(...match (true) {
             null === $label => $this->spans,
             is_callable($label) => $this->filter($label),
             default => $this->getAll($label),
-        })->metrics(AggregationType::Sum);
+        })->column(AggregationType::Sum);
     }
 
     /**
@@ -309,13 +309,13 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @param (callable(Span): bool)|non-empty-string|null $label
      */
-    public function coefVar(callable|string|null $label = null): Metrics
+    public function coefVar(callable|string|null $label = null): AggregatedMetrics
     {
         return Report::fromMetrics(...match (true) {
             null === $label => $this->spans,
             is_callable($label) => $this->filter($label),
             default => $this->getAll($label),
-        })->metrics(AggregationType::CoefVar);
+        })->column(AggregationType::CoefVar);
     }
 
     /**
@@ -323,13 +323,13 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @param (callable(Span): bool)|non-empty-string|null $label
      */
-    public function stdDev(callable|string|null $label = null): Metrics
+    public function stdDev(callable|string|null $label = null): AggregatedMetrics
     {
         return Report::fromMetrics(...match (true) {
             null === $label => $this->spans,
             is_callable($label) => $this->filter($label),
             default => $this->getAll($label),
-        })->metrics(AggregationType::StdDev);
+        })->column(AggregationType::StdDev);
     }
 
     /**
@@ -337,13 +337,13 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
      *
      * @param (callable(Span): bool)|non-empty-string|null $label
      */
-    public function variance(callable|string|null $label = null): Metrics
+    public function variance(callable|string|null $label = null): AggregatedMetrics
     {
         return Report::fromMetrics(...match (true) {
             null === $label => $this->spans,
             is_callable($label) => $this->filter($label),
             default => $this->getAll($label),
-        })->metrics(AggregationType::Variance);
+        })->column(AggregationType::Variance);
     }
 
     /**

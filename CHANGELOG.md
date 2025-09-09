@@ -16,7 +16,9 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - **BC BREAK:** Rename `Stack::metrics` to `Stack::benchmark`
 - **BC BREAK:** Rename `Stack::dumpMetrics` to `Stack::dumpBenchmark`
 - **BC BREAK:** Rename `Stack::ddMetrics` to `Stack::ddBenchmark`
-- Added `Report::metrics` to have a single source of truth for statistics generation
+- Added `AggregatedMetrics` to distinguish raw and calculated metrics
+- Added `Report::row` to make the `Report` public API consistent
+- Added `Report::column` to have a single source of truth for statistics generation
 - Added `OtlExporter` to export data to an Open Telemetry server
 - Added `MetricType` Enum to list possible metrics supported by the package
 - Added `Profiler` missing aggregated related methods.
@@ -27,9 +29,9 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Fixed
 
+- **BC BREAK:** `Statistics` no longer exposes its main unit it now exposes its type using the `MetricType` enum.
 - `Timeline::dump` and `Timeline::dd` can take an optional filter callable.
 - `ViewExporter` no longer needs or requires the `Renderer` which is removed
-- Bumped console version
 - **BC BREAK:** Move all the classes related to export in their own namespace `Bakame\Stackwatch\Exporter`
 
 ### Deprecated
@@ -41,6 +43,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 - Removed all `Metrics` static method related to aggregated data. use `Report::metrics()` instead.
 - Removed `Metrics::add` method
 - Removed the internal `Renderer` class
+- **BC BREAK:** Remove access to `Report` properties (they are made private to improve the public API)
 
 ## [0.14.0 - Nouakchott](https://github.com/bakame-php/stackwatch/compare/0.13.0...0.14.0) - 2025-09-05
 

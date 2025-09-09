@@ -48,27 +48,27 @@ use function iterator_to_array;
 final class Report implements JsonSerializable
 {
     public function __construct(
-        public readonly Statistics $cpuTime,
-        public readonly Statistics $executionTime,
-        public readonly Statistics $memoryUsage,
-        public readonly Statistics $memoryUsageGrowth,
-        public readonly Statistics $peakMemoryUsage,
-        public readonly Statistics $peakMemoryUsageGrowth,
-        public readonly Statistics $realMemoryUsage,
-        public readonly Statistics $realMemoryUsageGrowth,
-        public readonly Statistics $realPeakMemoryUsage,
-        public readonly Statistics $realPeakMemoryUsageGrowth,
+        private readonly Statistics $cpuTime,
+        private readonly Statistics $executionTime,
+        private readonly Statistics $memoryUsage,
+        private readonly Statistics $memoryUsageGrowth,
+        private readonly Statistics $peakMemoryUsage,
+        private readonly Statistics $peakMemoryUsageGrowth,
+        private readonly Statistics $realMemoryUsage,
+        private readonly Statistics $realMemoryUsageGrowth,
+        private readonly Statistics $realPeakMemoryUsage,
+        private readonly Statistics $realPeakMemoryUsageGrowth,
     ) {
-        Unit::Nanoseconds === $this->cpuTime->unit || throw new InvalidArgument('Invalid cpu time unit specified');
-        Unit::Nanoseconds === $this->executionTime->unit || throw new InvalidArgument('Invalid execution time unit specified');
-        Unit::Bytes === $this->memoryUsage->unit || throw new InvalidArgument('Invalid memory usage unit specified');
-        Unit::Bytes === $this->memoryUsageGrowth->unit || throw new InvalidArgument('Invalid memory usage unit specified');
-        Unit::Bytes === $this->peakMemoryUsage->unit || throw new InvalidArgument('Invalid peak memory usage unit specified');
-        Unit::Bytes === $this->peakMemoryUsageGrowth->unit || throw new InvalidArgument('Invalid memory usage unit specified');
-        Unit::Bytes === $this->realMemoryUsage->unit || throw new InvalidArgument('Invalid real memory usage unit specified');
-        Unit::Bytes === $this->realMemoryUsageGrowth->unit || throw new InvalidArgument('Invalid real memory usage unit specified');
-        Unit::Bytes === $this->realPeakMemoryUsage->unit || throw new InvalidArgument('Invalid real peak memory usage unit specified');
-        Unit::Bytes === $this->realPeakMemoryUsageGrowth->unit || throw new InvalidArgument('Invalid real peak memory usage unit specified');
+        MetricType::CpuTime === $this->cpuTime->type || throw new InvalidArgument('Invalid cpu time statistics specified');
+        MetricType::ExecutionTime === $this->executionTime->type || throw new InvalidArgument('Invalid execution time statistics specified');
+        MetricType::MemoryUsage === $this->memoryUsage->type || throw new InvalidArgument('Invalid memory usage statistics specified');
+        MetricType::MemoryUsageGrowth === $this->memoryUsageGrowth->type || throw new InvalidArgument('Invalid memory usage statistics specified');
+        MetricType::PeakMemoryUsage === $this->peakMemoryUsage->type || throw new InvalidArgument('Invalid peak memory usage statistics specified');
+        MetricType::PeakMemoryUsageGrowth === $this->peakMemoryUsageGrowth->type || throw new InvalidArgument('Invalid memory usage statistics specified');
+        MetricType::RealMemoryUsage === $this->realMemoryUsage->type || throw new InvalidArgument('Invalid real memory usage statistics specified');
+        MetricType::RealMemoryUsageGrowth === $this->realMemoryUsageGrowth->type || throw new InvalidArgument('Invalid real memory usage statistics specified');
+        MetricType::RealPeakMemoryUsage === $this->realPeakMemoryUsage->type || throw new InvalidArgument('Invalid real peak memory usage statistics specified');
+        MetricType::RealPeakMemoryUsageGrowth === $this->realPeakMemoryUsageGrowth->type || throw new InvalidArgument('Invalid real peak memory usage statistics specified');
     }
 
     /**
@@ -149,16 +149,16 @@ final class Report implements JsonSerializable
         }
 
         return new self(
-            cpuTime: Statistics::fromValues(Unit::Nanoseconds, $statistics[MetricType::CpuTime->value]),
-            executionTime: Statistics::fromValues(Unit::Nanoseconds, $statistics[MetricType::ExecutionTime->value]),
-            memoryUsage: Statistics::fromValues(Unit::Bytes, $statistics[MetricType::MemoryUsage->value]),
-            memoryUsageGrowth: Statistics::fromValues(Unit::Bytes, $statistics[MetricType::MemoryUsageGrowth->value]),
-            peakMemoryUsage: Statistics::fromValues(Unit::Bytes, $statistics[MetricType::PeakMemoryUsage->value]),
-            peakMemoryUsageGrowth: Statistics::fromValues(Unit::Bytes, $statistics[MetricType::PeakMemoryUsageGrowth->value]),
-            realMemoryUsage: Statistics::fromValues(Unit::Bytes, $statistics[MetricType::RealMemoryUsage->value]),
-            realMemoryUsageGrowth: Statistics::fromValues(Unit::Bytes, $statistics[MetricType::RealMemoryUsageGrowth->value]),
-            realPeakMemoryUsage: Statistics::fromValues(Unit::Bytes, $statistics[MetricType::RealPeakMemoryUsage->value]),
-            realPeakMemoryUsageGrowth: Statistics::fromValues(Unit::Bytes, $statistics[MetricType::RealPeakMemoryUsageGrowth->value]),
+            cpuTime: Statistics::fromValues(MetricType::CpuTime, $statistics[MetricType::CpuTime->value]),
+            executionTime: Statistics::fromValues(MetricType::ExecutionTime, $statistics[MetricType::ExecutionTime->value]),
+            memoryUsage: Statistics::fromValues(MetricType::MemoryUsage, $statistics[MetricType::MemoryUsage->value]),
+            memoryUsageGrowth: Statistics::fromValues(MetricType::MemoryUsageGrowth, $statistics[MetricType::MemoryUsageGrowth->value]),
+            peakMemoryUsage: Statistics::fromValues(MetricType::PeakMemoryUsage, $statistics[MetricType::PeakMemoryUsage->value]),
+            peakMemoryUsageGrowth: Statistics::fromValues(MetricType::PeakMemoryUsageGrowth, $statistics[MetricType::PeakMemoryUsageGrowth->value]),
+            realMemoryUsage: Statistics::fromValues(MetricType::RealMemoryUsage, $statistics[MetricType::RealMemoryUsage->value]),
+            realMemoryUsageGrowth: Statistics::fromValues(MetricType::RealMemoryUsageGrowth, $statistics[MetricType::RealMemoryUsageGrowth->value]),
+            realPeakMemoryUsage: Statistics::fromValues(MetricType::RealPeakMemoryUsage, $statistics[MetricType::RealPeakMemoryUsage->value]),
+            realPeakMemoryUsageGrowth: Statistics::fromValues(MetricType::RealPeakMemoryUsageGrowth, $statistics[MetricType::RealPeakMemoryUsageGrowth->value]),
         );
     }
 
@@ -190,9 +190,11 @@ final class Report implements JsonSerializable
         }
     }
 
-    public function metrics(AggregationType $type): Metrics
+    public function column(AggregationType $type): AggregatedMetrics
     {
-        return new Metrics(
+        return new AggregatedMetrics(
+            type: $type,
+            iterations: $this->cpuTime->iterations,
             cpuTime: $this->cpuTime->toArray()[$type->value],
             executionTime: $this->executionTime->toArray()[$type->value],
             memoryUsage: $this->memoryUsage->toArray()[$type->value],
@@ -206,22 +208,24 @@ final class Report implements JsonSerializable
         );
     }
 
+    public function row(MetricType $type): Statistics
+    {
+        return $this->jsonSerialize()[$type->value] ?? throw new InvalidArgument('Unknown or unsupported metric type `'.$type->value.'`.');
+    }
+
     public static function none(): self
     {
-        $nanoStats = Statistics::none(Unit::Nanoseconds);
-        $byteStats = Statistics::none(Unit::Bytes);
-
         return new self(
-            cpuTime: $nanoStats,
-            executionTime: $nanoStats,
-            memoryUsage: $byteStats,
-            memoryUsageGrowth: $byteStats,
-            peakMemoryUsage: $byteStats,
-            peakMemoryUsageGrowth: $byteStats,
-            realMemoryUsage: $byteStats,
-            realMemoryUsageGrowth: $byteStats,
-            realPeakMemoryUsage: $byteStats,
-            realPeakMemoryUsageGrowth: $byteStats,
+            cpuTime: Statistics::none(MetricType::CpuTime),
+            executionTime: Statistics::none(MetricType::ExecutionTime),
+            memoryUsage: Statistics::none(MetricType::MemoryUsage),
+            memoryUsageGrowth: Statistics::none(MetricType::MemoryUsageGrowth),
+            peakMemoryUsage: Statistics::none(MetricType::PeakMemoryUsage),
+            peakMemoryUsageGrowth: Statistics::none(MetricType::PeakMemoryUsageGrowth),
+            realMemoryUsage: Statistics::none(MetricType::RealMemoryUsage),
+            realMemoryUsageGrowth: Statistics::none(MetricType::RealMemoryUsageGrowth),
+            realPeakMemoryUsage: Statistics::none(MetricType::RealPeakMemoryUsage),
+            realPeakMemoryUsageGrowth: Statistics::none(MetricType::RealPeakMemoryUsageGrowth),
         );
     }
 

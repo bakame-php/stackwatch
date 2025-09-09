@@ -200,15 +200,15 @@ final class Metrics implements JsonSerializable
         return $humans[$propertyNormalized] ?? throw new InvalidArgument('Unknown metrics name: "'.$property.'"; expected one of "'.implode('", "', array_keys($humans)).'"');
     }
 
-    public function dump(?AggregationType $type = null): self
+    public function dump(): self
     {
-        (new ViewExporter())->exportMetrics($this, $type);
+        (new ViewExporter())->exportMetrics($this);
 
         return $this;
     }
 
-    public function dd(?AggregationType $type = null): never
+    public function dd(): never
     {
-        CallbackDumper::dd(fn () => $this->dump($type));
+        CallbackDumper::dd(fn () => $this->dump());
     }
 }

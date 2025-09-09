@@ -26,12 +26,12 @@ use function implode;
  */
 final class Span implements JsonSerializable
 {
-    public readonly Metrics $metrics;
-    public readonly Snapshot $start;
-    public readonly Snapshot $end;
-    public readonly CallRange $range;
     /** @var non-empty-string */
     public readonly string $label;
+    public readonly Snapshot $start;
+    public readonly Snapshot $end;
+    public readonly Metrics $metrics;
+    public readonly CallRange $range;
 
     /**
      * @param non-empty-string $label

@@ -8,5 +8,6 @@ version:
             Timeline: '/1.0/timeline/'
             CLI command: '/1.0/command/'
             PHPUnit Helper: '/1.0/phpunit/'
+            Building blocks: '/1.0/building-blocks/'
             Exporters: '/1.0/exporters/'
             Helpers: '/1.0/helpers/'

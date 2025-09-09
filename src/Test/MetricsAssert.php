@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Test;
 
+use Bakame\Stackwatch\AggregatedMetrics;
 use Bakame\Stackwatch\DurationUnit;
 use Bakame\Stackwatch\MemoryUnit;
 use Bakame\Stackwatch\Metrics;
@@ -29,7 +30,7 @@ final class MetricsAssert
 {
     private ?string $current = null;
 
-    public function __construct(public readonly Metrics $metrics)
+    public function __construct(public readonly Metrics|AggregatedMetrics $metrics)
     {
     }
 

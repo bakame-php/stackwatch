@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Exporter;
 
-use Bakame\Stackwatch\AggregationType;
+use Bakame\Stackwatch\AggregatedMetrics;
 use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\Metrics;
-use Bakame\Stackwatch\MetricType;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Report;
 use Bakame\Stackwatch\Snapshot;
@@ -19,9 +18,9 @@ interface Exporter
 {
     public function exportEnvironment(Environment $environment): void;
     public function exportSnapshot(Snapshot $snapshot): void;
-    public function exportMetrics(Metrics $metrics, ?AggregationType $type = null): void;
+    public function exportMetrics(Metrics|AggregatedMetrics $metrics): void;
     public function exportSpan(Span $span): void;
-    public function exportStatistics(Statistics $statistics, ?MetricType $type = null): void;
+    public function exportStatistics(Statistics $statistics): void;
     public function exportReport(Report $report): void;
     /**
      * @param (callable(Span): bool)|string|null $label

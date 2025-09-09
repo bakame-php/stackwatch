@@ -134,6 +134,18 @@ final class CallRange implements JsonSerializable
             && $this->end->line < $this->start->line;
     }
 
+    public function isSameLine(): bool
+    {
+        return $this->isSameFile()
+            && $this->start->line === $this->end->line;
+    }
+
+    public function isDifferentLine(): bool
+    {
+        return $this->isSameFile()
+            && $this->start->line !== $this->end->line;
+    }
+
     /**
      * @return CallRangeMap
      */

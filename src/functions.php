@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Bakame\Stackwatch\AggregatedMetrics;
 use Bakame\Stackwatch\AggregationType;
 use Bakame\Stackwatch\Metrics;
 use Bakame\Stackwatch\Report;
@@ -104,7 +105,7 @@ if (!function_exists('stack_bench')) {
      *
      * @throws Throwable
      */
-    function stack_bench(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
+    function stack_bench(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): AggregatedMetrics
     {
         return Stack::benchmark($callback, $iterations, $warmup, $type);
     }
@@ -121,7 +122,7 @@ if (!function_exists('stack_bdump')) {
      *
      * @throws Throwable
      */
-    function stack_bdump(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
+    function stack_bdump(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): AggregatedMetrics
     {
         return Stack::dumpBenchmark($callback, $iterations, $warmup, $type);
     }

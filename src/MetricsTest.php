@@ -12,6 +12,7 @@ use ReflectionClass;
 
 use function hrtime;
 
+#[CoversClass(AggregatedMetrics::class)]
 #[CoversClass(Metrics::class)]
 #[CoversClass(Report::class)]
 final class MetricsTest extends TestCase
@@ -27,12 +28,16 @@ final class MetricsTest extends TestCase
     }
 
     #[Test]
-    public function it_can_handle_the_avegare_of_zero_values(): void
+    public function it_can_handle_the_average_of_zero_values(): void
     {
-        self::assertEquals(
+        $aggregatedMetrics = Report::fromMetrics(
             Metrics::none(),
-            Report::fromMetrics(Metrics::none(), Metrics::none(), Metrics::none())->metrics(AggregationType::Average),
-        );
+            Metrics::none(),
+            Metrics::none()
+        )->column(AggregationType::Average);
+
+        self::assertSame(3, $aggregatedMetrics->iterations);
+        self::assertSame(0.0, $aggregatedMetrics->peakMemoryUsage);
     }
 
     #[Test]
@@ -40,7 +45,7 @@ final class MetricsTest extends TestCase
     {
         $span = $this->createSpan('empty_label');
 
-        self::assertNotEquals($span->metrics, Report::fromMetrics($span)->metrics(AggregationType::Average));
+        self::assertNotEquals($span->metrics, Report::fromMetrics($span)->column(AggregationType::Average));
     }
 
     #[Test]
@@ -54,8 +59,8 @@ final class MetricsTest extends TestCase
         $reflection->getProperty('spans')->setValue($profiler, [$span1, $span2]);
 
         self::assertEquals(
-            Report::fromMetrics($profiler)->metrics(AggregationType::Average),
-            Report::fromMetrics($span1, $span2)->metrics(AggregationType::Average),
+            Report::fromMetrics($profiler)->column(AggregationType::Average),
+            Report::fromMetrics($span1, $span2)->column(AggregationType::Average),
         );
     }
 

@@ -99,9 +99,9 @@ final class Stack
      *
      * @throws InvalidArgument|Throwable
      */
-    public static function benchmark(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
+    public static function benchmark(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): AggregatedMetrics
     {
-        return self::report($callback, $iterations, $warmup)->metrics($type);
+        return self::report($callback, $iterations, $warmup)->column($type);
     }
 
     /**
@@ -154,7 +154,7 @@ final class Stack
      *
      * @throws Throwable
      */
-    public static function dumpBenchmark(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): Metrics
+    public static function dumpBenchmark(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): AggregatedMetrics
     {
         $stats = self::benchmark($callback, $iterations, $warmup, $type);
 
@@ -186,6 +186,6 @@ final class Stack
      */
     public static function ddBenchmark(callable $callback, int $iterations = 1, int $warmup = 0, AggregationType $type = AggregationType::Average): never
     {
-        CallbackDumper::dd(fn (): Metrics => self::dumpBenchmark($callback, $iterations, $warmup, $type));
+        CallbackDumper::dd(fn (): AggregatedMetrics => self::dumpBenchmark($callback, $iterations, $warmup, $type));
     }
 }

@@ -6,6 +6,7 @@ namespace Bakame\Stackwatch\Exporter;
 
 use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\Metrics;
+use Bakame\Stackwatch\MetricType;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Result;
 use Bakame\Stackwatch\Snapshot;
@@ -13,7 +14,6 @@ use Bakame\Stackwatch\Span;
 use Bakame\Stackwatch\Stack;
 use Bakame\Stackwatch\Statistics;
 use Bakame\Stackwatch\Timeline;
-use Bakame\Stackwatch\Unit;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -70,7 +70,7 @@ final class JsonExporterTest extends TestCase
         /** @var resource $handle */
         $handle = fopen($this->tmpFile, 'wb');
         $exporter = new JsonExporter($handle, 0);
-        $data = Statistics::fromOne(Unit::Nanoseconds, 3);
+        $data = Statistics::fromOne(MetricType::CpuTime, 3);
         $exporter->exportStatistics($data);
         fclose($handle);
 

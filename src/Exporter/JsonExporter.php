@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Exporter;
 
-use Bakame\Stackwatch\AggregationType;
+use Bakame\Stackwatch\AggregatedMetrics;
 use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\Metrics;
-use Bakame\Stackwatch\MetricType;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Report;
 use Bakame\Stackwatch\Result;
@@ -113,12 +112,9 @@ final class JsonExporter implements Exporter
         $this->write($snapshot);
     }
 
-    public function exportMetrics(Metrics $metrics, ?AggregationType $type = null): void
+    public function exportMetrics(Metrics|AggregatedMetrics $metrics): void
     {
-        $this->write(match ($type) {
-            null => $metrics->toArray(),
-            default => [...['type' => $type->value], ...$metrics->toArray()]
-        });
+        $this->write($metrics->toArray());
     }
 
     public function exportSpan(Result|Span $span): void
@@ -172,11 +168,8 @@ final class JsonExporter implements Exporter
         $this->write($environment);
     }
 
-    public function exportStatistics(Statistics $statistics, ?MetricType $type = null): void
+    public function exportStatistics(Statistics $statistics): void
     {
-        $this->write(match ($type) {
-            null => $statistics->toArray(),
-            default => [...['type' => $type->value], ...$statistics->toArray()]
-        });
+        $this->write($statistics->toArray());
     }
 }

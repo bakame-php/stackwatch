@@ -27,4 +27,12 @@ enum MetricType: string
             default => false,
         };
     }
+
+    public function unit(): Unit
+    {
+        return match ($this) {
+            self::CpuTime, self::ExecutionTime => Unit::Nanoseconds,
+            default => Unit::Bytes,
+        };
+    }
 }

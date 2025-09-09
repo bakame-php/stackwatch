@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch\Exporter;
 
-use Bakame\Stackwatch\AggregationType;
+use Bakame\Stackwatch\AggregatedMetrics;
 use Bakame\Stackwatch\CallLocation;
 use Bakame\Stackwatch\DurationUnit;
 use Bakame\Stackwatch\Environment;
 use Bakame\Stackwatch\Metrics;
-use Bakame\Stackwatch\MetricType;
 use Bakame\Stackwatch\Profile;
 use Bakame\Stackwatch\Profiler;
 use Bakame\Stackwatch\Report;
@@ -171,36 +170,30 @@ CSS;
         $this->containerEnd();
     }
 
-    public function exportStatistics(Statistics $statistics, ?MetricType $type = null): void
+    public function exportStatistics(Statistics $statistics): void
     {
         $this->renderStyle();
-        $this->exportLeaderPrinter(match ($type) {
-            null => $statistics->toHuman(),
-            default => [...['type' => $type->value], ...$statistics->toHuman()],
-        }, 'statistics');
+        $this->exportLeaderPrinter($statistics->toHuman(), 'statistics');
     }
 
-    private function buildMetrics(Result|Span|Metrics $metrics, ?AggregationType $type = null): void
+    private function buildMetrics(Result|Span|Metrics|AggregatedMetrics $metrics): void
     {
         $source = match ($metrics::class) {
             Result::class => $metrics->span->metrics,
             Span::class => $metrics->metrics,
-            Metrics::class => $metrics,
+            AggregatedMetrics::class, Metrics::class => $metrics,
         };
 
-        $this->exportLeaderPrinter(match ($type) {
-            null => $source->toHuman(),
-            default => [...['type' => $type->value], ...$source->toHuman()],
-        });
+        $this->exportLeaderPrinter($source->toHuman());
     }
 
     private function buildReport(Report $report): void
     {
         $data = $report->toHuman();
-        $headers = array_map($this->translator->translate(...), array_merge(['metrics'], array_keys($data['cpu_time'])));
+        $headers = array_map($this->translator->translate(...), array_merge(array_keys($data['cpu_time'])));
         $rows = [];
-        foreach ($data as $name => $statsForHuman) {
-            $rows[] = array_values(array_merge([$this->translator->translate($name)], $statsForHuman));
+        foreach ($data as $statsForHuman) {
+            $rows[] = array_values($statsForHuman);
         }
 
         $tableRenderer = Table::dashed()
@@ -378,15 +371,15 @@ CSS;
         $this->containerEnd();
     }
 
-    public function exportMetrics(Metrics $metrics, ?AggregationType $type = null): void
+    public function exportMetrics(AggregatedMetrics|Metrics $metrics): void
     {
         $this->renderStyle();
         $this->containerStart('metrics');
-        $this->buildMetrics($metrics, $type);
+        $this->buildMetrics($metrics);
         $this->containerEnd();
     }
 
-    public function exportStack(Report|Metrics $stats, ?Profile $profile = null, ?CallLocation $callLocation = null): void
+    public function exportStack(Report|Metrics|AggregatedMetrics $stats, ?Profile $profile = null, ?CallLocation $callLocation = null): void
     {
         $this->renderStyle();
         $this->containerStart($stats instanceof Report ? 'report' : 'metrics');

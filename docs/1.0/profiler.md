@@ -7,7 +7,7 @@ title: Scoped Execution Profiling Aggregator
 
 ## Metrics recording
 
-If you want to record multiple individual calls you will need to create a new `Profiler` instance by passing in the callback you wish to profile.
+If you want to record multiple individual calls, you need to create a `Profiler` instance by passing in the callback you wish to profile.
 
 ```php
 use Bakame\Stackwatch\Profiler;
@@ -87,7 +87,7 @@ If the label is invalid or has never been used, `Profiler::getAll()` returns an 
 while `Profiler::get()` returns `null`. To determine whether a label exists, use `Profiler::has()`,
 which returns `true` if the label has been recorded, or `false` otherwise.
 
-The metrics related methods (`average`, `median`, `min`, `max`, `range`) can take an optional `label` argument:
+The metrics related methods, each representing one of the `AggregationType` case can take an optional `label` argument:
 
 - if it is a string, it will expect a `Span` label used to filter the `Span` to use for the metrics aggregation.
 - if it is a callable, it will expect a filtering **callable** which takes a `Span` as its unique argument and keep the instance which returns `true`.

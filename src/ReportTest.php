@@ -10,45 +10,37 @@ use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Report::class)]
 #[CoversClass(Statistics::class)]
+#[CoversClass(AggregatedMetrics::class)]
 #[CoversClass(Unit::class)]
 final class ReportTest extends TestCase
 {
     #[Test]
     public function it_can_be_converted_to_array_an_json(): void
     {
-        $statsNano = Statistics::fromValues(Unit::Nanoseconds, [1_000, 2_000, 3_000]);
-        $statsBytes = Statistics::fromValues(Unit::Bytes, [1_000, 2_000, 3_000]);
-
         $report = new Report(
-            cpuTime: $statsNano,
-            executionTime: $statsNano,
-            memoryUsage: $statsBytes,
-            memoryUsageGrowth: $statsBytes,
-            peakMemoryUsage: $statsBytes,
-            peakMemoryUsageGrowth: $statsBytes,
-            realMemoryUsage: $statsBytes,
-            realMemoryUsageGrowth: $statsBytes,
-            realPeakMemoryUsage: $statsBytes,
-            realPeakMemoryUsageGrowth: $statsBytes,
+            cpuTime: $cpuTime = Statistics::fromValues(MetricType::CpuTime, [1_000, 2_000, 3_000]),
+            executionTime: $executionTime = Statistics::fromValues(MetricType::ExecutionTime, [1_000, 2_000, 3_000]),
+            memoryUsage: $memoryUsage = Statistics::fromValues(MetricType::MemoryUsage, [1_000, 2_000, 3_000]),
+            memoryUsageGrowth: $memoryUsageGrowth = Statistics::fromValues(MetricType::MemoryUsageGrowth, [1_000, 2_000, 3_000]),
+            peakMemoryUsage: $peakMemoryUsage = Statistics::fromValues(MetricType::PeakMemoryUsage, [1_000, 2_000, 3_000]),
+            peakMemoryUsageGrowth: $peakMemoryUsageGrowth = Statistics::fromValues(MetricType::PeakMemoryUsageGrowth, [1_000, 2_000, 3_000]),
+            realMemoryUsage: $realMemoryUsage = Statistics::fromValues(MetricType::RealMemoryUsage, [1_000, 2_000, 3_000]),
+            realMemoryUsageGrowth: $realMemoryUsageGrowth = Statistics::fromValues(MetricType::RealMemoryUsageGrowth, [1_000, 2_000, 3_000]),
+            realPeakMemoryUsage: $realPeakMemoryUsageGrowth = Statistics::fromValues(MetricType::RealPeakMemoryUsage, [1_000, 2_000, 3_000]),
+            realPeakMemoryUsageGrowth: $realPeakMemoryUsageGrowth = Statistics::fromValues(MetricType::RealPeakMemoryUsageGrowth, [1_000, 2_000, 3_000]),
         );
 
         $array = $report->toArray();
 
-        self::assertSame($statsNano->toArray(), $array['cpu_time']);
-        self::assertSame($statsNano->toArray(), $array['execution_time']);
-        self::assertSame($statsBytes->toArray(), $array['memory_usage']);
-        self::assertSame($statsBytes->toArray(), $array['peak_memory_usage']);
-        self::assertSame($statsBytes->toArray(), $array['real_memory_usage']);
-        self::assertSame($statsBytes->toArray(), $array['real_peak_memory_usage']);
+        self::assertSame($cpuTime->toArray(), $array['cpu_time']);
+        self::assertSame($executionTime->toArray(), $array['execution_time']);
+        self::assertSame($memoryUsage->toArray(), $array['memory_usage']);
 
         $json = $report->jsonSerialize();
 
-        self::assertSame($statsNano, $json['cpu_time']);
-        self::assertSame($statsNano, $json['execution_time']);
-        self::assertSame($statsBytes, $json['memory_usage']);
-        self::assertSame($statsBytes, $json['peak_memory_usage']);
-        self::assertSame($statsBytes, $json['real_memory_usage']);
-        self::assertSame($statsBytes, $json['real_peak_memory_usage']);
+        self::assertSame($cpuTime, $json['cpu_time']);
+        self::assertSame($executionTime, $json['execution_time']);
+        self::assertSame($memoryUsage, $json['memory_usage']);
     }
 
     #[Test]
@@ -60,33 +52,41 @@ final class ReportTest extends TestCase
         $report = Report::fromMetrics($metric1, $metric2);
 
         self::assertEquals(
-            Statistics::fromValues(Unit::Nanoseconds, [100, 110])->toArray(),
+            Statistics::fromValues(MetricType::CpuTime, [100, 110])->toArray(),
             $report->toArray()['cpu_time']
         );
 
         self::assertEquals(
-            Statistics::fromValues(Unit::Bytes, [300, 310])->toArray(),
+            Statistics::fromValues(MetricType::MemoryUsage, [300, 310])->toArray(),
             $report->toArray()['memory_usage']
         );
     }
 
     #[Test]
-    public function it_can_do_a_roundtrup_with_from_and_to_array_methods(): void
+    public function it_can_do_a_round_trip_with_from_and_to_array_methods(): void
     {
-        $statsBytes = Statistics::fromValues(Unit::Bytes, [10, 20, 30]);
-        $statsNano = Statistics::fromValues(Unit::Nanoseconds, [10, 20, 30]);
+        $cpuTime = Statistics::fromValues(MetricType::CpuTime, [1_000, 2_000, 3_000]);
+        $executionTime = Statistics::fromValues(MetricType::ExecutionTime, [1_000, 2_000, 3_000]);
+        $memoryUsage = Statistics::fromValues(MetricType::MemoryUsage, [1_000, 2_000, 3_000]);
+        $memoryUsageGrowth = Statistics::fromValues(MetricType::MemoryUsageGrowth, [1_000, 2_000, 3_000]);
+        $peakMemoryUsage = Statistics::fromValues(MetricType::PeakMemoryUsage, [1_000, 2_000, 3_000]);
+        $peakMemoryUsageGrowth = Statistics::fromValues(MetricType::PeakMemoryUsageGrowth, [1_000, 2_000, 3_000]);
+        $realMemoryUsage = Statistics::fromValues(MetricType::RealMemoryUsage, [1_000, 2_000, 3_000]);
+        $realMemoryUsageGrowth = Statistics::fromValues(MetricType::RealMemoryUsageGrowth, [1_000, 2_000, 3_000]);
+        $realPeakMemoryUsage = Statistics::fromValues(MetricType::RealPeakMemoryUsage, [1_000, 2_000, 3_000]);
+        $realPeakMemoryUsageGrowth = Statistics::fromValues(MetricType::RealPeakMemoryUsageGrowth, [1_000, 2_000, 3_000]);
 
         $array = [
-            'cpu_time' => $statsNano->toArray(),
-            'execution_time' => $statsNano->toArray(),
-            'memory_usage' => $statsBytes->toArray(),
-            'memory_usage_growth' => $statsBytes->toArray(),
-            'real_memory_usage' => $statsBytes->toArray(),
-            'real_memory_usage_growth' => $statsBytes->toArray(),
-            'peak_memory_usage' => $statsBytes->toArray(),
-            'peak_memory_usage_growth' => $statsBytes->toArray(),
-            'real_peak_memory_usage' => $statsBytes->toArray(),
-            'real_peak_memory_usage_growth' => $statsBytes->toArray(),
+            'cpu_time' => $cpuTime->toArray(),
+            'execution_time' => $executionTime->toArray(),
+            'memory_usage' => $memoryUsage->toArray(),
+            'memory_usage_growth' => $memoryUsageGrowth->toArray(),
+            'real_memory_usage' => $realMemoryUsage->toArray(),
+            'real_memory_usage_growth' => $realMemoryUsageGrowth->toArray(),
+            'peak_memory_usage' => $peakMemoryUsage->toArray(),
+            'peak_memory_usage_growth' => $peakMemoryUsageGrowth->toArray(),
+            'real_peak_memory_usage' => $realPeakMemoryUsage->toArray(),
+            'real_peak_memory_usage_growth' => $realPeakMemoryUsageGrowth->toArray(),
         ];
 
         self::assertSame($array, Report::fromArray($array)->toArray());
@@ -95,19 +95,27 @@ final class ReportTest extends TestCase
     #[Test]
     public function it_will_fail_instantiation_with_the_wrong_unit(): void
     {
-        $statsBytes = Statistics::fromValues(Unit::Bytes, [10, 20, 30]);
+        $cpuTime = Statistics::fromValues(MetricType::CpuTime, [1_000, 2_000, 3_000]);
+        $memoryUsage = Statistics::fromValues(MetricType::MemoryUsage, [1_000, 2_000, 3_000]);
+        $memoryUsageGrowth = Statistics::fromValues(MetricType::MemoryUsageGrowth, [1_000, 2_000, 3_000]);
+        $peakMemoryUsage = Statistics::fromValues(MetricType::PeakMemoryUsage, [1_000, 2_000, 3_000]);
+        $peakMemoryUsageGrowth = Statistics::fromValues(MetricType::PeakMemoryUsageGrowth, [1_000, 2_000, 3_000]);
+        $realMemoryUsage = Statistics::fromValues(MetricType::RealMemoryUsage, [1_000, 2_000, 3_000]);
+        $realMemoryUsageGrowth = Statistics::fromValues(MetricType::RealMemoryUsageGrowth, [1_000, 2_000, 3_000]);
+        $realPeakMemoryUsage = Statistics::fromValues(MetricType::RealPeakMemoryUsage, [1_000, 2_000, 3_000]);
+        $realPeakMemoryUsageGrowth = Statistics::fromValues(MetricType::RealPeakMemoryUsageGrowth, [1_000, 2_000, 3_000]);
 
         $array = [
-            'cpu_time' => $statsBytes->toArray(),
-            'execution_time' => $statsBytes->toArray(),
-            'memory_usage' => $statsBytes->toArray(),
-            'memory_usage_growth' => $statsBytes->toArray(),
-            'real_memory_usage' => $statsBytes->toArray(),
-            'real_memory_usage_growth' => $statsBytes->toArray(),
-            'peak_memory_usage' => $statsBytes->toArray(),
-            'peak_memory_usage_growth' => $statsBytes->toArray(),
-            'real_peak_memory_usage' => $statsBytes->toArray(),
-            'real_peak_memory_usage_growth' => $statsBytes->toArray(),
+            'cpu_time' => $cpuTime->toArray(),
+            'execution_time' => $cpuTime->toArray(),
+            'memory_usage' => $memoryUsage->toArray(),
+            'memory_usage_growth' => $memoryUsageGrowth->toArray(),
+            'real_memory_usage' => $realMemoryUsage->toArray(),
+            'real_memory_usage_growth' => $realMemoryUsageGrowth->toArray(),
+            'peak_memory_usage' => $peakMemoryUsage->toArray(),
+            'peak_memory_usage_growth' => $peakMemoryUsageGrowth->toArray(),
+            'real_peak_memory_usage' => $realPeakMemoryUsage->toArray(),
+            'real_peak_memory_usage_growth' => $realPeakMemoryUsageGrowth->toArray(),
         ];
 
         $this->expectException(InvalidArgument::class);
@@ -117,19 +125,28 @@ final class ReportTest extends TestCase
     #[Test]
     public function it_will_fail_instantiation_with_missing_keys(): void
     {
-        $validStats = Statistics::fromValues(Unit::Bytes, [1, 2]);
-        $payload = [
-            'cpu_time' => Statistics::fromValues(Unit::Nanoseconds, [1, 2])->toArray(),
-            'memory_usage' => $validStats->toArray(),
-            'real_memory_usage' => $validStats->toArray(),
-            'peak_memory_usage' => $validStats->toArray(),
-            'real_peak_memory_usage' => $validStats->toArray(),
+        $cpuTime = Statistics::fromValues(MetricType::CpuTime, [1_000, 2_000, 3_000]);
+        $executionTime = Statistics::fromValues(MetricType::ExecutionTime, [1_000, 2_000, 3_000]);
+        $memoryUsage = Statistics::fromValues(MetricType::MemoryUsage, [1_000, 2_000, 3_000]);
+        $memoryUsageGrowth = Statistics::fromValues(MetricType::MemoryUsageGrowth, [1_000, 2_000, 3_000]);
+        $peakMemoryUsage = Statistics::fromValues(MetricType::PeakMemoryUsage, [1_000, 2_000, 3_000]);
+        $realMemoryUsage = Statistics::fromValues(MetricType::RealMemoryUsage, [1_000, 2_000, 3_000]);
+        $realMemoryUsageGrowth = Statistics::fromValues(MetricType::RealMemoryUsageGrowth, [1_000, 2_000, 3_000]);
+
+        $array = [
+            'cpu_time' => $cpuTime->toArray(),
+            'execution_time' => $executionTime->toArray(),
+            'memory_usage' => $memoryUsage->toArray(),
+            'memory_usage_growth' => $memoryUsageGrowth->toArray(),
+            'real_memory_usage' => $realMemoryUsage->toArray(),
+            'real_memory_usage_growth' => $realMemoryUsageGrowth->toArray(),
+            'peak_memory_usage' => $peakMemoryUsage->toArray(),
         ];
 
         $this->expectException(InvalidArgument::class);
-        $this->expectExceptionMessage('The payload is missing the following keys: execution_time');
+        $this->expectExceptionMessage('The payload is missing the following keys: peak_memory_usage_growth, real_peak_memory_usage, real_peak_memory_usage_growth');
 
-        Report::fromArray($payload); /* @phpstan-ignore-line */
+        Report::fromArray($array); /* @phpstan-ignore-line */
     }
 
     #[Test]
