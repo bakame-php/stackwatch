@@ -2,6 +2,24 @@
 
 All Notable changes to `bakame/stackwatch` will be documented in this file.
 
+## [Next - African city](https://github.com/bakame-php/stackwatch/compare/0.15.0...main) - TBD
+
+### Added
+
+- None
+
+### Fixed
+
+- None
+
+### Deprecated
+
+- None
+
+### Remove
+
+- None
+
 ## [0.15.0 - Ouagadougou](https://github.com/bakame-php/stackwatch/compare/0.14.0...0.15.0) - 2025-09-09
 
 ### Added
