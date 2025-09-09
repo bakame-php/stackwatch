@@ -2,7 +2,7 @@
 
 All Notable changes to `bakame/stackwatch` will be documented in this file.
 
-## [Next - Ouagadougou](https://github.com/bakame-php/stackwatch/compare/0.14.0...main) - TBD
+## [0.15.0 - Ouagadougou](https://github.com/bakame-php/stackwatch/compare/0.14.0...0.15.0) - 2025-09-09
 
 ### Added
 
