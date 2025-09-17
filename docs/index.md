@@ -104,25 +104,24 @@ Target: Foobar\Baz\MyEnum::test; Path: /path/to/profiling/code.php; Iterations: 
 A **fluent, unit-aware PHPUnit helper** for asserting profiler metrics.
 
 ```php
-use Bakame\Stackwatch\Test\MetricsAssertions;
+use Bakame\Stackwatch\Test\PerformanceAssertions;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class ExampleTest extends TestCase
 {
-    use MetricsAssertions;
+    use PerformanceAssertions;
 
     #[Test]
     public function it_can_test_callback_performance(): void
     {
         $performance = $this
-             ->iter(5)
+             ->iterations(5)
              ->warmup(2)
-             ->aggMedian()
-             ->assertMetrics($service->calculateHeavyStuff(...));
-        
-        $performance->executionTime()->lessThan(200, 'milliseconds')
-        $performance->memoryUsage()->greaterThan(10, 'mb');
+             ->assertPerformance($service->calculateHeavyStuff(...));
+
+        $performance->median()->executionTime()->lessThan(200, 'milliseconds')
+        $performance->range()->memoryUsage()->greaterThan(10, 'mb');
     }
 }
 ```
