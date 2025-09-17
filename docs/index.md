@@ -120,7 +120,7 @@ final class ExampleTest extends TestCase
              ->warmup(2)
              ->assertPerformance($service->calculateHeavyStuff(...));
 
-        $performance->median()->executionTime()->lessThan(200, 'milliseconds')
+        $performance->median()->executionTime()->lessThan(200, 'milliseconds');
         $performance->range()->memoryUsage()->greaterThan(10, 'mb');
     }
 }
