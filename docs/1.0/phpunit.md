@@ -11,40 +11,39 @@ This helper provides:
 
  - Fluent API for metric assertions (executionTime, memoryUsage, etc.)
  - Unit conversions using MemoryUnit and DurationUnit enums
- - Optional configuration for **iterations, warmup runs, and aggregation type**
+ - Optional configuration for **iterations and warmup**
  - Project-wide default configuration support
  - Relative assertions between metrics
  - Semantic consistency checks
 
 ## Installation
 
-Include the `MetricsAssertions` trait in your base test class:
+Include the `PerformanceAssertions` trait in your base test class:
 
 ```php
-use Bakame\Stackwatch\Test\MetricsAssertions;
+use Bakame\Stackwatch\Test\PerformanceAssertions;
 
 abstract class PerformanceTestCase extends TestCase
 {
-    use MetricsAssertions;
+    use PerformanceAssertions;
 
     protected function defaultMetricsConfig(): array
     {
         return [
             'iterations' => 5,
             'warmup'=> 1,
-            'type' => AggregationType::Median,
         ];
     }
 }
 ```
-Your `MetricsAssert` class must also be loaded.
+Your `ReportAssert` and  `MetricsAssert` class must also be loaded.
 
 ## Usage
 
 ### Basic metric assertion
 
 ```php
-$metrics = $this->assertMetrics($service->calculateHeavyStuff(...));
+$metrics = $this->assertAverage($service->calculateHeavyStuff(...));
 
 $metrics->executionTime()->lessThan(200, 'ms');
 $metrics->memoryUsage()->greaterThan(10, 'mb');
@@ -53,39 +52,77 @@ $metrics->memoryUsage()->greaterThan(10, 'mb');
 ### Fluent configuration
 
 ```php
-$this->iter(5)
+$this->iterations(5)
      ->warmup(2)
-     ->aggMedian()
-     ->assertMetrics($service->calculateHeavyStuff(...))
+     ->assertMedian($service->calculateHeavyStuff(...))
      ->executionTime()->lessThan(200, 'ms')
      ->memoryUsage()->greaterThan(10, 'mb');
 ```
 ### Aggregation presets
 
-- `->aggAverage()`
-- `->aggMedian()`
-- `->aggMin()`
-- `->aggMax()`
-- `->aggSum()`
-- `->aggRange()`
-- `->aggStdDev()`
-- `->aggVariance()`
-- `->aggCoefVar()`
+- `->assertAverage()`
+- `->assertMedian()`
+- `->assertMin()`
+- `->assertMax()`
+- `->assertSum()`
+- `->assertRange()`
+- `->assertStdDev()`
+- `->assertVariance()`
+- `->assertCoefVar()`
 
 Example:
 
 ```php
-$this->iter(10)
+$this->iterations(10)
      ->warmup(2)
-     ->aggAverage()
-     ->assertMetrics($service->calculateHeavyStuff(...))
+     ->assertAverage($service->calculateHeavyStuff(...))
      ->executionTime()->lessThan(150, 'ms');
 ```
+
+### Asserting multiple aggregations
+
+In some cases, you may want to evaluate several performance aggregations
+(e.g., average, median) for the same callback.
+
+Instead of running the profiler multiple times, you can use the `assertPerformance`
+method.
+
+This method collects multiple runs of the callback, then exposes helpers to
+retrieve aggregated metrics:
+
+```php
+$performance = $this->iterations(5)
+     ->warmup(2)
+     ->assertPerformance($service->calculateHeavyStuff(...));
+ 
+$average = $performance->average();
+$average->executionTime()->lessThan(200, 'ms');
+
+$median = $performance->median();
+$median->memoryUsage()->greaterThan(10, 'mb');
+```
+
+In the example above:
+
+`assertPerformance(...)` returns a `PerformanceResult` object, allowing you to 
+query multiple aggregations (average, median, etc.).
+
+### Asserting a single call
+
+If you only need to validate a single execution of a callback, use the `assertOnce` method.
+This skips aggregation and directly returns an `AssertMetrics` instance:
+
+```php
+$performance = $this->assertOnce($service->calculateHeavyStuff(...));
+$performance->executionTime()->lessThan(200, 'ms');
+$performance->memoryUsage()->greaterThan(10, 'mb');
+```
+This is useful when you only care about one measurement rather than aggregated statistics.
 
 ### Relative assertions
 
 ```php
-$this->assertMetrics($service->calculateHeavyStuff(...))
+$this->assertRange($service->calculateHeavyStuff(...))
      ->executionTime()->greaterThanMetric('cpuTime')
      ->peakMemoryUsage()->lessThanMetric('memoryUsage');
 ```
@@ -93,7 +130,7 @@ $this->assertMetrics($service->calculateHeavyStuff(...))
 ### Semantic consistency checks
 
 ```php
-$this->assertMetrics($service->calculateHeavyStuff(...))
+$this->assertVariance($service->calculateHeavyStuff(...))
      ->assertConsistency()
      ->allNonNegative();
 ```
@@ -121,20 +158,26 @@ $this->assertMetrics($service->calculateHeavyStuff(...))
 
 ### Fluent configuration API
 
-| Method                                     | Alias                          | Description                      |
-|--------------------------------------------|--------------------------------|----------------------------------|
-| `withIterations(int)`                      | `iter(int)`                    | Number of iterations             |
-| `withWarmup(int)`                          | `warmup(int)`                  | Number of warmup runs            | 
-| `withAggregation(?AggregationType = null)` | `agg(?AggregationType = null)` | Aggregation type                 |
-| `aggAverage()`                             | —                              | AggregationType::Average preset  |
-| `aggMedian()`                              | —                              | AggregationType::Median preset   | 
-| `aggMin()`                                 | —                              | AggregationType::Min preset      | 
-| `aggMax()`                                 | —                              | AggregationType::Max preset      | 
-| `aggSum()`                                 | —                              | AggregationType::Sum preset      |
-| `aggRange()`                               | —                              | AggregationType::Range preset    |
-| `aggVariance()`                            | —                              | AggregationType::Variance preset |
-| `aggStdDev()`                              | —                              | AggregationType::StdDev preset   |
-| `aggCoefVar()`                             | —                              | AggregationType::CoefVar preset  |
+| Method                | Description            |
+|-----------------------|------------------------|
+| `iterations(int)`     | Number of iterations   |
+| `warmup(int)`         | Number of warmup runs  | 
+
+### Assertion Helpers API
+
+| Method                | Description                             |
+|-----------------------|-----------------------------------------|
+| `assertAverage()`     | Assert average metrics                  |
+| `assertMedian()`      | Assert median metrics                   | 
+| `assertMin()`         | Assert minimum metrics                  | 
+| `assertMax()`         | Assert maximum metrics                  | 
+| `assertSum()`         | Assert sum metrics                      |
+| `assertRange()`       | Assert range metrics                    |
+| `assertVariance()`    | Assert variance metrics                 |
+| `assertStdDev()`      | Assert standard deviation metrics       |
+| `assertCoefVar()`     | Assert coefficient of variation metrics |
+| `assertPerformance()` | Give access to mutliple metrics         |
+| `assertOnce()`        | Assert metrics for a single call        |
 
 
 ### Of Note
@@ -146,4 +189,4 @@ unit.
 **Project-wide defaults:** Override `defaultMetricsConfig()` in your base test class to define default
 iterations, warmup, and aggregation type.
 
-**Fluent and safe:** Config resets automatically after each `assertMetrics()` call to prevent leaks between tests.
+**Fluent and safe:** Config resets automatically after each `assert*` call to prevent leaks between tests.

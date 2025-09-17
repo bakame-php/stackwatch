@@ -243,6 +243,6 @@ final class AggregatedMetrics implements JsonSerializable
 
     public function dd(): never
     {
-        CallbackDumper::dd(fn () => $this->dump());
+        CallbackDumper::dd($this->dump(...));
     }
 }

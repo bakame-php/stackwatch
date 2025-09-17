@@ -286,6 +286,6 @@ final class Statistics implements JsonSerializable
 
     public function dd(): never
     {
-        CallbackDumper::dd(fn () => $this->dump());
+        CallbackDumper::dd($this->dump(...));
     }
 }

@@ -6,11 +6,13 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Added
 
-- None
+- `PerformanceAssertions` to align with `AggregatedMetrics` usage and generation.
+- `Report::iterations()` method is added.
 
 ### Fixed
 
-- None
+- **BC BREAK:**  improve `Report` generation validation and adds missing `Report::iterations()` method 
+- `AggregatedMetrics::dd` and `Statistics::dd` improved implementation
 
 ### Deprecated
 
@@ -18,7 +20,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 ### Remove
 
-- None
+- `MetricsAssertions` trait replaced by the `PerformanceAssertions` trait
 
 ## [0.15.0 - Ouagadougou](https://github.com/bakame-php/stackwatch/compare/0.14.0...0.15.0) - 2025-09-09
 

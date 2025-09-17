@@ -10,9 +10,11 @@ use Generator;
 use JsonSerializable;
 use Throwable;
 
+use function array_column;
 use function array_diff_key;
 use function array_keys;
 use function array_map;
+use function array_unique;
 use function implode;
 use function iterator_to_array;
 
@@ -47,6 +49,8 @@ use function iterator_to_array;
  */
 final class Report implements JsonSerializable
 {
+    private readonly int $iterations;
+
     public function __construct(
         private readonly Statistics $cpuTime,
         private readonly Statistics $executionTime,
@@ -69,6 +73,10 @@ final class Report implements JsonSerializable
         MetricType::RealMemoryUsageGrowth === $this->realMemoryUsageGrowth->type || throw new InvalidArgument('Invalid real memory usage statistics specified');
         MetricType::RealPeakMemoryUsage === $this->realPeakMemoryUsage->type || throw new InvalidArgument('Invalid real peak memory usage statistics specified');
         MetricType::RealPeakMemoryUsageGrowth === $this->realPeakMemoryUsageGrowth->type || throw new InvalidArgument('Invalid real peak memory usage statistics specified');
+
+        $iterations = array_unique(array_column($this->toArray(), 'iterations'));
+        1 === count($iterations) || throw new InvalidArgument('Invalid iterations specified');
+        $this->iterations = $iterations[0];
     }
 
     /**
@@ -211,6 +219,11 @@ final class Report implements JsonSerializable
     public function row(MetricType $type): Statistics
     {
         return $this->jsonSerialize()[$type->value] ?? throw new InvalidArgument('Unknown or unsupported metric type `'.$type->value.'`.');
+    }
+
+    public function iterations(): int
+    {
+        return $this->iterations;
     }
 
     public static function none(): self
