@@ -12,16 +12,6 @@ use Bakame\Stackwatch\Report;
  */
 final class PerformanceResult
 {
-    private MetricsAssert $average;
-    private MetricsAssert $median;
-    private MetricsAssert $minimum;
-    private MetricsAssert $maximum;
-    private MetricsAssert $range;
-    private MetricsAssert $sum;
-    private MetricsAssert $variance;
-    private MetricsAssert $stdDev;
-    private MetricsAssert $coefVar;
-
     public function __construct(public readonly Report $report)
     {
     }
@@ -37,46 +27,46 @@ final class PerformanceResult
 
     public function average(): MetricsAssert
     {
-        return $this->average ??= $this->column(AggregationType::Average);
+        return $this->column(AggregationType::Average);
     }
 
     public function median(): MetricsAssert
     {
-        return $this->median ??= $this->column(AggregationType::Median);
+        return $this->column(AggregationType::Median);
     }
 
     public function min(): MetricsAssert
     {
-        return $this->minimum ??= $this->column(AggregationType::Minimum);
+        return $this->column(AggregationType::Minimum);
     }
 
     public function max(): MetricsAssert
     {
-        return $this->maximum ??= $this->column(AggregationType::Maximum);
+        return $this->column(AggregationType::Maximum);
     }
 
     public function sum(): MetricsAssert
     {
-        return $this->sum ??= $this->column(AggregationType::Sum);
+        return $this->column(AggregationType::Sum);
     }
 
     public function range(): MetricsAssert
     {
-        return $this->range ??= $this->column(AggregationType::Range);
+        return $this->column(AggregationType::Range);
     }
 
     public function variance(): MetricsAssert
     {
-        return $this->variance ??= $this->column(AggregationType::Variance);
+        return $this->column(AggregationType::Variance);
     }
 
     public function stdDev(): MetricsAssert
     {
-        return $this->stdDev ??= $this->column(AggregationType::StdDev);
+        return $this->column(AggregationType::StdDev);
     }
 
     public function coefVar(): MetricsAssert
     {
-        return $this->coefVar ??= $this->column(AggregationType::CoefVar);
+        return $this->column(AggregationType::CoefVar);
     }
 }

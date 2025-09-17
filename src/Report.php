@@ -51,6 +51,11 @@ final class Report implements JsonSerializable
 {
     private readonly int $iterations;
 
+    /**
+     * @var array<AggregationType::value, AggregatedMetrics>
+     */
+    private array $columns = [];
+
     public function __construct(
         private readonly Statistics $cpuTime,
         private readonly Statistics $executionTime,
@@ -77,55 +82,6 @@ final class Report implements JsonSerializable
         $iterations = array_unique(array_column($this->toArray(), 'iterations'));
         1 === count($iterations) || throw new InvalidArgument('Invalid iterations specified');
         $this->iterations = $iterations[0];
-    }
-
-    /**
-     * @return array{
-     *     cpu_time: Statistics,
-     *     execution_time: Statistics,
-     *     memory_usage: Statistics,
-     *     memory_usage_growth: Statistics,
-     *     real_memory_usage: Statistics,
-     *     real_memory_usage_growth: Statistics,
-     *     peak_memory_usage: Statistics,
-     *     peak_memory_usage_growth: Statistics,
-     *     real_peak_memory_usage: Statistics,
-     *     real_peak_memory_usage_growth: Statistics,
-     * }
-     */
-    public function jsonSerialize(): array
-    {
-        return [
-            MetricType::CpuTime->value => $this->cpuTime,
-            MetricType::ExecutionTime->value => $this->executionTime,
-            MetricType::MemoryUsage->value => $this->memoryUsage,
-            MetricType::MemoryUsageGrowth->value => $this->memoryUsageGrowth,
-            MetricType::RealMemoryUsage->value => $this->realMemoryUsage,
-            MetricType::RealMemoryUsageGrowth->value => $this->realMemoryUsageGrowth,
-            MetricType::PeakMemoryUsage->value => $this->peakMemoryUsage,
-            MetricType::PeakMemoryUsageGrowth->value => $this->peakMemoryUsageGrowth,
-            MetricType::RealPeakMemoryUsage->value => $this->realPeakMemoryUsage,
-            MetricType::RealPeakMemoryUsageGrowth->value => $this->realPeakMemoryUsageGrowth,
-        ];
-    }
-
-    /**
-     * @return ReportMap
-     */
-    public function toArray(): array
-    {
-        return [
-            MetricType::CpuTime->value => $this->cpuTime->toArray(),
-            MetricType::ExecutionTime->value => $this->executionTime->toArray(),
-            MetricType::MemoryUsage->value => $this->memoryUsage->toArray(),
-            MetricType::MemoryUsageGrowth->value => $this->memoryUsageGrowth->toArray(),
-            MetricType::RealMemoryUsage->value => $this->realMemoryUsage->toArray(),
-            MetricType::RealMemoryUsageGrowth->value => $this->realMemoryUsageGrowth->toArray(),
-            MetricType::PeakMemoryUsage->value => $this->peakMemoryUsage->toArray(),
-            MetricType::PeakMemoryUsageGrowth->value => $this->peakMemoryUsageGrowth->toArray(),
-            MetricType::RealPeakMemoryUsage->value => $this->realPeakMemoryUsage->toArray(),
-            MetricType::RealPeakMemoryUsageGrowth->value => $this->realPeakMemoryUsageGrowth->toArray(),
-        ];
     }
 
     public static function fromMetrics(Timeline|Profiler|Span|Metrics ...$metrics): self
@@ -185,7 +141,7 @@ final class Report implements JsonSerializable
      *
      * @return Generator<Metrics>
      */
-    public static function yieldFrom(Timeline|Profiler|Result|Span|Metrics ...$metrics): Generator
+    private static function yieldFrom(Timeline|Profiler|Result|Span|Metrics ...$metrics): Generator
     {
         foreach ($metrics as $metric) {
             yield from match ($metric::class) {
@@ -198,9 +154,47 @@ final class Report implements JsonSerializable
         }
     }
 
+    /**
+     * @return array{
+     *     cpu_time: Statistics,
+     *     execution_time: Statistics,
+     *     memory_usage: Statistics,
+     *     memory_usage_growth: Statistics,
+     *     real_memory_usage: Statistics,
+     *     real_memory_usage_growth: Statistics,
+     *     peak_memory_usage: Statistics,
+     *     peak_memory_usage_growth: Statistics,
+     *     real_peak_memory_usage: Statistics,
+     *     real_peak_memory_usage_growth: Statistics,
+     * }
+     */
+    public function jsonSerialize(): array
+    {
+        return [
+            MetricType::CpuTime->value => $this->cpuTime,
+            MetricType::ExecutionTime->value => $this->executionTime,
+            MetricType::MemoryUsage->value => $this->memoryUsage,
+            MetricType::MemoryUsageGrowth->value => $this->memoryUsageGrowth,
+            MetricType::RealMemoryUsage->value => $this->realMemoryUsage,
+            MetricType::RealMemoryUsageGrowth->value => $this->realMemoryUsageGrowth,
+            MetricType::PeakMemoryUsage->value => $this->peakMemoryUsage,
+            MetricType::PeakMemoryUsageGrowth->value => $this->peakMemoryUsageGrowth,
+            MetricType::RealPeakMemoryUsage->value => $this->realPeakMemoryUsage,
+            MetricType::RealPeakMemoryUsageGrowth->value => $this->realPeakMemoryUsageGrowth,
+        ];
+    }
+
+    /**
+     * @return ReportMap
+     */
+    public function toArray(): array
+    {
+        return array_map(fn (Statistics $statistics): array => $statistics->toArray(), $this->jsonSerialize());
+    }
+
     public function column(AggregationType $type): AggregatedMetrics
     {
-        return new AggregatedMetrics(
+        return $this->columns[$type->value] ??= new AggregatedMetrics(
             type: $type,
             iterations: $this->cpuTime->iterations,
             cpuTime: $this->cpuTime->toArray()[$type->value],

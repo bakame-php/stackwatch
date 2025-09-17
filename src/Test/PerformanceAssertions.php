@@ -103,7 +103,7 @@ trait PerformanceAssertions
         return $this->assertPerformance($callback)->coefVar();
     }
 
-    public function assertSumr(callable $callback): MetricsAssert
+    public function assertSum(callable $callback): MetricsAssert
     {
         return $this->assertPerformance($callback)->sum();
     }
