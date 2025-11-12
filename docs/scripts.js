@@ -3,11 +3,18 @@
   if (!root) return;
 
   const isHeading = el => el && el.nodeType === 1 && /^H[1-6]$/.test(el.tagName);
+  const headers = root.querySelectorAll('h2, h3, h4, h5, h6');
+  const ids = new Set();
+  headers.forEach(h => {
+    let id = h.id || h.textContent.trim().toLowerCase().replace(/\W+/g, '-');
+    let base = id;
+    let i = 2;
+    while (ids.has(id)) id = `${base}-${i++}`;
+    ids.add(id);
+    h.id = id;
+  });
 
-  // Récupère tous les titres h2..h6 dans l'ordre du document (live snapshot figé)
-  const headings = Array.from(root.querySelectorAll('h2, h3, h4, h5, h6'));
-
-  for (const h of headings) {
+  for (const h of Array.from(headers)) {
     // Idempotence : si ce titre est déjà le 1er enfant d'un .section-wrapper, on ne fait rien
     if (h.parentElement?.classList.contains('section-wrapper') &&
       h.parentElement.firstElementChild === h) {
