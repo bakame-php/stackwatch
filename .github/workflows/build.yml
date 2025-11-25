@@ -89,6 +89,7 @@ jobs:
 
             # Restore vendor cache
             - name: Restore vendor cache
+              id: vendor-cache
               uses: actions/cache@v3
               with:
                   path: vendor
@@ -96,7 +97,7 @@ jobs:
 
             - name: Install dependencies if needed
               run: composer update --prefer-stable --no-interaction --no-progress
-              if: always() && !exists('vendor/autoload.php')
+              if: steps.vendor-cache.outputs.cache-hit != 'true'
 
             - name: Run PHPStan
               run: composer phpstan
@@ -120,6 +121,7 @@ jobs:
 
             # Restore vendor cache
             - name: Restore vendor cache
+              id: vendor-cache
               uses: actions/cache@v3
               with:
                   path: vendor
@@ -127,7 +129,7 @@ jobs:
 
             - name: Install dependencies if needed
               run: composer update --prefer-stable --no-interaction --no-progress
-              if: always() && !exists('vendor/autoload.php')
+              if: steps.vendor-cache.outputs.cache-hit != 'true'
 
             - name: Run PHPCS
               run: composer phpcs:fix
