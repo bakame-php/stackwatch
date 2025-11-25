@@ -13,13 +13,15 @@ $service->calculateHeavyStuff();
 echo microtime(true) - $start; // the execution time of your code
 ```
 
-**StackWatch** makes this process simpler and more powerful with a set of **global helper functions**.
+**StackWatch** makes this process simpler and more powerful with a set of **namespaced helper functions**
+defined under the `Bakame\Stackwatch` namespace.
 
 ## Quick Profiling
 
 ```php
-$result = stack_call($service->calculateHeavyStuff(...));
+use function Bakame\Stackwatch\stack_call;
 
+$result = stack_call($service->calculateHeavyStuff(...));
 $result->returnValue; // the actual return value from the callback
 $result->span;        // profiling data (Span object)
 ```
@@ -33,6 +35,7 @@ Use `stack_bench()` to collect execution time, memory usage, and CPU time:
 
 ```php
 use Bakame\Stackwatch\DurationUnit;
+use function Bakame\Stackwatch\stack_bench;
 
 $metrics = stack_bench($service->calculateHeavyStuff(...));
 echo DurationUnit::format($metrics->executionTime); // "1.271 ms"
@@ -59,6 +62,7 @@ Choose how results are aggregated:
 
 ```php
 use Bakame\Stackwatch\AggregationType;
+use function Bakame\Stackwatch\stack_bench;
 
 $metrics = stack_bench(
     callback: $service->calculateHeavyStuff(...),
@@ -87,6 +91,7 @@ For detailed statistics instead of a single number:
 ```php
 use Bakame\Stackwatch\AggregationType;
 use Bakame\Stackwatch\MetricType;
+use function Bakame\Stackwatch\stack_report;
 
 $report = stack_report($service->calculateHeavyStuff(...), 100);
 $report->row(MetricType::CpuTime)->minimum;
@@ -105,7 +110,7 @@ You can learn more about this `Statistics` and `AggregatedMetrics` in the [build
 
 For quick inspection:
 
- - `stack_cdump()` → dumps span/metrics, continues execution
+- `stack_cdump()` → dumps span/metrics, continues execution
 - `stack_cdd()` → dumps span/metrics, halts execution
 - `stack_rdump()` → dumps detailed report, continues execution
 - `stack_rdd()` → dumps detailed report, halts execution

@@ -12,6 +12,8 @@ Once installed, it will allow you to
 ## Profile any block using closures
 
 ```php
+use function Bakame\Stackwatch\stack_bench;
+
 $duration = stack_bench(function () {
     // code that will be profiled
 })->executionTime;

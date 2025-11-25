@@ -1,21 +1,18 @@
----
 name: build
 on:
     push: ~
     pull_request: ~
 
 jobs:
-    linux_tests:
-        name: PHP on ${{ matrix.php }} - ${{ matrix.stability }} - ${{ matrix.composer-flags }}
+    tests:
+        name: Tests • PHP ${{ matrix.php }} • ${{ matrix.stability }}
         runs-on: ubuntu-22.04
+
         strategy:
             matrix:
-                php: ['8.1', '8.2', '8.3', '8.4']
+                php: ['8.1', '8.2', '8.3', '8.4', '8.5']
                 stability: [prefer-lowest, prefer-stable]
-                include:
-                    -   php: '8.5'
-                        flags: "--ignore-platform-req=php"
-                        stability: prefer-stable
+
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
@@ -26,39 +23,111 @@ jobs:
                   php-version: ${{ matrix.php }}
                   coverage: xdebug
                   tools: composer:v2
-            - name: Check PHP Version
-              run: php -v
 
             - name: Validate composer files
               run: composer validate --strict
 
+            # -----------------------
+            # Composer cache
+            # -----------------------
             - name: Get Composer Cache Directory
               id: composer-cache
-              run: |
-                  echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-            - uses: actions/cache@v3
+              run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+            - name: Cache Composer Files
+              uses: actions/cache@v3
               with:
                   path: ${{ steps.composer-cache.outputs.dir }}
-                  key: ${{ runner.os }}-composer-${{ matrix.stability }}-${{ matrix.flags }}-${{ hashFiles('**/composer.lock') }}
+                  key: ${{ runner.os }}-php${{ matrix.php }}-${{ matrix.stability }}-composer-${{ hashFiles('composer.lock') }}
                   restore-keys: |
-                      ${{ runner.os }}-composer-${{ matrix.stability }}-${{ matrix.flags }}-
+                      ${{ runner.os }}-php${{ matrix.php }}-${{ matrix.stability }}-composer-
+                      ${{ runner.os }}-php${{ matrix.php }}-composer-
                       ${{ runner.os }}-composer-
 
+            # -----------------------
+            # vendor/ cache
+            # -----------------------
+            - name: Cache vendor directory
+              id: vendor-cache
+              uses: actions/cache@v3
+              with:
+                  path: vendor
+                  key: vendor-${{ runner.os }}-php${{ matrix.php }}-${{ matrix.stability }}-${{ hashFiles('composer.lock') }}
+
             - name: Install dependencies
-              run: composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress ${{ matrix.flags }}
+              if: steps.vendor-cache.outputs.cache-hit != 'true'
+              run: composer update --${{ matrix.stability }} --prefer-dist --no-interaction --no-progress
 
-            - name: Run Unit tests with coverage
-              run: composer phpunit -- ${{ matrix.phpunit-flags }}
-              if: ${{ matrix.php != '8.5' }}
+            # -----------------------
+            # PHPUnit coverage cache
+            # -----------------------
+            - name: Cache PHPUnit coverage
+              uses: actions/cache@v3
+              with:
+                  path: build/coverage
+                  key: coverage-${{ runner.os }}-php${{ matrix.php }}-${{ github.sha }}
 
-            - name: Run Unit tests without coverage
-              run: vendor/bin/phpunit --no-coverage
-              if: ${{ matrix.php == '8.5' }}
+            - name: Run Unit tests
+              run: composer phpunit
 
-            - name: Run static analysis
+    # -----------------------------------------------------------
+
+    static_analysis:
+        name: Static Analysis (PHP 8.4, prefer-stable)
+        runs-on: ubuntu-22.04
+        needs: tests
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup PHP 8.4
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: 8.4
+                  tools: composer:v2
+
+            # Restore vendor cache
+            - name: Restore vendor cache
+              uses: actions/cache@v3
+              with:
+                  path: vendor
+                  key: vendor-${{ runner.os }}-php8.4-prefer-stable-${{ hashFiles('composer.lock') }}
+
+            - name: Install dependencies if needed
+              run: composer update --prefer-stable --no-interaction --no-progress
+              if: always() && !exists('vendor/autoload.php')
+
+            - name: Run PHPStan
               run: composer phpstan
-              if: ${{ matrix.php == '8.4' && matrix.stability == 'prefer-stable'}}
 
-            - name: Run Coding style rules
+    # -----------------------------------------------------------
+
+    coding_style:
+        name: Coding Style (PHP 8.4, prefer-stable)
+        runs-on: ubuntu-22.04
+        needs: tests
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            - name: Setup PHP 8.4
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: 8.4
+                  tools: composer:v2
+
+            # Restore vendor cache
+            - name: Restore vendor cache
+              uses: actions/cache@v3
+              with:
+                  path: vendor
+                  key: vendor-${{ runner.os }}-php8.4-prefer-stable-${{ hashFiles('composer.lock') }}
+
+            - name: Install dependencies if needed
+              run: composer update --prefer-stable --no-interaction --no-progress
+              if: always() && !exists('vendor/autoload.php')
+
+            - name: Run PHPCS
               run: composer phpcs:fix
-              if: ${{ matrix.php == '8.4' && matrix.stability == 'prefer-stable'}}

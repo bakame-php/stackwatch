@@ -13,6 +13,8 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 - **BC BREAK:**  improve `Report` generation validation and adds missing `Report::iterations()` method 
 - `AggregatedMetrics::dd` and `Statistics::dd` improved implementation
+- **BC BREAK:** global functions are namespaced
+- Improve github actions
 
 ### Deprecated
 
