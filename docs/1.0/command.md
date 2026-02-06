@@ -41,11 +41,9 @@ trait TimerTrait {
     }
 }
 
-enum Foobar
+class Foobar
 {
     use TimerTrait;
-
-    case Foobar;
 }
 
 #[Profile(iterations: 20, warmup: 2)]

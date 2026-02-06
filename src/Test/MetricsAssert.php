@@ -8,7 +8,6 @@ use Bakame\Stackwatch\AggregatedMetrics;
 use Bakame\Stackwatch\DurationUnit;
 use Bakame\Stackwatch\MemoryUnit;
 use Bakame\Stackwatch\Metrics;
-use LogicException;
 use PHPUnit\Framework\Assert;
 use ValueError;
 
@@ -47,7 +46,7 @@ final class MetricsAssert
 
     private function getValue(): float|int
     {
-        null !== $this->current || throw new LogicException('No metric selected before assertion.');
+        null !== $this->current || throw new MetricNotSelected('No metric selected before assertion.');
 
         return $this->metrics->{$this->current}; /* @phpstan-ignore-line */
     }

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Bakame\Stackwatch;
 
-use Throwable;
+use Exception;
 
-interface ProfilingException extends Throwable
+class StackWatchException extends Exception
 {
 }

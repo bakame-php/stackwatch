@@ -8,13 +8,16 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 
 - `PerformanceAssertions` to align with `AggregatedMetrics` usage and generation.
 - `Report::iterations()` method is added.
+- `StackWatchException`
+- `NoMetricSelected` exceptions
 
 ### Fixed
 
 - **BC BREAK:**  improve `Report` generation validation and adds missing `Report::iterations()` method 
 - `AggregatedMetrics::dd` and `Statistics::dd` improved implementation
 - **BC BREAK:** global functions are namespaced
-- Improve github actions
+- Improve Github actions
+- **BC BREAK:** exceptions are now all inheriting from a base `StackWatchException`
 
 ### Deprecated
 
