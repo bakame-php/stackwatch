@@ -20,7 +20,9 @@ use function array_merge;
 use function array_reduce;
 use function class_exists;
 use function count;
+use function enum_exists;
 use function function_exists;
+use function in_array;
 
 final class UnitOfWorkGenerator
 {
@@ -90,8 +92,12 @@ final class UnitOfWorkGenerator
             return [];
         }
 
-        $refClass = enum_exists($className) ? new ReflectionEnum($className) : new ReflectionClass($className);
-        $targetRequiresConstructorArgs = !$refClass instanceof ReflectionEnum && (($refClass->getConstructor()?->getNumberOfRequiredParameters() ?? 0) !== 0);
+        if (enum_exists($className)) {
+            return [];
+        }
+
+        $refClass = new ReflectionClass($className);
+        $targetRequiresConstructorArgs = 0 !== ($refClass->getConstructor()?->getNumberOfRequiredParameters() ?? 0);
         $parentProfile = $this->findProfile($refClass);
 
         $results = [];

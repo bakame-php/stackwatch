@@ -53,19 +53,17 @@ require 'vendor/autoload.php';
 
 trait TimerTrait {
     #[Profile]
-    private function test() : int {
+    private function test() : int
+    {
         usleep(100);
 
         return random_int(1, 100);
     }
 }
 
-enum MyEnum
+class MyClass
 {
     use TimerTrait;
-
-    case Case1;
-    case Case2;
 }
 ```
 
@@ -83,7 +81,7 @@ Runtime: PHP 8.3.25 OS: Linux Memory Limit: 64M
 
 ............................
 
-Target: Foobar\Baz\MyEnum::test; Path: /path/to/profiling/code.php; Iterations: 3; Warmup: 0; Type: Full;
+Target: Foobar\Baz\MyClass::test; Path: /path/to/profiling/code.php; Iterations: 3; Warmup: 0; Type: Full;
 
 +-------------------------------+------------+------------+------------+------------+------------+------------+--------------+---------------+-----------+-----------+
 | Metrics                       | iterations | Min Value  | Max Value  | Range      | Sum        | Average    | Median Value | Variance      | Std Dev   | Coef Var  |

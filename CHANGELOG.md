@@ -23,6 +23,7 @@ All Notable changes to `bakame/stackwatch` will be documented in this file.
 ### Remove
 
 - `MetricsAssertions` trait replaced by the `PerformanceAssertions` trait
+- **BC BREAK:** Enums can no longer be profiled using the CLI instance as it was making no sense.
 
 ## [0.15.0 - Ouagadougou](https://github.com/bakame-php/stackwatch/compare/0.14.0...0.15.0) - 2025-09-09
 

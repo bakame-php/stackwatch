@@ -229,14 +229,14 @@ final class UnitOfWork implements JsonSerializable
         0 === $refMethod->getNumberOfRequiredParameters() || throw new UnableToProfile('The method '.$this->class.'::'.$this->method.' cannot be profiled because it has required parameters.');
 
         if ($refMethod->isStatic()) {
-            $this->callback =  fn () => $refMethod->invoke(null);
+            $this->callback = fn () => $refMethod->invoke(null);
 
             return $this->callback;
         }
 
-        $instance = $refClass instanceof ReflectionEnum ? $refClass->getCases()[0]->getValue() : $refClass->newInstance();
+        !$refClass instanceof ReflectionEnum || throw new UnableToProfile('The method '.$this->class.'::'.$this->method.' belongs to an enum and can only be profiled when executed by a case.');
 
-        $this->callback = fn () => $refMethod->invoke($instance);
+        $this->callback = fn () => $refMethod->invoke($refClass->newInstance());
 
         return $this->callback;
     }

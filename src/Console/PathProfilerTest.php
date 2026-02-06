@@ -120,7 +120,7 @@ PHP;
         $output = $this->stdout->fetch();
         $errorOutput = $this->stderr->fetch();
 
-        self::assertStringContainsString('Full', $output);
+        self::assertEmpty($output);
         self::assertEmpty($errorOutput, 'No errors expected');
     }
 
@@ -134,10 +134,8 @@ namespace Test;
 use Bakame\Stackwatch\AggregationType;
 use Bakame\Stackwatch\Profile;
 
-enum TestMethodWithArguments
+class TestMethodWithArguments
 {
-    case Foo;
-
     #[Profile(iterations: 3, warmup: 1, type: AggregationType::Average)]
     public function testMethod(string $foo): string
     {
