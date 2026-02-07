@@ -2,7 +2,7 @@
 
 All Notable changes to `bakame/stackwatch` will be documented in this file.
 
-## [Next - African city](https://github.com/bakame-php/stackwatch/compare/0.15.0...main) - TBD
+## [0.16.0 - Pointe-Noire](https://github.com/bakame-php/stackwatch/compare/0.15.0...0.16.0) - 2026-02-07
 
 ### Added
 
