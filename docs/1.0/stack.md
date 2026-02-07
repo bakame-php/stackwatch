@@ -114,8 +114,8 @@ For quick inspection:
 - `stack_cdd()` → dumps span/metrics, halts execution
 - `stack_rdump()` → dumps detailed report, continues execution
 - `stack_rdd()` → dumps detailed report, halts execution
-- `stack_mdump()` → dumps summary metrics, continues execution
-- `stack_mdd()` → dumps summary metrics, halts execution
+- `stack_bdump()` → dumps summary metrics, continues execution
+- `stack_bdd()` → dumps summary metrics, halts execution
 
 
 | Function         | Returns   | Dumps? | Halts? |
