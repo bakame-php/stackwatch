@@ -2,6 +2,25 @@
 
 All Notable changes to `bakame/stackwatch` will be documented in this file.
 
+## [0.16.1 - Pointe-Noire](https://github.com/bakame-php/stackwatch/compare/0.16.0...0.16.1) - 2026-02-07
+
+### Added
+
+- None
+
+### Fixed
+
+- Version class
+- Simplify PSR-3 usage (remove nullable calls)
+
+### Deprecated
+
+- None
+
+### Remove
+
+- None
+
 ## [0.16.0 - Pointe-Noire](https://github.com/bakame-php/stackwatch/compare/0.15.0...0.16.0) - 2026-02-07
 
 ### Added
