@@ -127,5 +127,5 @@ For quick inspection:
 | `stack_rdump()`  | `Report`  | ✅      | ❌      |
 | `stack_rdd()`    | `never`   | ✅      | ✅      |
 | `stack_bench()`  | `Metrics` | ❌      | ❌      |
-| `stack_mdump()`  | `Metrics` | ✅      | ❌      |
-| `stack_mdd()`    | `never`   | ✅      | ✅      |
+| `stack_bdump()`  | `Metrics` | ✅      | ❌      |
+| `stack_bdd()`    | `never`   | ✅      | ✅      |
