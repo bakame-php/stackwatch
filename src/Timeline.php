@@ -11,6 +11,7 @@ use Generator;
 use IteratorAggregate;
 use JsonSerializable;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Traversable;
 
 use function array_key_exists;
@@ -34,18 +35,18 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
     /** @var array<non-empty-string, Snapshot> */
     private array $snapshots;
     private bool $isComplete;
-    private ?LoggerInterface $logger;
 
     /**
      * @param ?non-empty-string $identifier
      */
-    public function __construct(?string $identifier = null, ?LoggerInterface $logger = null)
-    {
+    public function __construct(
+        ?string $identifier = null,
+        private LoggerInterface $logger = new NullLogger()
+    ) {
         $identifier = trim($identifier ?? (new LabelGenerator())->generate());
         '' !== $identifier || throw new InvalidArgument('The identifier must be a non-empty string.');
 
         $this->identifier = $identifier;
-        $this->logger = $logger;
         $this->reset();
     }
 
@@ -273,7 +274,7 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
      * @param non-empty-string $label
      * @param ?non-empty-string $identifier
      */
-    public static function start(string $label = 'start', ?string $identifier = null, ?LoggerInterface $logger = null): self
+    public static function start(string $label = 'start', ?string $identifier = null, LoggerInterface $logger = new NullLogger()): self
     {
         $timeline = new self($identifier, $logger);
         $timeline->capture($label);
@@ -330,7 +331,7 @@ final class Timeline implements Countable, IteratorAggregate, JsonSerializable
      */
     private function log(string $message, array $context = []): void
     {
-        $this->logger?->info('Timeline ['.$this->identifier.'] '.$message, [
+        $this->logger->info('Timeline ['.$this->identifier.'] '.$message, [
             'identifier' => $this->identifier,
             ...$context,
         ]);

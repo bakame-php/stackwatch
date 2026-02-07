@@ -11,6 +11,7 @@ use Countable;
 use IteratorAggregate;
 use JsonSerializable;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Throwable;
 use Traversable;
 
@@ -33,14 +34,13 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     /** @var non-empty-string */
     private readonly string $identifier;
     private readonly Closure $callback;
-    private readonly ?LoggerInterface $logger;
     /** @var list<Span> */
     private array $spans;
 
     /**
      * @param ?non-empty-string $identifier
      */
-    public function __construct(callable $callback, ?string $identifier = null, ?LoggerInterface $logger = null)
+    public function __construct(callable $callback, ?string $identifier = null, private LoggerInterface $logger = new NullLogger())
     {
         $identifier ??= self::generateLabel();
         $identifier = trim($identifier);
@@ -48,7 +48,6 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
 
         $this->identifier = $identifier;
         $this->callback = $callback instanceof Closure ? $callback : $callback(...);
-        $this->logger = $logger;
         $this->reset();
     }
 
@@ -92,12 +91,12 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
     public function profile(string $label, mixed ...$args): mixed
     {
         try {
-            $this->logger?->info('Profiler ['.$this->identifier.'] starting profiling for label: '.$label.'.', ['identifier' => $this->identifier, 'label' => $label]);
+            $this->logger->info('Profiler ['.$this->identifier.'] starting profiling for label: '.$label.'.', ['identifier' => $this->identifier, 'label' => $label]);
             $start = Snapshot::now('start');
             $returnValue = ($this->callback)(...$args);
             $end = Snapshot::now('end');
             $span = new Span($label, $start, $end);
-            $this->logger?->info('Profiler ['.$this->identifier.'] ending profiling for label: '.$label.'.', [...['identifier' => $this->identifier], ...$span->toArray()]);
+            $this->logger->info('Profiler ['.$this->identifier.'] ending profiling for label: '.$label.'.', [...['identifier' => $this->identifier], ...$span->toArray()]);
 
             $profiled = new Result($returnValue, $span);
             $this->spans[] = $profiled->span;
@@ -105,7 +104,7 @@ final class Profiler implements JsonSerializable, IteratorAggregate, Countable
             return $profiled->returnValue;
 
         } catch (Throwable $exception) {
-            $this->logger?->error('Profiler ['.$this->identifier.'] profiling aborted for label: '.$label.' due to an error in the executed code.', ['identifier' => $this->identifier, 'label' => $label, 'exception' => $exception]);
+            $this->logger->error('Profiler ['.$this->identifier.'] profiling aborted for label: '.$label.' due to an error in the executed code.', ['identifier' => $this->identifier, 'label' => $label, 'exception' => $exception]);
 
             throw $exception;
         }
